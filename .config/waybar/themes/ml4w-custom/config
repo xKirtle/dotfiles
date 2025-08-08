@@ -1,0 +1,109 @@
+// __        __          _                 
+// \ \      / /_ _ _   _| |__   __ _ _ __  
+//  \ \ /\ / / _` | | | | '_ \ / _` | '__| 
+//   \ V  V / (_| | |_| | |_) | (_| | |    
+//    \_/\_/ \__,_|\__, |_.__/ \__,_|_|    
+//                 |___/                   
+//  
+// by Stephan Raabe (2023) 
+// ----------------------------------------------------- 
+//
+{
+    // General Settings
+    "layer": "top",
+    "margin-top": 0,
+    "margin-bottom": 0,
+    "margin-left": 0,
+    "margin-right": 0,    
+    "spacing": 0,
+
+    // Load Modules
+    "include": [
+        "~/.config/ml4w/settings/waybar-quicklinks.json",
+        "~/.config/waybar/modules.json"
+    ],
+
+    // Modules Left
+    "modules-left": [
+        // "custom/appmenu",
+        "clock",
+        // "group/links",
+        //"wlr/taskbar",
+        // "group/quicklinks",
+        "hyprland/workspaces",
+        "custom/empty"
+    ],
+
+    // Modules Center
+    "modules-center": [
+        "hyprland/window"
+    ],
+
+    // Modules Right    
+    "modules-right": [
+        "custom/updates",
+        "pulseaudio",
+        //"backlight",
+        "bluetooth",
+        "network",
+        // "battery", 
+        // "power-profiles-daemon",
+        // "group/hardware",
+        "group/tools",
+        "tray",
+        // "custom/ml4w-welcome",
+        "custom/notification",
+        "custom/exit"
+    ],
+
+    // Workspaces
+    "hyprland/workspaces": {
+        "on-scroll-up": "hyprctl dispatch workspace r-1",
+        "on-scroll-down": "hyprctl dispatch workspace r+1",
+        "on-click": "activate",
+        "active-only": true,
+        "all-outputs": false,
+        "format": "{}",
+        "format-icons": {
+        "urgent": "",
+        "active": "",
+        "default": ""
+        }
+        // "persistent-workspaces": {
+        //     "*": 3
+        // }
+    },
+
+    // Group Tools
+    "group/tools": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 300,
+            "children-class": "not-memory",
+            "transition-left-to-right": false,
+            "click-to-reveal": true
+        },
+        "modules": [
+            "custom/tools",
+            "custom/cliphist",
+            "custom/hypridle",
+            "custom/hyprshade",
+            "custom/ml4w-welcome"
+        ]
+    },
+
+    // System tray
+    "tray": {
+        "icon-size": 24,
+        "spacing": 10
+    },
+
+    // Clock
+    "clock": {
+        "format": "{:%H:%M %A, %d %b}",
+        "on-click": "flatpak run com.ml4w.calendar",
+        "timezone": "",
+        "tooltip": true,
+        "tooltip-format": "{:%A, %d %B %Y}"
+    }
+}
