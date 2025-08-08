@@ -69,7 +69,9 @@
             "default": ""
         },
         "persistent-workspaces": {
-            "*": 3
+            "DP-3": [1, 2, 3, 4, 5, 6],
+            "DP-2": [7, 8, 9],
+            "HDMI-A-1": [10]
         }
     },
 
