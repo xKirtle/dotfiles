@@ -1,46 +1,51 @@
 #!/bin/bash
-# Jump to local workspace N (1..9) on the focused monitor.
-# If the Nth numeric WS already exists on that monitor, go there.
-# Otherwise create a new global WS (global max + 1) and bind it to local N for that monitor.
+# Usage: ws-local.sh [gap|max] <1-9>
+# Jump to the Nth numeric workspace on the focused monitor.
+# If fewer than N exist, allocate a new global workspace using either:
+#  - max: GLOBAL_MAX+1 (default)
+#  - gap: smallest unused global number
 set -euo pipefail
 
-N="${1:-}"; [[ "$N" =~ ^[1-9]$ ]] || { echo "need 1..9"; exit 1; }
-command -v jq >/dev/null || { notify-send "Install jq"; exit 1; }
+ALLOC="${1:-max}"
+if [[ "$ALLOC" == "gap" || "$ALLOC" == "max" ]]; then
+  shift
+else
+  ALLOC="max"
+fi
+N="${1:-}"
+[[ "$N" =~ ^[1-9]$ ]] || { echo "need 1..9"; exit 1; }
 
-MAPFILE="$HOME/.config/hypr/.ws_map.json"
-mkdir -p "$(dirname "$MAPFILE")"
-[[ -f "$MAPFILE" ]] || echo '{}' > "$MAPFILE"
+command -v jq >/dev/null || { notify-send "Install jq"; exit 1; }
 
 MON=$(hyprctl -j monitors | jq -r '.[] | select(.focused==true).name')
 [[ -n "$MON" ]] || exit 0
 
-# 1) Discover current numeric workspaces on this monitor, sorted.
+# Discover current numeric workspaces on this monitor
 mapfile -t WS_ON_MON < <(
   hyprctl -j workspaces \
   | jq -r --arg mon "$MON" '[.[] | select(.monitor==$mon) | select(.name|test("^[0-9]+$")) | .name | tonumber] | sort | map(tostring) | .[]'
 )
 
-# 2) If we already have at least N numeric WS here, use the Nth one directly.
 IDX=$((N-1))
 if (( ${#WS_ON_MON[@]} > IDX )); then
   TARGET="${WS_ON_MON[$IDX]}"
   hyprctl dispatch workspace "$TARGET"
-  # Sync mapping so local N points to current real number.
-  TMP=$(mktemp)
-  jq --arg m "$MON" --arg n "$N" --arg v "$TARGET" '.[ $m ] = ( .[ $m ] // {} ) | .[ $m ][ $n ] = $v' "$MAPFILE" > "$TMP"
-  mv "$TMP" "$MAPFILE"
   exit 0
 fi
 
-# 3) Otherwise allocate a new global workspace (guaranteed unused) and pin it to this monitor.
-GLOBAL_MAX=$(hyprctl -j workspaces | jq -r '[.[] | select(.name|test("^[0-9]+$")) | .name | tonumber] | if length==0 then 0 else max end')
-NEW=$((GLOBAL_MAX + 1))
+next_free_gap() {
+  local used i
+  used=$(hyprctl -j workspaces | jq -r '.[] | select(.name|test("^[0-9]+$")) | .name' | sort -n | uniq)
+  i=1; while :; do if ! grep -qx "$i" <<<"$used"; then echo "$i"; return; fi; i=$((i+1)); done
+}
+next_free_max() {
+  hyprctl -j workspaces | jq -r '[.[] | select(.name|test("^[0-9]+$")) | .name | tonumber] | if length==0 then 1 else (max+1) end'
+}
+get_next_id() {
+  if [[ "$ALLOC" == "gap" ]]; then next_free_gap; else next_free_max; fi
+}
 
-# Create/switch; Hyprland will spawn it on the focused monitor. Force move just in case.
-hyprctl dispatch workspace "$NEW"
-hyprctl dispatch moveworkspacetomonitor "$NEW" "$MON" >/dev/null 2>&1 || true
-
-# Save mapping
-TMP=$(mktemp)
-jq --arg m "$MON" --arg n "$N" --arg v "$NEW" '.[ $m ] = ( .[ $m ] // {} ) | .[ $m ][ $n ] = $v' "$MAPFILE" > "$TMP"
-mv "$TMP" "$MAPFILE"
+TARGET="$(get_next_id)"
+# Create/switch; Hyprland should spawn on focused monitor; ensure placement just in case
+hyprctl dispatch workspace "$TARGET"
+hyprctl dispatch moveworkspacetomonitor "$TARGET" "$MON" >/dev/null 2>&1 || true
