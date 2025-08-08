@@ -179,6 +179,7 @@ window#waybar.empty #window {
 #custom-windowsvm,
 #custom-cliphist,
 #custom-settings,
+#custom-gear,
 #custom-wallpaper,
 #custom-system,
 #custom-hyprshade,
@@ -418,9 +419,9 @@ window#waybar.empty #window {
     opacity:0.8;
 }
 
-#pulseaudio.muted {
-    background-color: @backgrounddark;
-    color: @textcolor1;
+#pulseaudio.muted,
+#pulseaudio.source-muted {
+    color: rgb(140, 34, 34);
 }
 
 /* -----------------------------------------------------

@@ -1,0 +1,23 @@
+# Run everything (hypr + waybar + scripts)
+./install-all.sh
+
+# Dry run first (no changes)
+./install-all.sh --dry-run
+
+# Only specific tasks
+./install-all.sh --only waybar --only scripts
+
+# Clean stale links too
+./install-all.sh --clean
+
+# Verbose logs
+./install-all.sh -v
+
+# Override paths (if your repo layout ever changes)
+./install-all.sh \
+  --repo-hypr "$HOME/Dev/dotfiles/.config/hypr/conf" \
+  --repo-waybar "$HOME/Dev/dotfiles/.config/waybar/themes" \
+  --repo-scripts "$HOME/Dev/dotfiles/scripts" \
+  --target-hypr "$HOME/.config/hypr/conf" \
+  --target-waybar "$HOME/.config/waybar/themes" \
+  --target-scripts "$HOME/.config/ml4w/scripts"

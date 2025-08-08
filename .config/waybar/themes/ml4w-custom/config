@@ -18,18 +18,12 @@
     "spacing": 0,
 
     // Load Modules
-    "include": [
-        "~/.config/ml4w/settings/waybar-quicklinks.json",
-        "~/.config/waybar/modules.json"
-    ],
+    // "include": [
+    // ],
 
     // Modules Left
     "modules-left": [
-        // "custom/appmenu",
         "clock",
-        // "group/links",
-        //"wlr/taskbar",
-        // "group/quicklinks",
         "hyprland/workspaces",
         "custom/empty"
     ],
@@ -43,18 +37,23 @@
     "modules-right": [
         "custom/updates",
         "pulseaudio",
-        //"backlight",
         "bluetooth",
         "network",
-        // "battery", 
-        // "power-profiles-daemon",
-        // "group/hardware",
         "group/tools",
         "tray",
-        // "custom/ml4w-welcome",
         "custom/notification",
+        "custom/gear",
         "custom/exit"
     ],
+
+    // Clock
+    "clock": {
+        "format": "{:%H:%M %A, %d %b}",
+        "on-click": "flatpak run com.ml4w.calendar",
+        "timezone": "",
+        "tooltip": true,
+        "tooltip-format": "{:%A, %d %B %Y}"
+    },
 
     // Workspaces
     "hyprland/workspaces": {
@@ -65,13 +64,96 @@
         "all-outputs": false,
         "format": "{}",
         "format-icons": {
-        "urgent": "",
-        "active": "",
-        "default": ""
+            "urgent": "",
+            "active": "",
+            "default": ""
+        },
+        "persistent-workspaces": {
+            "*": 3
         }
-        // "persistent-workspaces": {
-        //     "*": 3
-        // }
+    },
+
+    // Empty
+    "custom/empty": {
+        "format": ""
+    },
+
+    // Hyprland Window
+    "hyprland/window": {
+        "max-length": 60,
+        "rewrite": {
+        "(.*) - Brave": "$1",
+        "(.*) - Chromium": "$1",
+        "(.*) - Brave Search": "$1",
+        "(.*) - Outlook": "$1",
+        "(.*) Microsoft Teams": "$1"
+        },
+        "separate-outputs": true
+    },
+
+    // Updates Count
+    "custom/updates": {
+        "format": "  {}",
+        "escape": true,
+        "return-type": "json",
+        "exec": "~/.config/ml4w/scripts/updates.sh",
+        "interval": 1800,
+        "signal": 1,
+        "hide-empty-text": true,
+        "on-click": "~/.config/ml4w/settings/installupdates.sh"
+    },
+
+    // Pulseaudio
+    "pulseaudio": {
+        "scroll-step": 5, // %, can be a float
+        "format": "{icon}  {volume}% {format_source}",
+        "format-bluetooth": "{volume}% {icon} {format_source}",
+        "format-bluetooth-muted": " {icon} {format_source}",
+        "format-muted": " 0% {format_source}",
+        // "format-source": " {volume}%",
+        "format-source": "| ",
+        "format-source-muted": "| ",
+        "format-icons": {
+            "headphone": " ",
+            "hands-free": " ",
+            "headset": " ",
+            "phone": " ",
+            "portable": " ",
+            "car": " ",
+            "default": ["", "", ""]
+        },
+        "on-click": "pavucontrol",
+        "on-click-right": "~/.config/ml4w/scripts/wpctl-cycle-sink.sh"
+    },
+
+    // Bluetooth
+    "bluetooth": {
+        "format": " {status}",
+        "format-disabled": "",
+        "format-off": "",
+        "interval": 30,
+        "on-click": "sleep 0.1 && ~/.config/ml4w/settings/bluetooth.sh",
+        "format-no-controller": ""
+    },
+
+    "custom/gear": {
+        "format": "",
+        "on-click": "code \"$DOTFILES\""
+    },
+
+    // Network
+    "network": {
+        "format": "{ifname}",
+        "format-wifi": " {essid} ({signalStrength}%)",
+        "format-ethernet": "  {ifname}",
+        "format-disconnected": "Disconnected ⚠",
+        "tooltip-format": " {ifname} via {gwaddri}",
+        "tooltip-format-wifi": "  {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\nUp: {bandwidthUpBits} Down: {bandwidthDownBits}",
+        "tooltip-format-ethernet": " {ifname}\nIP: {ipaddr}\n up: {bandwidthUpBits} down: {bandwidthDownBits}",
+        "tooltip-format-disconnected": "Disconnected",
+        "max-length": 50,
+        "on-click": "~/.config/ml4w/settings/networkmanager.sh",
+        "on-click-right": "~/.config/ml4w/scripts/nm-applet.sh toggle",
     },
 
     // Group Tools
@@ -87,9 +169,41 @@
             "custom/tools",
             "custom/cliphist",
             "custom/hypridle",
-            "custom/hyprshade",
             "custom/ml4w-welcome"
         ]
+    },
+
+    // Tools
+    "custom/tools": {
+        "format": "",
+        "tooltip-format": "Tools"
+    },
+
+    // Cliphist
+    "custom/cliphist": {
+        "format": "",
+        "on-click": "sleep 0.1 && ~/.config/ml4w/scripts/cliphist.sh",
+        "on-click-right": "sleep 0.1 && ~/.config/ml4w/scripts/cliphist.sh d",
+        "on-click-middle": "sleep 0.1 && ~/.config/ml4w/scripts/cliphist.sh w",
+        "tooltip-format": "Left: Open clipboard Manager\nRight: Delete an entry\nMiddle: Clear list"
+    },
+
+    // Hypridle inhibitor
+    "custom/hypridle": {
+        "format": "",
+        "return-type": "json",
+        "escape": true,
+        "exec-on-event": true,
+        "interval": 60,
+        "exec": "~/.config/hypr/scripts/hypridle.sh status",
+        "on-click": "~/.config/hypr/scripts/hypridle.sh toggle"
+    },
+
+      // ML4W Welcome App
+    "custom/ml4w-welcome": {
+        "on-click": "flatpak run com.ml4w.sidebar",
+        "format": " ",
+        "tooltip-format": "Open ML4W Sidebar App"
     },
 
     // System tray
@@ -98,12 +212,37 @@
         "spacing": 10
     },
 
-    // Clock
-    "clock": {
-        "format": "{:%H:%M %A, %d %b}",
-        "on-click": "flatpak run com.ml4w.calendar",
-        "timezone": "",
-        "tooltip": true,
-        "tooltip-format": "{:%A, %d %B %Y}"
+    // SwayNC
+    "custom/notification": {
+        "tooltip-format": "Left: Notifications\nRight: Do not disturb",
+        "format": "{icon}",
+        "format-icons": {
+        "notification":
+            "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
+        "none": "",
+        "dnd-notification":
+            "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
+        "dnd-none": "",
+        "inhibited-notification":
+            "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
+        "inhibited-none": "",
+        "dnd-inhibited-notification":
+            "<span rise='8pt'><span foreground='red'><sup></sup></span></span>",
+        "dnd-inhibited-none": ""
+        },
+        "return-type": "json",
+        "exec-if": "which swaync-client",
+        "exec": "swaync-client -swb",
+        "on-click": "swaync-client -t -sw",
+        "on-click-right": "swaync-client -d -sw",
+        "escape": true
+    },
+
+    // Power Menu
+    "custom/exit": {
+        "format": "",
+        "on-click": "~/.config/ml4w/scripts/wlogout.sh",
+        "on-click-right": "hyprlock",
+        "tooltip-format": "Left: Power menu\nRight: Lock screen"
     }
 }

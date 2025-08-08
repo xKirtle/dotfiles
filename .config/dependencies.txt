@@ -1,1 +1,3 @@
 flatpak install dev.krtirtho.Flemozi
+
+paru -S gnome-calculator
