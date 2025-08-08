@@ -57,21 +57,18 @@
 
     // Workspaces
     "hyprland/workspaces": {
-        "on-scroll-up": "hyprctl dispatch workspace r-1",
-        "on-scroll-down": "hyprctl dispatch workspace r+1",
+        // "on-scroll-up": "hyprctl dispatch workspace r-1",
+        // "on-scroll-down": "hyprctl dispatch workspace r+1",
+        "on-scroll-up": "~/.config/ml4w/scripts/workspace-cycle-smart.sh up",
+        "on-scroll-down": "~/.config/ml4w/scripts/workspace-cycle-smart.sh down",
         "on-click": "activate",
-        "active-only": true,
+        "active-only": false,
         "all-outputs": false,
         "format": "{}",
         "format-icons": {
             "urgent": "",
             "active": "",
             "default": ""
-        },
-        "persistent-workspaces": {
-            "DP-3": [1, 2, 3, 4, 5, 6],
-            "DP-2": [7, 8, 9],
-            "HDMI-A-1": [10]
         }
     },
 
