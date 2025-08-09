@@ -1,2 +1,11 @@
 workspace-local-move and workspace-local-moveall won't move tiles to non existant workspaces.
 Ideally it should allow to move tiles to up to max+1.
+
+(Unsure if worth the effort)
+Modify my keybinds to include description like so:
+bindd = SUPER, Q, Open my favourite terminal, exec, kitty
+This makes it accessible through hyprctl binds
+
+Include sunshine pre/post script in repo
+
+Fix brightness controls on keybinds

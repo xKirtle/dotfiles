@@ -16,6 +16,7 @@
     "margin-left": 0,
     "margin-right": 0,    
     "spacing": 0,
+    "output": ["DP-2","DP-3"], // Disable Waybar on dummy HDMI plug
 
     // Load Modules
     // "include": [
