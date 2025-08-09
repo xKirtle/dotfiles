@@ -51,7 +51,7 @@
         "format": "{:%H:%M %A, %d %b}",
         "on-click": "flatpak run com.ml4w.calendar",
         "timezone": "",
-        "tooltip": true,
+        "tooltip": false, // Doesn't add much value
         "tooltip-format": "{:%A, %d %B %Y}"
     },
 
@@ -87,7 +87,8 @@
         "(.*) - Outlook": "$1",
         "(.*) Microsoft Teams": "$1"
         },
-        "separate-outputs": true
+        "separate-outputs": true,
+        "tooltip": false
     },
 
     // Updates Count
