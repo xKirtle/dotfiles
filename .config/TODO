@@ -1,1 +1,2 @@
-keybind to open new empty workspace assigned to active monitor. Super + Tab works, but needs to have tiles created there already (so not empty)
+workspace-local-move and workspace-local-moveall won't move tiles to non existant workspaces.
+Ideally it should allow to move tiles to up to max+1.
