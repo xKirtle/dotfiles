@@ -1,0 +1,3 @@
+# AUR
+kitty
+thunar
