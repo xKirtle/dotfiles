@@ -1,0 +1,15 @@
+# AUR
+kitty
+thunar
+
+# use nwg-look to change GTK themes
+# change qt themes on both qt5ct and qt6ct
+
+# https://wiki.archlinux.org/title/Uniform_look_for_Qt_and_GTK_applications#Styles_for_both_Qt_and_GTK
+breeze
+breeze-icons
+breeze-gtk
+qt5ct-kde
+qt6ct-kde
+
+stow # manage symlinks
