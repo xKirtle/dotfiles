@@ -1,0 +1,18 @@
+-- allow_images=true
+-- hide_scroll=true
+-- no_actions=false
+-- term=alacritty
+-- mode=drun
+-- --show
+
+show=drun
+term=kitty
+allow_images=true
+no_actions=false
+hide_scroll=true
+insensitive=true
+prompt=Search...
+matching=fuzzy
+lines=10
+location=center
+width=30%

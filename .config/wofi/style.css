@@ -1,0 +1,69 @@
+/* * {
+    font-family: "Hack", monospace;
+}
+
+window {
+    background-color: #007d6f;
+}
+
+#input {
+    margin: 5px;
+    border-radius: 0px;
+    border: none;
+    background-color: #111826;
+    color: #ffffffff;
+}
+
+#inner-box {
+    background-color: #111826;
+}
+
+#outer-box {
+    margin: 2px;
+    padding: 10px;
+    background-color: #111826;
+}
+
+#scroll {
+    margin: 5px;
+}
+
+#text {
+    padding: 4px;
+    color: #ffffffff;
+}
+
+#entry:nth-child(even){
+    background-color: #182545;
+}
+
+#entry:selected {
+    background-color: #00aa84;
+}
+
+#text:selected {
+    background: transparent;
+} */
+
+window {
+    background-color: rgba(30, 30, 46, 0.95); /* Dark with transparency */
+    border-radius: 12px;
+    padding: 10px;
+}
+
+#input {
+    background-color: #1e1e2e;
+    color: #cdd6f4;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+#entry {
+    padding: 6px;
+    border-radius: 6px;
+}
+
+#entry:selected {
+    background-color: #89b4fa; /* Highlight */
+    color: #1e1e2e;
+}
