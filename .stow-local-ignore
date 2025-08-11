@@ -1,7 +1,7 @@
 \.git
 \.gitignore
-\.md$
-\.txt$
-\.sh$
+^.+.md$
+^.+.txt$
+^.+.sh$
 ^/LICENSE$
 ^/README
