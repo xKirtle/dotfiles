@@ -1,0 +1,6 @@
+{
+  "custom/gear": {
+    "format": "",
+    "on-click": "~/.config/waybar/scripts/code-open-dotfiles.sh"
+  }
+}

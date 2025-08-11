@@ -15,3 +15,8 @@ qt6ct-kde
 stow # manage symlinks
 
 # FOLLOW THIS POST https://github.com/elFarto/nvidia-vaapi-driver#configuration
+
+blueman (waybar)
+network-manager-applet (waybar)
+swaync (waybar)
+checkupdates-with-aur (waybar)

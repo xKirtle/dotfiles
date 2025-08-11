@@ -1,0 +1,12 @@
+{
+  "custom/updates": {
+    "format": "  {}",
+    "escape": true,
+    "return-type": "json",
+    "exec": "~/.config/waybar/scripts/updates.sh",
+    "interval": 1800,
+    "signal": 1,
+    "hide-empty-text": true,
+    "on-click": "~/.config/waybar/scripts/install-updates.sh"
+  }
+}

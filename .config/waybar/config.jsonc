@@ -1,0 +1,51 @@
+{
+  // General
+  "layer": "top",
+  "margin-top": 0,
+  "margin-bottom": 0,
+  "margin-left": 0,
+  "margin-right": 0,
+  "spacing": 0,
+  "output": ["DP-1", "DP-2"], // Disable Waybar on dummy HDMI plug
+
+  // Pull in all module definitions from ./modules
+  "include": [
+    "~/.config/waybar/modules/clock.jsonc",
+    "~/.config/waybar/modules/workspaces.jsonc",
+    "~/.config/waybar/modules/empty.jsonc",
+    "~/.config/waybar/modules/window.jsonc",
+    "~/.config/waybar/modules/updates.jsonc",
+    "~/.config/waybar/modules/pulseaudio.jsonc",
+    "~/.config/waybar/modules/bluetooth.jsonc",
+    "~/.config/waybar/modules/network.jsonc",
+    "~/.config/waybar/modules/groups.jsonc",
+    "~/.config/waybar/modules/tools.jsonc",
+    "~/.config/waybar/modules/cliphist.jsonc",
+    "~/.config/waybar/modules/hypridle.jsonc",
+    "~/.config/waybar/modules/tray.jsonc",
+    "~/.config/waybar/modules/notification.jsonc",
+    "~/.config/waybar/modules/exit.jsonc",
+    "~/.config/waybar/modules/gear.jsonc"
+  ],
+
+  // Module placement
+  "modules-left": [
+    "clock", 
+    "hyprland/workspaces", 
+    "custom/empty"
+  ],
+  "modules-center": [
+    "hyprland/window"
+  ],
+  "modules-right": [
+    "custom/updates",
+    "pulseaudio",
+    "bluetooth",
+    "network",
+    "group/tools",
+    "tray",
+    "custom/notification",
+    "custom/gear",
+    "custom/exit"
+  ]
+}
