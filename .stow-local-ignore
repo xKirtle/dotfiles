@@ -1,6 +1,7 @@
-^\.git($|/)
-^\.github($|/)
+\.git
+\.gitignore
 \.md$
 \.txt$
 \.sh$
-^LICENSE$
+^/LICENSE$
+^/README
