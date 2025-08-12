@@ -1,4 +1,4 @@
-fix workspace cycle on secondary display (initial workspace from ws-init is not properly named?)
+prevent matugen + wallust on startup if background didn't change
 
 mangohud + goverlay
 
