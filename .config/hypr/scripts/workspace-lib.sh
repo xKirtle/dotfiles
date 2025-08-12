@@ -116,74 +116,81 @@ ws_active_ws_client_count() {
 }
 
 ws_decide_target_goto() {
-  # $1=N → prints target slot or '' for no-op.
-  # Extra rule: if current workspace has 0 clients, do NOT go to a higher slot.
+  # $1 = N (local index). Prints *target slot number* or '' for no-op.
+  # Rules:
+  #  • If Nth existing local slot exists → go to that slot.
+  #  • If N > count → create/clamp to boundary:
+  #      B = (LAST_OCC == 0 ? MAX_EXIST+1 : LAST_OCC+1)
+  #  • Extra: if current workspace is EMPTY, block *upward* moves (no walking).
+
   local N="$1"
 
-  local CUR;  CUR="$(ws_current_local_slot)"
+  local CUR;   CUR="$(ws_current_local_slot)"     # current slot number (e.g., 12)
+  local MAX;   MAX="$(ws_max_exist)"              # max existing slot number   (e.g., 14)
+  local LAST;  LAST="$(ws_last_occupied)"         # highest occupied slot num  (0 if none)
+
+  # 1) If the Nth existing local slot is present → use it (pure index semantics)
+  local EXIST_SLOT
+  EXIST_SLOT="$(ws_nth_existing_local_slot "$N")"
+  if [[ -n "$EXIST_SLOT" ]]; then
+    # no-op if we’re already on it
+    [[ "$CUR" == "$EXIST_SLOT" ]] && { printf ''; return; }
+    printf '%s' "$EXIST_SLOT"
+    return
+  fi
+
+  # 2) N beyond count → boundary creation/clamp (single step)
+  local B
+  if (( LAST == 0 )); then
+    B=$((MAX + 1))         # first creation from a single existing slot
+  else
+    B=$((LAST + 1))        # occupied boundary
+  fi
+
+  # 3) If current is EMPTY, block *upward* moves (prevents indefinite stepping)
+  if [[ -n "$CUR" ]]; then
+    local c; c="$(ws_active_ws_client_count)"
+    if (( c == 0 )) && (( B > CUR )); then
+      printf ''            # block upward when current is empty
+      return
+    fi
+  fi
+
+  # no-op if already at the boundary
+  [[ "$CUR" == "$B" ]] && { printf ''; return; }
+
+  printf '%s' "$B"
+}
+
+# Decide target for MOVE (index semantics) with "empty-upward" guard
+# $1=N(index) $2=mode(one|all) $3=src_ws_id
+ws_decide_target_move() {
+  local N="$1" MODE="$2" SRC_ID="$3"
+
+  local CUR;  CUR="$(ws_current_local_slot)"   # slot number (e.g., 12)
   local MAX;  MAX="$(ws_max_exist)"
   local LAST; LAST="$(ws_last_occupied)"
 
-  # Already there → no-op
-  [[ "$CUR" == "$N" ]] && { printf ''; return; }
-
-  # If N exists, candidate target is N
+  # If Nth existing local slot exists → go there
+  local EXIST_SLOT; EXIST_SLOT="$(ws_nth_existing_local_slot "$N")"
   local TGT=''
-  if ws_slot_exists "$N"; then
-    TGT="$N"
+  if [[ -n "$EXIST_SLOT" ]]; then
+    TGT="$EXIST_SLOT"
   else
-    # Standard clamp matrix
-    if (( N > MAX + 1 )); then
-      TGT="$((MAX + 1))"
-    elif (( N == MAX + 1 )); then
-      TGT="$N"
-    elif (( N > LAST + 1 )); then
-      TGT="$((LAST + 1))"
+    # N beyond count → single-step boundary
+    local B
+    if (( LAST == 0 )); then
+      B=$((MAX + 1))       # first creation on fresh screen
     else
-      # Hole below boundary → no-op
-      printf ''; return
+      B=$((LAST + 1))      # occupied boundary
     fi
+    TGT="$B"
   fi
 
-  # If current workspace is empty, block upward moves (no walking from empty)
-  if [[ -n "$CUR" ]]; then
-    local c; c="$(ws_active_ws_client_count)"
-    if (( c == 0 )) && (( TGT > CUR )); then
-      printf ''; return
-    fi
-  fi
+  # No-op if target equals current
+  [[ -n "$CUR" && "$CUR" -eq "$TGT" ]] && { printf ''; return; }
 
-  printf '%s' "$TGT"
-}
-
-ws_decide_target_move() {
-  # $1=N $2=mode(one|all) $3=src_ws_id
-  # Returns target slot or '' for no-op.
-  local N="$1" MODE="$2" SRC_ID="$3"
-  local CUR; CUR="$(ws_current_local_slot)"
-  [[ "$CUR" == "$N" ]] && { printf ''; return; }
-
-  local MAX LAST
-  MAX="$(ws_max_exist)"
-  LAST="$(ws_last_occupied)"
-
-  # Resolve like goto
-  local TGT=''
-  if ws_slot_exists "$N"; then
-    TGT="$N"
-  else
-    if (( N > MAX + 1 )); then
-      TGT="$((MAX + 1))"
-    elif (( N == MAX + 1 )); then
-      TGT="$N"
-    elif (( N > LAST + 1 )); then
-      TGT="$((LAST + 1))"
-    else
-      printf ''; return
-    fi
-  fi
-
-  # Empty-upward guard: if move would empty source AND TGT > CUR → block.
+  # Empty-upward guard: if moving would empty source AND TGT > CUR → block
   local SRC_COUNT
   SRC_COUNT="$(jq -r --argjson id "$SRC_ID" '[ .[] | select(.workspace.id==$id) ] | length' <<<"$CL_JSON")"
   local EMPTIES=0
@@ -197,4 +204,13 @@ ws_decide_target_move() {
   fi
 
   printf '%s' "$TGT"
+}
+
+# Return the slot number of the Nth existing local slot on the focused monitor
+# (numeric-on-this-monitor ∪ wrapped-for-this-MID), or '' if N > count.
+ws_nth_existing_local_slot() {
+  local N="$1"
+  mapfile -t _SLOTS < <(ws_list_existing_local_slots)   # e.g., 12 13 14
+  (( N >= 1 && N <= ${#_SLOTS[@]} )) || { printf ''; return; }
+  printf '%s' "${_SLOTS[$((N-1))]}"
 }

@@ -13,54 +13,67 @@ ws_focus || exit 0
 ws_wsjson
 ws_clients_json
 
-# Local existing slots, current, boundaries
+# Existing local slots (sorted numeric)
 mapfile -t SLOTS < <(ws_list_existing_local_slots)
+COUNT=${#SLOTS[@]}
+[[ $COUNT -eq 0 ]] && exit 0
+
 CUR="$(ws_current_local_slot)"
+# Find current index
+cur_idx=-1
+for i in "${!SLOTS[@]}"; do
+  if [[ "${SLOTS[$i]}" == "$CUR" ]]; then cur_idx=$i; break; fi
+done
+[[ $cur_idx -lt 0 ]] && exit 0
 
-FIRST_EXIST=0
-MAX_EXIST=0
-((${#SLOTS[@]})) && FIRST_EXIST="${SLOTS[0]}"
-((${#SLOTS[@]})) && MAX_EXIST="${SLOTS[-1]}"
-
+FIRST="${SLOTS[0]}"
+LAST="${SLOTS[-1]}"
 LAST_OCC="$(ws_last_occupied)"
-NEXT_ALLOWED=$(( (LAST_OCC == 0) ? (MAX_EXIST + 1) : (LAST_OCC + 1) ))
+B=$(( LAST_OCC == 0 ? LAST + 1 : LAST_OCC + 1 ))  # active boundary slot number
 
-goto_slot_num() { ws_goto_slot "$1"; }
+goto_by_index () {
+  local idx="$1"
+  local tgt_slot
+  tgt_slot="$(ws_decide_target_goto "$idx")"  # index semantics + “no-walk when empty”
+  [[ -z "$tgt_slot" ]] && return 1
+  ws_goto_slot "$tgt_slot"
+  return 0
+}
 
 if [[ "$DIR" == "down" ]]; then
-  [[ -z "$CUR" ]] && exit 0
-  prev=""
-  for s in "${SLOTS[@]}"; do
-    (( s < CUR )) && prev="$s" || break
-  done
-  if [[ -n "$prev" ]]; then
-    goto_slot_num "$prev"
+  # Previous existing
+  if (( cur_idx > 0 )); then
+    ws_goto_slot "${SLOTS[$((cur_idx-1))]}"
     exit 0
   fi
-  # wrap: go to NEXT_ALLOWED (create if needed)
-  goto_slot_num "$NEXT_ALLOWED"
+  # No previous → wrap
+  if (( LAST_OCC == 0 )); then
+    # all-empty: wrap to last existing (never create)
+    ws_goto_slot "$LAST"
+    exit 0
+  fi
+  # occupied: wrap to boundary B (force go-to; allow create even if current is empty)
+  ws_goto_slot "$B"
   exit 0
 fi
 
-# up
-if [[ -n "$CUR" ]]; then
-  for s in "${SLOTS[@]}"; do
-    if (( s > CUR )); then
-      goto_slot_num "$s"
-      exit 0
-    fi
-  done
-fi
-
-# No next existing
-if [[ -n "$CUR" ]] && (( CUR == NEXT_ALLOWED )) && (( FIRST_EXIST > 0 )); then
-  # wrap to first
-  goto_slot_num "$FIRST_EXIST"
+# ---- UP ----
+# Next existing
+if (( cur_idx + 1 < COUNT )); then
+  ws_goto_slot "${SLOTS[$((cur_idx+1))]}"
   exit 0
 fi
 
-if [[ -n "$CUR" ]] && (( CUR < NEXT_ALLOWED )); then
-  goto_slot_num "$NEXT_ALLOWED"
+# No next existing → try “index COUNT+1” via goto logic
+if goto_by_index $((COUNT+1)); then
+  # If we just created/jumped to boundary, done
+  exit 0
+fi
+
+# If goto logic no-oped (e.g., current is empty & it would step up), wrap to first
+# Also: if we ARE already at the boundary, wrap to first
+if (( CUR == B )) || true; then
+  ws_goto_slot "$FIRST"
   exit 0
 fi
 
