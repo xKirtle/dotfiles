@@ -17,6 +17,6 @@
       "default": ["", "", ""]
     },
     "on-click": "pavucontrol",
-    "on-click-right": "~/.config/waybar/scripts/wpctl-cycle-sink.sh"
+    "on-click-right": "~/.config/hypr/scripts/wpctl-cycle-sink.sh"
   }
 }
