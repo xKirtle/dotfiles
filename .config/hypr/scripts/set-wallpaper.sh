@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: set-wallpaper.sh /path/to/image [fill|fit|stretch|center|tile]
-IMG="${1:-}"; MODE="${2:-fill}"
+IMG="${1:-}"
+[[ -n "$IMG" && -f "$IMG" ]] || { echo "Usage: $0 /path/to/image"; exit 1; }
 
-if [[ -z "$IMG" || ! -f "$IMG" ]]; then
-  echo "Usage: $0 /path/to/image [mode]"; exit 1
-fi
+CACHE="${HOME}/.cache/current_wallpaper"
+mkdir -p "$(dirname "$CACHE")"
+printf '%s' "$IMG" > "$CACHE"
 
-WALLPAPER_FILE="${HOME}/.cache/current_wallpaper"
-mkdir -p "$(dirname "$WALLPAPER_FILE")"
-printf '%s' "$IMG" > "$WALLPAPER_FILE"
+# Ensure hyprpaper running
+pgrep -x hyprpaper >/dev/null || { hyprpaper & disown; sleep 0.2; }
 
-# Kill any previous swaybg and start a new one (all outputs)
-pkill -x swaybg >/dev/null 2>&1 || true
-swaybg -o '*' -i "$IMG" -m "$MODE" & disown
+# Preload + set on every monitor
+hyprctl hyprpaper preload "$IMG" >/dev/null 2>&1 || true
+hyprctl -j monitors | jq -r '.[].name' | while read -r mon; do
+  [[ -n "$mon" ]] || continue
+  hyprctl hyprpaper wallpaper "$mon,$IMG" >/dev/null 2>&1 || true
+done
 
-# Apply theme (matugen + wallust), auto dark/light
-"${HOME}/.config/hypr/scripts/theme-apply-from-wallpaper.sh" &
+# Regenerate theme + reload Waybar/SwayNC/Kitty now
+"${HOME}/.config/hypr/scripts/theme-reload.sh"

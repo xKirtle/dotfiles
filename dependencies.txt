@@ -36,3 +36,7 @@ heroic-games-launcher
 matugen-bin
 inotify-tools
 wallust
+
+hyprpaper (remove swaybg)
+
+jetbrains-toolbox (for rider, webstorm)

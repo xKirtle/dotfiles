@@ -1,5 +1,4 @@
-make matugen/theme scripts reload waybar
-switch from swaybg to hyprpaper to be able to IPC query current background
+fix workspace cycle on secondary display (initial workspace from ws-init is not properly named?)
 
 mangohud + goverlay
 
