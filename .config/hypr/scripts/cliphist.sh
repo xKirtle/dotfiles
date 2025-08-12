@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Optional: point to a dedicated wofi style for this picker
-STYLE="${HOME}/.config/wofi/style-cliphist.css"
+STYLE="${HOME}/.config/wofi/style.css"
 STYLE_FLAG=()
 [ -f "$STYLE" ] && STYLE_FLAG=(--style "$STYLE")
 

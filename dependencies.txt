@@ -33,3 +33,5 @@ steam
 discord
 protonup-qt
 heroic-games-launcher
+matugen-bin
+inotify-tools
