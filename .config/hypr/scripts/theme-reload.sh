@@ -1,66 +1,85 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Where Wallust writes kitty colors
-KITTY_COLORS="${HOME}/.config/kitty/colors-wallust.conf"
+# Paths
+WPF_FILE="${WPF_FILE:-$HOME/.cache/current_wallpaper}"          # “current” image
+THEME_FILE="${THEME_FILE:-$HOME/.cache/current_wallpaper_theme}" # last image used to generate theme
 
-# Prefer querying hyprpaper; fall back to our cache file (written by set-wallpaper)
-get_current_wallpaper() {
-  # hyprpaper IPC: "hyprctl hyprpaper list" prints lines like:
-  # monitor DP-1, /path/to/image.jpg
-  local from_ipc
-  from_ipc="$(hyprctl hyprpaper list 2>/dev/null | awk -F', ' '/^monitor /{print $2; exit}')"
-  if [[ -n "${from_ipc:-}" && -f "$from_ipc" ]]; then
-    printf '%s\n' "$from_ipc"; return
+# Binaries + configs (override via env if needed)
+MATUGEN="${MATUGEN:-matugen}"
+WALLUST="${WALLUST:-wallust}"
+MATUGEN_CFG="${MATUGEN_CFG:-$HOME/.config/matugen/config.toml}"
+WALLUST_CFG="${WALLUST_CFG:-$HOME/.config/wallust}"
+
+# Services to (re)load
+WAYBAR_CMD="${WAYBAR_CMD:-waybar}"
+SWAYNC_CMD="${SWAYNC_CMD:-swaync}"
+NM_APPLET_CMD="${NM_APPLET_CMD:-nm-applet --indicator}"
+SWAYOSD_CMD="${SWAYOSD_CMD:-swayosd-server}"
+
+mkdir -p -- "$(dirname "$WPF_FILE")" "$(dirname "$THEME_FILE")"
+
+# Resolve current image (from cache, or optional $1 override)
+resolve_img() {
+  local img="${1:-}"
+  if [[ -z "$img" && -f "$WPF_FILE" ]]; then
+    img="$(awk 'NF{print; exit}' "$WPF_FILE" 2>/dev/null || true)"
   fi
-  local cache="${HOME}/.cache/current_wallpaper"
-  [[ -f "$cache" ]] && cat "$cache" || true
+  [[ -n "$img" ]] && { realpath -m -- "$img" 2>/dev/null || printf '%s\n' "$img"; }
 }
 
-# Read GTK dark/light preference (GTK4 first, then GTK3)
-gtk_pref() {
-  local v
-  for f in "$HOME/.config/gtk-4.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"; do
-    [[ -f "$f" ]] || continue
-    v="$(awk -F= '/^gtk-application-prefer-dark-theme=/{print $2; exit}' "$f")"
-    [[ -n "${v:-}" ]] && { printf '%s' "$v"; return; }
-  done
-  printf '1'  # default to dark if unknown
-}
-
-IMG="$(get_current_wallpaper || true)"
-[[ -n "${IMG:-}" && -f "$IMG" ]] || { echo "theme-reload: no valid wallpaper found"; exit 0; }
-
-PREF="$(gtk_pref || true)"
-MODE="dark"; PALETTE="dark16"
-[[ "$PREF" == "0" ]] && { MODE="light"; PALETTE="light16"; }
-
-# 1) Matugen (your matugen.toml handles all template outputs + hyprctl reload via post_hook)
-if command -v matugen >/dev/null 2>&1; then
-  if [[ "$MODE" == "light" ]]; then
-    matugen image "$IMG" -m light || true
+IMG="$(resolve_img "${1:-}")"
+if [[ -z "$IMG" ]]; then
+  echo "[theme-reload] No cached wallpaper in $WPF_FILE; nothing to do."
+  # Still try to ensure panels are running
+  NEED_REGEN=0
+else
+  PREV="$( [[ -f "$THEME_FILE" ]] && awk 'NF{print; exit}' "$THEME_FILE" || echo "" )"
+  if [[ "$IMG" != "$PREV" ]]; then
+    NEED_REGEN=1
+    echo "[theme-reload] Theme out of date → regenerating for: $IMG"
+    if command -v "$MATUGEN" >/dev/null 2>&1; then
+      "$MATUGEN" image "$IMG" --config "$MATUGEN_CFG" || echo "[theme-reload] matugen failed (non-fatal)"
+    else
+      echo "[theme-reload] matugen not found; skipping"
+    fi
+    if command -v "$WALLUST" >/dev/null 2>&1; then
+      "$WALLUST" run "$IMG" --config-dir "$WALLUST_CFG" || echo "[theme-reload] wallust failed (non-fatal)"
+    else
+      echo "[theme-reload] wallust not found; skipping"
+    fi
+    printf '%s\n' "$IMG" > "$THEME_FILE"
   else
-    matugen image "$IMG" -m dark || true
+    NEED_REGEN=0
+    echo "[theme-reload] Theme already up-to-date for: $IMG → skipping generators"
   fi
 fi
 
-# 2) Wallust (for kitty, etc.)
-if command -v wallust >/dev/null 2>&1; then
-  wallust run --palette "$PALETTE" "$IMG" || true
+# --- Reload / (re)start panels & daemons ---
+
+# Waybar: reload if running; otherwise start
+if pgrep -x waybar >/dev/null 2>&1; then
+  pkill -SIGUSR2 waybar || true
+else
+  ($WAYBAR_CMD >/dev/null 2>&1 & disown) || true
 fi
 
-# 3) Live reload the usual suspects (instant, no flicker)
-pkill -SIGUSR2 waybar 2>/dev/null || true            # Waybar CSS/config reload
-
-# Only attempt if the daemon is running; otherwise this call waits forever.
+# swaync: reload if running; otherwise start
 if pgrep -x swaync >/dev/null 2>&1; then
   swaync-client -rs >/dev/null 2>&1 || true
 else
-  echo "swaync not running yet; skipping CSS reload"
+  ($SWAYNC_CMD >/dev/null 2>&1 & disown) || true
 fi
 
-kitty @ set-colors --all "$KITTY_COLORS" >/dev/null 2>&1 || true  # Kitty colors
-# Hyprland: matugen’s post_hook already runs "hyprctl reload"; keep a fallback if you want:
-# hyprctl reload >/dev/null 2>&1 || true
+# nm-applet + swayosd: only restart when theme changed (to avoid needless disruption)
+if [[ "${NEED_REGEN:-0}" -eq 1 ]]; then
+  # nm-applet (kill & start fresh)
+  if pgrep -x nm-applet >/dev/null 2>&1; then pkill -x nm-applet || true; fi
+  ($NM_APPLET_CMD >/dev/null 2>&1 & disown) || true
+
+  # swayosd-server (kill & start fresh; adjust binary name if yours differs)
+  if pgrep -x swayosd-server >/dev/null 2>&1; then pkill -x swayosd-server || true; fi
+  ($SWAYOSD_CMD >/dev/null 2>&1 & disown) || true
+fi
 
 echo "finish"

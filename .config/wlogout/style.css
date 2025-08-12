@@ -15,7 +15,7 @@
 }
 
 window {
-	background: url("/usr/share/wallpapers/cachyos-wallpapers/Skyscraper.png");
+	background-color: @background;
 	background-size: cover;
 	font-size: 16pt;
 

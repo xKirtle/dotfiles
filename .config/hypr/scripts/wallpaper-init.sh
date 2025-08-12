@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# --- config ------------------------------------------------------------------
 DEFAULT_WP="/usr/share/wallpapers/cachyos-wallpapers/Skyscraper.png"  # change me
-CACHE="${HOME}/.cache/current_wallpaper"
-HCONF="${HOME}/.config/hypr/hyprpaper.conf"
+HCONF="${HCONF:-$HOME/.config/hypr/hyprpaper.conf}"
+WPF_FILE="${WPF_FILE:-$HOME/.cache/current_wallpaper}"
 
-mkdir -p "$(dirname "$CACHE")" "$(dirname "$HCONF")"
+mkdir -p -- "$(dirname "$HCONF")" "$(dirname "$WPF_FILE")"
 
-# Ensure hyprpaper has a minimal config so it doesn't crash
+# Ensure minimal hyprpaper.conf exists with IPC on (do NOT embed wallpapers here)
 if [[ ! -s "$HCONF" ]]; then
   cat >"$HCONF" <<'EOF'
 splash = false
@@ -15,77 +16,49 @@ ipc = on
 EOF
 fi
 
-have() { command -v "$1" >/dev/null 2>&1; }
-
-# Start hyprpaper if not running, then wait for IPC to be ready
-if ! pgrep -x hyprpaper >/dev/null; then
+# Ensure hyprpaper is running (IPC requires it)
+if ! pgrep -x hyprpaper >/dev/null 2>&1; then
   hyprpaper & disown
+  # tiny pause so IPC is ready
+  sleep 0.2
 fi
 
-# Wait up to ~2s for IPC (hyprctl hyprpaper list should succeed)
-for i in {1..20}; do
-  if hyprctl hyprpaper list >/dev/null 2>&1; then break; fi
-  sleep 0.1
+# Choose image:
+# 1) previously cached current wallpaper (if file exists),
+# 2) otherwise DEFAULT_WP.
+pick_img() {
+  local img=""
+  if [[ -f "$WPF_FILE" ]]; then
+    img="$(awk 'NF{print; exit}' "$WPF_FILE" 2>/dev/null || true)"
+  fi
+  if [[ -z "$img" || ! -f "$img" ]]; then
+    img="$DEFAULT_WP"
+  fi
+  # normalize to absolute path if possible
+  if rp="$(realpath -m -- "$img" 2>/dev/null)"; then
+    printf '%s\n' "$rp"
+  else
+    printf '%s\n' "$img"
+  fi
+}
+
+IMG="$(pick_img)"
+if [[ -z "$IMG" || ! -f "$IMG" ]]; then
+  echo "[wallpaper-init] No valid wallpaper found (checked $WPF_FILE and DEFAULT_WP). Exiting." >&2
+  exit 0
+fi
+
+# Preload + set on all monitors (best-effort)
+hyprctl hyprpaper preload "$IMG" >/dev/null 2>&1 || true
+hyprctl -j monitors | jq -r '.[].name' | while read -r mon; do
+  [[ -n "$mon" ]] || continue
+  hyprctl hyprpaper wallpaper "$mon,$IMG" >/dev/null 2>&1 || true
 done
 
-# Resolve wallpaper to use (cache or default)
-if [[ -f "$CACHE" ]] && [[ -f "$(cat "$CACHE")" ]]; then
-  WALLPAPER="$(cat "$CACHE")"
-else
-  WALLPAPER="$DEFAULT_WP"
-  printf '%s' "$WALLPAPER" > "$CACHE"
-fi
+# Persist current wallpaper path for later runs
+printf '%s\n' "$IMG" > "$WPF_FILE"
 
-# Preload + assign to every active monitor
-hyprctl hyprpaper preload "$WALLPAPER" >/dev/null 2>&1 || true
+# Hand off to theme-reload (it will decide to skip or regenerate and (re)start panels)
+"$HOME/.config/hypr/scripts/theme-reload.sh"
 
-# Iterate monitors (jq → JSON; fallback → parse text)
-if have jq; then
-  hyprctl -j monitors | jq -r '.[].name' | while read -r mon; do
-    [[ -n "$mon" ]] || continue
-    hyprctl hyprpaper wallpaper "$mon,$WALLPAPER" >/dev/null 2>&1 || true
-  done
-else
-  # hyprctl monitors produces lines like: "Monitor DP-1 (…)"; take the 2nd field
-  hyprctl monitors 2>/dev/null | awk '{print $2}' | while read -r mon; do
-    [[ -n "$mon" ]] || continue
-    hyprctl hyprpaper wallpaper "$mon,$WALLPAPER" >/dev/null 2>&1 || true
-  done
-fi
-
-# Regenerate theme FIRST (Matugen + Wallust + reloads)
-"${HOME}/.config/hypr/scripts/theme-reload.sh"
-
-# ----- App starters (idempotent) ---------------------------------------------
-
-start_or_reload_waybar() {
-  if pgrep -x waybar >/dev/null; then
-    # polite live-reload if already running
-    pkill -SIGUSR2 waybar 2>/dev/null || true
-  else
-    waybar & disown
-  fi
-}
-
-start_or_reload_swaync() {
-  if pgrep -x swaync >/dev/null; then
-    # reload CSS if running
-    swaync-client -rs 2>/dev/null || true
-  else
-    swaync & disown
-  fi
-}
-
-start_once_nm_applet() {
-  # nm-applet advertises as nm-applet; some builds run under different argv
-  pgrep -f 'nm-applet' >/dev/null || nm-applet --indicator & disown
-}
-
-start_once_swayosd() {
-  pgrep -x swayosd-server >/dev/null || swayosd-server & disown
-}
-
-start_or_reload_waybar
-start_or_reload_swaync
-start_once_nm_applet
-start_once_swayosd
+exit 0
