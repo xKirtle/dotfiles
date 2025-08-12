@@ -1,4 +1,5 @@
 # AUR
+firefox
 kitty
 thunar
 
@@ -20,3 +21,15 @@ blueman (waybar)
 network-manager-applet (waybar)
 swaync (waybar)
 checkupdates-with-aur (waybar)
+
+swayosd
+flatpak
+dev.krtirtho.Flemozi (flatpak)
+
+p7zip
+unzip
+unrar
+steam
+discord
+protonup-qt
+heroic-games-launcher
