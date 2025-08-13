@@ -89,6 +89,7 @@ hdparm
 hwdetect
 hwinfo
 hyprland
+hyprlock
 hyprpaper
 inetutils
 inotify-tools
@@ -244,3 +245,7 @@ xorg-xwayland
 
 # flatpak
 dev.krtirtho.Flemozi
+
+
+Export explicit packages:
+pacman -Qqe > ~/pkglist.txt

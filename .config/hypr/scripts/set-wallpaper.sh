@@ -16,9 +16,11 @@ hyprctl -j monitors | jq -r '.[].name' | while read -r mon; do
 done
 
 # Cache the current wallpaper so theme-reload can see it
-WPF_FILE="${WPF_FILE:-$HOME/.cache/current_wallpaper}"
+WPF_FILE="$HOME/.cache/current_wallpaper"
 mkdir -p -- "$(dirname "$WPF_FILE")"
 printf '%s\n' "$IMG" > "$WPF_FILE"
+
+ln -sTfn -- "$IMG" "$HOME/.cache/current_wallpaper.jpg"
 
 # Kick theme reload (it will decide whether to regenerate)
 "$HOME/.config/hypr/scripts/theme-reload.sh"
