@@ -147,9 +147,6 @@ noto-fonts-cjk
 noto-fonts-emoji
 nss-mdns
 ntp
-nvidia
-nvidia-settings
-nvidia-utils
 nwg-look
 octopi
 opencl-nvidia
@@ -188,6 +185,7 @@ sg3_utils
 slurp
 smartmontools
 sof-firmware
+spotify-client
 steam
 stow
 sudo

@@ -17,7 +17,7 @@ log() { printf "\n==> %s\n" "$*"; }
 
 MANIFEST=""
 ALLOW_DOWNGRADES=0
-NONINTERACTIVE=1
+NONINTERACTIVE=0
 
 # ---- args ----
 for arg in "$@"; do
