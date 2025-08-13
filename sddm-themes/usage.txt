@@ -1,0 +1,19 @@
+chmod +x mount-themes.sh
+
+# Non-persistent, read-only (default)
+./mount-themes.sh
+
+# Non-persistent, read-write (good for development)
+./mount-themes.sh --rw
+
+# Persistent (writes /etc/fstab) + mounts now (read-only) (good for installing)
+./mount-themes.sh --persist
+
+# Persistent + read-write (good for more permanent development)
+./mount-themes.sh --persist --rw
+
+# Unmount now (keeps fstab so it remounts on reboot, if it was there)
+./unmount.sh
+
+# Unmount and remove persistence (from fstab)
+./unmount.sh --purge
