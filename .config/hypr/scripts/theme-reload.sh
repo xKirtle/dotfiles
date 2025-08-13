@@ -66,9 +66,9 @@ fi
 
 # swaync: reload if running; otherwise start
 if pgrep -x swaync >/dev/null 2>&1; then
-  swaync > ~/swaync.log 2>&1 || true
+  pkill swaync && swaync & > ~/swaync.log 2>&1 || true
 else
-  ($SWAYNC_CMD > ~/swaync2.log 2>&1 & disown) || true
+  pkill swaync && swaync & > ~/swaync2.log 2>&1 || true
 fi
 
 # nm-applet + swayosd: only restart when theme changed (to avoid needless disruption)

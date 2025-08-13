@@ -183,6 +183,7 @@ rsync
 rtkit
 s-nail
 sddm
+sddm-kcm
 sg3_utils
 slurp
 smartmontools
