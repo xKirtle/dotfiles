@@ -245,7 +245,3 @@ xorg-xwayland
 
 # flatpak
 dev.krtirtho.Flemozi
-
-
-Export explicit packages:
-pacman -Qqe > ~/pkglist.txt
