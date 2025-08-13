@@ -86,6 +86,7 @@ gst-plugins-bad
 gst-plugins-ugly
 haveged
 hdparm
+heroic-games-launcher
 hwdetect
 hwinfo
 hyprland
@@ -166,6 +167,7 @@ plymouth
 polkit-kde-agent
 poppler-glib
 power-profiles-daemon
+protonup-qt
 pv
 python
 python-defusedxml
@@ -198,6 +200,7 @@ swayosd
 sysfsutils
 texinfo
 thunar
+tumbler
 ttf-bitstream-vera
 ttf-dejavu
 ttf-jetbrains-mono-nerd

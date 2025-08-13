@@ -64,12 +64,16 @@ else
   ($WAYBAR_CMD >/dev/null 2>&1 & disown) || true
 fi
 
+echo "1"
+
 # swaync: reload if running; otherwise start
 if pgrep -x swaync >/dev/null 2>&1; then
-  swaync-client -rs >/dev/null 2>&1 || true
+  swaync >/dev/null 2>&1 || true
 else
   ($SWAYNC_CMD >/dev/null 2>&1 & disown) || true
 fi
+
+echo "2"
 
 # nm-applet + swayosd: only restart when theme changed (to avoid needless disruption)
 if [[ "${NEED_REGEN:-0}" -eq 1 ]]; then
