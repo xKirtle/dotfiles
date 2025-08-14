@@ -1,4 +1,2 @@
-Fix swaync dying on theme reload (only sometimes??)
-Auto wallpaper reload (on a given folder) each hour
-SDDM Theme that sync with last used background (maybe impossible?)
+SDDM Theme that sync with last used background (set autosudoer for sddm flag)
 Black out screens when idle for X mins

@@ -74,7 +74,9 @@ firefox
 flatpak
 fsarchiver
 git
+git-credential-manager
 glances
+gnome-keyring
 goverlay
 grimblast-git
 grub
@@ -184,6 +186,7 @@ rtkit
 s-nail
 sddm
 sddm-kcm
+seahorse
 sg3_utils
 slurp
 smartmontools
