@@ -25,10 +25,6 @@
             "type": "uptime"
         },
         {
-            "key": "│ {#37} weather   {#keys}│",
-            "type": "weather"
-        },
-        {
             "key": "│ {#35} kernel    {#keys}│",
             "type": "kernel"
         },
