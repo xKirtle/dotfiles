@@ -91,6 +91,7 @@ hdparm
 heroic-games-launcher
 hwdetect
 hwinfo
+hypridle
 hyprland
 hyprlock
 hyprpaper
@@ -185,7 +186,6 @@ rsync
 rtkit
 s-nail
 sddm
-sddm-kcm
 seahorse
 sg3_utils
 slurp
