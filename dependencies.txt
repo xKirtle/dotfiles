@@ -145,6 +145,7 @@ networkmanager
 networkmanager-openvpn
 nfs-utils
 nilfs-utils
+nodejs
 noto-color-emoji-fontconfig
 noto-fonts
 noto-fonts-cjk
