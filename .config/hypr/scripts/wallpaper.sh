@@ -20,6 +20,8 @@ GDBUS="$(command -v gdbus || true)"
 WAYBAR="$(command -v waybar || true)"
 SWAYNC="$(command -v swaync || true)"
 SWAYNC_CLIENT="$(command -v swaync-client || true)"
+SWAYOSD="$(command -v swayosd-server || true)"
+NMAPPLET="$(command -v nm-applet || true)"
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 log() { printf '[%s] %s\n' "$(date '+%F %T')" "$*"; }
@@ -110,6 +112,30 @@ start_or_reload_waybar() {
   fi
 }
 
+start_or_reload_swayosd() {
+  if pgrep -x swayosd-server >/dev/null; then
+    pkill -SIGUSR2 swayosd-server || true
+    swayosd-server & disown
+  else
+    if [ -n "$SWAYOSD" ]; then
+      log "Starting swayosd…"
+      swayosd-server & disown
+    fi
+  fi
+}
+
+start_or_reload_nmapplet() {
+  if pgrep -x nm-applet >/dev/null; then
+    pkill -SIGUSR2 nm-applet || true
+    nm-applet & disown
+  else
+    if [ -n "$NMAPPLET" ]; then
+      log "Starting nm-applet…"
+      nm-applet & disown
+    fi
+  fi
+}
+
 # ── SDDM (your original behavior) ────────────────────────────────────────────
 update_sddm() {
   local img="$1" force="${2:-0}"
@@ -183,6 +209,8 @@ run_themers "$WP"
 start_or_reload_swaync
 wait_for_notifications_bus || true
 start_or_reload_waybar
+start_or_reload_swayosd
+start_or_reload_nmapplet
 
 update_sddm "$WP" "$FORCE_SDDM"
 
