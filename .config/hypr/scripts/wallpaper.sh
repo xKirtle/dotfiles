@@ -18,7 +18,9 @@ WALLUST="$(command -v wallust || true)"
 SERVICES=( "waybar" "swaync" "nm-applet" "swayosd" )
 
 # Update SDDM background (requires sudoers entry, see note)
-SDDM_BG_TARGET="/usr/share/sddm/themes/red-dragon/background.jpg"  # "" to disable
+SDDM_BG_TARGET="/usr/share/sddm/themes/sddm-astronaut-theme/Backgrounds/dynamic.jpg"
+SDDM_CONF_SOURCE="${HOME}/.config/matugen/sddm.conf"
+SDDM_CONF_TARGET="/usr/share/sddm/themes/sddm-astronaut-theme/Themes/custom.conf"
 
 ### -------------------------------------------------------------------------
 
@@ -55,17 +57,28 @@ ensure_symlink() {
   ln -sfn -- "$img" "$CURRENT_LINK"
 }
 
+# Recommended to create /etc/sudoers.d/wallpaper with:
+# $USER ALL=(ALL) NOPASSWD: /usr/bin/cp * /usr/share/sddm/themes/sddm-astronaut-theme/Backgrounds/dynamic.jpg, /usr/bin/cp * /usr/share/sddm/themes/sddm-astronaut-theme/Themes/custom.conf
 update_sddm() {
   local img="$1" force="${2:-0}"
   [[ -z "${SDDM_BG_TARGET}" && "${force}" != "1" ]] && return 0
   [[ -z "${SDDM_BG_TARGET}" && "${force}" == "1" ]] && \
     log "SDDM disabled in config but forced by --sddm"
 
-  if [[ -n "${SDDM_BG_TARGET}" && "${force}" == "1" ]]; then
-    local target="${SDDM_BG_TARGET:-/usr/share/sddm/themes/mytheme/background.jpg}"
-    log "Updating SDDM background -> ${target}"
-    # Requires sudoers NOPASSWD for this exact cp (recommended).
-    sudo /usr/bin/cp -f -- "$img" "$target"
+  if [[ "${force}" == "1" ]]; then
+    log "Updating SDDM background -> ${SDDM_BG_TARGET}"
+    sudo cp -f -- "$img" "$SDDM_BG_TARGET"
+
+    local src_conf
+    src_conf="$(realpath -e "${HOME}/.config/matugen/sddm.conf")" || {
+      log "Matugen SDDM config not found."
+      return 1
+    }
+
+    log "Updating SDDM theme config -> ${SDDM_CONF_TARGET}"
+    # sudo install -d -m 0755 -- "$(dirname "${SDDM_CONF_TARGET}")"
+    sudo cp -f -- "$src_conf" "$SDDM_CONF_TARGET"
+    rm -f -- "$src_conf"
   fi
 }
 
@@ -244,7 +257,6 @@ process_image() {
 
   ensure_symlink "$img"
   set_hyprpaper_all "$img"
-  update_sddm "$img" "$force_sddm"
 
   if [[ "$FORCE_COLORS" -eq 1 ]] || colors_needed "$img"; then
     log "Colors need update for image."
@@ -257,6 +269,8 @@ process_image() {
     # light-weight reloads to reflect style tweaks if any
     start_or_reload_services
   fi
+
+  update_sddm "$img" "$force_sddm"
 }
 
 pick_random_image() {

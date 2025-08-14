@@ -28,3 +28,7 @@ output_path = '~/.config/wlogout/colors.css'
 [templates.swaync]
 input_path = '~/.config/matugen/templates/colors.css'
 output_path = '~/.config/swaync/colors.css'
+
+[templates.sddm]
+input_path = "~/.config/matugen/templates/sddm.conf"
+output_path = "~/.config/matugen/sddm.conf"
