@@ -123,6 +123,7 @@ docs/.vitepress/devicon
 .config/waybar/colors.css
 .config/wlogout/colors.css
 .config/wofi/style.css
+.config/ohmyposh/colors.json
 
 # Ignore thunar's accel files
 .config/Thunar/accels.scm

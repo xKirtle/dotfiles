@@ -154,6 +154,7 @@ nss-mdns
 ntp
 nwg-look
 octopi
+oh-my-posh
 opencl-nvidia
 opendesktop-fonts
 openssh
