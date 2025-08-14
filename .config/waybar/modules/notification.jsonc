@@ -13,10 +13,16 @@
       "dnd-inhibited-none": ""
     },
     "return-type": "json",
-    "exec-if": "which swaync-client",
+
+    // Only start when the daemon exists, not just the binary
+    "exec-if": "pgrep -x swaync >/dev/null",
+
+    // Swaync client will stream updates; if it dies, Waybar will restart it
     "exec": "swaync-client -swb",
-    "on-click": "swaync-client -t -sw",
-    "on-click-right": "swaync-client -d -sw",
+    "restart-interval": 3,
+
+    "on-click": "pgrep -x swaync >/dev/null || swaync & disown; swaync-client -t -sw",
+    "on-click-right": "pgrep -x swaync >/dev/null || swaync & disown; swaync-client -d -sw",
     "escape": true
   }
 }
