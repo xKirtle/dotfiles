@@ -209,8 +209,8 @@ run_themers "$WP"
 start_or_reload_swaync
 wait_for_notifications_bus || true
 start_or_reload_waybar
-start_or_reload_swayosd
-start_or_reload_nmapplet
+# start_or_reload_swayosd
+# start_or_reload_nmapplet
 
 update_sddm "$WP" "$FORCE_SDDM"
 
