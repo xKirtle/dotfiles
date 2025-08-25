@@ -1,0 +1,7 @@
+{
+  "custom/emojipicker": {
+    "format": "",
+    "tooltip-format": "Open Emoji Picker",
+    "on-click": "flatpak run dev.krtirtho.Flemozi"
+  }
+}

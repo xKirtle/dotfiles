@@ -21,11 +21,12 @@
     "~/.config/waybar/modules/groups.jsonc",
     "~/.config/waybar/modules/tools.jsonc",
     "~/.config/waybar/modules/cliphist.jsonc",
-    "~/.config/waybar/modules/hypridle.jsonc",
     "~/.config/waybar/modules/tray.jsonc",
     "~/.config/waybar/modules/notification.jsonc",
     "~/.config/waybar/modules/exit.jsonc",
-    "~/.config/waybar/modules/gear.jsonc"
+    "~/.config/waybar/modules/gear.jsonc",
+    "~/.config/waybar/modules/emojipicker.jsonc",
+    "~/.config/waybar/modules/hypridle.jsonc"
   ],
 
   // Module placement

@@ -1,5 +1,2 @@
-Remove swayosd and nm-applet initialization from wallpaper script (makes no sense)
-
 Make a real custom sddm instead of using sddm-astronaut-theme
 Add calendar popup when clicking on clock on waybar
-Add emoji picker to waybar stack group

@@ -126,7 +126,8 @@ window#waybar.empty #window {
 #custom-gear,
 #custom-hypridle,
 #custom-tools,
-#custom-hypridle {
+#custom-hypridle,
+#custom-emojipicker {
     margin-right: 16px;
     font-size: 20px;
     font-weight: bold;

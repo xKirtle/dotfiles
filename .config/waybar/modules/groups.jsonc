@@ -1,12 +1,12 @@
 {
-    "group/tools": {
-        "orientation": "inherit",
-        "drawer": {
-        "transition-duration": 300,
-        "children-class": "not-memory",
-        "transition-left-to-right": false,
-        "click-to-reveal": true
-        },
-        "modules": ["custom/tools", "custom/cliphist"]
-    }
+  "group/tools": {
+    "orientation": "inherit",
+    "drawer": {
+    "transition-duration": 300,
+    "children-class": "not-memory",
+    "transition-left-to-right": false,
+    "click-to-reveal": true
+    },
+    "modules": ["custom/tools", "custom/cliphist", "custom/emojipicker", "custom/hypridle"]
+  }
 }

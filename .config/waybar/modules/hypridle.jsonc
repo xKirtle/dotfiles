@@ -1,0 +1,16 @@
+{
+  "custom/hypridle": {
+    "exec": "~/.config/hypr/scripts/hypridle-inhibit.sh --status",
+    "interval": 2,
+    "return-type": "json",
+    "format": "{icon}",
+    "format-icons": [
+      "", // disabled
+      "", // inhibited (media/fullscreen conditions)
+      ""  // active
+    ],
+    "on-click": "~/.config/hypr/scripts/hypridle-inhibit.sh --toggle",
+    "exec-on-event": true,
+    "tooltip": true
+  }
+}
