@@ -3,9 +3,9 @@
 # ─── Zero-width tags per monitor id ────────────────────────────────────────────
 ws_wrap_for_mid() {
   case "$1" in
-    0) printf '\u200B \u200C' ;; # ZWSP / ZWNJ
-    1) printf '\u200D \u2060' ;; # ZWJ / WORD JOINER
-    *) printf '\u200E \u200F' ;; # LRM / RLM
+    0) printf '\u200B\u200C' ;; # ZWSP / ZWNJ
+    1) printf '\u200D\u2060' ;; # ZWJ / WORD JOINER
+    *) printf '\u200E\u200F' ;; # LRM / RLM
   esac
 }
 

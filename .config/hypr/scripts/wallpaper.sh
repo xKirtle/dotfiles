@@ -39,7 +39,7 @@ ensure_hyprpaper() {
   if [ -n "$HYPRPAPER" ]; then
     log "Starting hyprpaper…"
     hyprpaper & disown
-    sleep 0.1
+    sleep 0.2
   else
     log "hyprpaper not found; skipping."
   fi
