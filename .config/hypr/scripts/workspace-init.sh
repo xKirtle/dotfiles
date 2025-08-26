@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Monitor descriptions exactly as in hyprland.conf (without "desc:")
 DESC_A="${1:-LG Electronics LG ULTRAGEAR+ 411NTTQ06481}"
-DESC_B="${2:-LG Electronics LG ULTRAGEAR 310NTCZ6H379}"
+DESC_B="${2:-LG Electronics LG ULTRAGEAR+ 402NTJJB7972}"
 
 LIB="${HOME}/.config/hypr/scripts/workspace-lib.sh"
 source "$LIB"
