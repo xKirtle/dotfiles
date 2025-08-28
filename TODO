@@ -1,2 +1,3 @@
 Make a real custom sddm instead of using sddm-astronaut-theme
 Add calendar popup when clicking on clock on waybar
+Make install script also symlink individual files under ~/.config instead of only folders
