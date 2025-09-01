@@ -7,6 +7,7 @@
     "interval": 1800,
     "signal": 1,
     "hide-empty-text": true,
-    "on-click": "setsid -f kitty -e bash -lc \"$HOME/.config/waybar/scripts/install-updates.sh\""
+    // "on-click": "setsid -f kitty -e bash -lc \"$HOME/.config/waybar/scripts/install-updates.sh\""
+    "on-click": "setsid -f kitty -e ~/dotfiles/go-scripts/aur-updates"
   }
 }
