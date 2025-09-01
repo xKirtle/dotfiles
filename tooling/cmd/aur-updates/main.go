@@ -1,88 +1,58 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/xKirtle/dotfiles/tooling/internal/util"
+	"flag"
 )
 
-// Doesn't update Flatpaks if something goes wrong with AUR updates. Don't really care though.
+type InstallOptions struct {
+	NoBanner  bool
+	AssumeYes bool
+	NoFlatpak bool
+}
+
+type CheckOptions struct {
+	EmitJSON  bool
+	ThrGreen  int
+	ThrYellow int
+	ThrRed    int
+}
+
 func main() {
-	util.ClearScreen()
-	printHeaderBanner("AUR Updates")
+	// Modes
+	modeInstall := flag.Bool("install", false, "Install updates (AUR helper, optional Flatpak, reload Waybar)")
+	modeCheck := flag.Bool("check", false, "Check for updates (default)")
 
-	aurHelper := detectPackageManager()
-	prefix("Detected AUR helper: \u001b[34m" + aurHelper + "\u001b[0m\n")
+	// Install flags
+	noBanner := flag.Bool("no-banner", false, "Do not print figlet banner")
+	assumeYes := flag.Bool("y", false, "Assume Yes (skip confirmation)")
+	noFlatpak := flag.Bool("no-flatpak", false, "Do not run 'flatpak update'")
 
-	promptStartUpdate()
-	util.MustRunInteractive(aurHelper)
-	fmt.Println()
+	// Check flags
+	jsonOut := flag.Bool("json", true, "Emit Waybar JSON output in --check mode")
+	thrGreen := flag.Int("thr-green", 0, "Threshold for green")
+	thrYellow := flag.Int("thr-yellow", 25, "Threshold for yellow")
+	thrRed := flag.Int("thr-red", 100, "Threshold for red")
 
-	if util.HasBinary("flatpak") {
-		prefix("Searching for Flatpak updates...")
-		util.MustRunInteractive("flatpak", "update", "-y")
-		fmt.Println()
+	flag.Parse()
+
+	// Default to --check
+	if !*modeInstall && !*modeCheck {
+		*modeCheck = true
 	}
 
-	if util.HasBinary("pkill") {
-		prefix("Restarting Waybar...")
-		_, _ = util.RunInteractive("pkill", "-RTMIN+1", "waybar")
+	if *modeInstall {
+		RunInstallUpdates(InstallOptions{
+			NoBanner:  *noBanner,
+			AssumeYes: *assumeYes,
+			NoFlatpak: *noFlatpak,
+		})
+		return
 	}
 
-	prefix("Update process complete! Press [ENTER] to close.")
-	_, _ = fmt.Scanln() // wait for enter
-
-}
-
-func printHeaderBanner(text string) {
-	if util.HasBinary("figlet") {
-		util.MustRunInteractive("figlet", "-f", "smslant", text)
-	} else {
-		fmt.Printf("==== %s ====\n", text)
-	}
-
-	fmt.Println()
-}
-
-func promptStartUpdate() {
-	gum := util.MustHaveBinary("gum")
-	code := util.MustRunInteractive(gum, "confirm", "DO YOU WANT TO START THE UPDATE NOW?")
-
-	switch code {
-	case 0:
-		// user confirmed
-		prefix("Starting the update...")
-	case 130:
-		// user cancelled (CTRL+C)
-		util.Fatalf(130, ":: Update cancelled by user")
-	case 1:
-		// user declined
-		util.Fatalf(1, ":: Update declined by user")
-	default:
-		// an error occurred
-		util.Fatalf(code, "%s exited with code %d", gum, code)
-	}
-}
-
-func detectPackageManager() string {
-	// Check if any known (non-graphical) pacman wrappers are installed in order of preference with pacman last as a fallback
-	helpers := []string{"paru", "yay", "pikaur", "trizen", "aurman", "pacaur", "pakku"}
-
-	// Return the first one found
-	for _, helper := range helpers {
-		if util.HasBinary(helper) {
-			return helper
-		}
-	}
-
-	// If none are found, exit with an error
-	util.Fatalf(1, "No AUR helper found. Supported helpers are: %v", helpers)
-	return "" // Unreachable, but required to satisfy the compiler
-}
-
-func prefix(msg string) {
-	const blue = "\u001b[34m"
-	const reset = "\u001b[0m"
-
-	fmt.Printf("%s%s%s %s\n", blue, "::", reset, msg)
+	RunFindUpdates(CheckOptions{
+		EmitJSON:  *jsonOut,
+		ThrGreen:  *thrGreen,
+		ThrYellow: *thrYellow,
+		ThrRed:    *thrRed,
+	})
 }
