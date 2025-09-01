@@ -10,5 +10,4 @@ if [ -d "$HOME/.config/environment.d" ]; then
   set +a
 fi
 
-repo="${DOTFILES:-$HOME/dotfiles/}"
 exec code --new-window ~/dotfiles/
