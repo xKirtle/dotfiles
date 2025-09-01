@@ -11,10 +11,10 @@ type InstallOptions struct {
 }
 
 type CheckOptions struct {
-	EmitJSON  bool
-	ThrGreen  int
-	ThrYellow int
-	ThrRed    int
+	EmitJSON        bool
+	ThresholdGreen  int
+	ThresholdYellow int
+	ThresholdRed    int
 }
 
 func main() {
@@ -29,9 +29,9 @@ func main() {
 
 	// Check flags
 	jsonOut := flag.Bool("json", true, "Emit Waybar JSON output in --check mode")
-	thrGreen := flag.Int("thr-green", 0, "Threshold for green")
-	thrYellow := flag.Int("thr-yellow", 25, "Threshold for yellow")
-	thrRed := flag.Int("thr-red", 100, "Threshold for red")
+	thresholdGreen := flag.Int("thr-green", 0, "Threshold for green")
+	thresholdYellow := flag.Int("thr-yellow", 25, "Threshold for yellow")
+	thresholdRed := flag.Int("thr-red", 100, "Threshold for red")
 
 	flag.Parse()
 
@@ -50,9 +50,9 @@ func main() {
 	}
 
 	RunFindUpdates(CheckOptions{
-		EmitJSON:  *jsonOut,
-		ThrGreen:  *thrGreen,
-		ThrYellow: *thrYellow,
-		ThrRed:    *thrRed,
+		EmitJSON:        *jsonOut,
+		ThresholdGreen:  *thresholdGreen,
+		ThresholdYellow: *thresholdYellow,
+		ThresholdRed:    *thresholdRed,
 	})
 }

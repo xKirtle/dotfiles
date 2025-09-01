@@ -41,15 +41,15 @@ func RunFindUpdates(opts CheckOptions) {
 	}
 
 	class := "green"
-	if n > opts.ThrYellow {
+	if n > opts.ThresholdYellow {
 		class = "yellow"
 	}
-	if n > opts.ThrRed {
+	if n > opts.ThresholdRed {
 		class = "red"
 	}
 
 	if n != 0 {
-		if n > opts.ThrGreen {
+		if n > opts.ThresholdGreen {
 			_ = json.NewEncoder(os.Stdout).Encode(waybarOut{
 				Text:    strconv.Itoa(n),
 				Alt:     strconv.Itoa(n),
@@ -70,7 +70,6 @@ func RunFindUpdates(opts CheckOptions) {
 func waitForLocks() {
 	pacmanLock := "/var/lib/pacman/db.lck"
 
-	// ${TMPDIR:-/tmp}/checkup-db-${UID}/db.lck
 	tmpdir := os.TempDir()
 	checkupLock := filepath.Join(tmpdir, fmt.Sprintf("checkup-db-%d", os.Getuid()), "db.lck")
 
