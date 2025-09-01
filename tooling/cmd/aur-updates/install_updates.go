@@ -52,12 +52,12 @@ func promptStartUpdate() {
 	}
 
 	switch code {
-	case 0:
+	case util.ExitSuccess:
 		// proceed
-	case 130:
-		util.Fatalf(130, "\u001B[34m::\u001B[0m Update cancelled by user")
-	case 1:
-		util.Fatalf(1, "\u001B[34m::\u001B[0m Update declined by user")
+	case util.ExitInterrupted:
+		util.Fatalf(util.ExitInterrupted, "\u001B[34m::\u001B[0m Update cancelled by user")
+	case util.ExitFailure:
+		util.Fatalf(util.ExitFailure, "\u001B[34m::\u001B[0m Update declined by user")
 	default:
 		util.Fatalf(code, "%s exited with code %d", gum, code)
 	}

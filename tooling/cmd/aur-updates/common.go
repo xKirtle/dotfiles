@@ -14,7 +14,7 @@ func detectPackageManager() string {
 			return h
 		}
 	}
-	util.Fatalf(1, "No AUR helper found. Supported helpers are: %v", helpers)
+	util.Fatalf(util.ExitFailure, "No AUR helper found. Supported helpers are: %v", helpers)
 	return "" // unreachable
 }
 

@@ -31,7 +31,7 @@ func RunFindUpdates(opts CheckOptions) {
 
 	n, err := countUpdatesArch()
 	if err != nil {
-		// If tooling missing or some transient error, do not spam Waybar; print nothing.
+		// If tooling missing or some transient error, we print nothing to not spam waybar
 		return
 	}
 
@@ -111,7 +111,7 @@ func countUpdatesArch() (int, error) {
 			count++
 		}
 	}
-	_ = cmd.Wait() // we don't care about its exit code; empty output is 0 updates
+	_ = cmd.Wait() // we don't care about its exit code, empty output is 0 updates
 
 	return count, nil
 }
