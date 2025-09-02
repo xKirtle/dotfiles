@@ -1,3 +1,4 @@
+# paru -Qqe > aur-deps.txt
 7zip
 accountsservice
 adobe-source-han-sans-cn-fonts

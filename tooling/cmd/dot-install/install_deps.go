@@ -74,25 +74,23 @@ func readPackagesList(path string) ([]string, error) {
 
 // installFlatpakDeps installs Flatpak apps listed in manifestPath (one App ID per line).
 // Lines starting with '#' and blanks are ignored.
-// Example manifest lines: org.mozilla.firefox, com.spotify.Client
 func installFlatpakDeps(manifestPath string, interactive bool) error {
-	// 1) Read package list
-	pkgs, err := readPackagesList(manifestPath) // your existing helper; returns []string
+	// Read package list
+	packages, err := readPackagesList(manifestPath) // your existing helper; returns []string
 	if err != nil {
 		return err
 	}
-	if len(pkgs) == 0 {
+	if len(packages) == 0 {
 		util.Prefix("Flatpak manifest is empty — nothing to install.")
 		return nil
 	}
 
-	// 2) Ensure flatpak is available
+	// Ensure flatpak is available
 	if !util.HasBinary("flatpak") {
 		return fmt.Errorf("flatpak not found on PATH")
 	}
 
-	// 3) (Optional) Ensure the flathub remote exists
-	//    Skip if you manage remotes elsewhere. Cheap/robust to keep:
+	// Ensure the flathub remote exists
 	ensureFlathub := func() error {
 		out, _, _ := util.RunCommand("flatpak", "remote-list", "--columns=name")
 		has := false
@@ -120,7 +118,8 @@ func installFlatpakDeps(manifestPath string, interactive bool) error {
 		return err
 	}
 
-	for _, app := range pkgs {
+	// Install
+	for _, app := range packages {
 		args := []string{"install"}
 		if !interactive {
 			args = append(args, "-y")

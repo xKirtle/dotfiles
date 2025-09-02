@@ -1,1 +1,2 @@
+# flatpak list --app --columns=application | tail -n +1 > flatpak-deps.txt
 dev.krtirtho.Flemozi
