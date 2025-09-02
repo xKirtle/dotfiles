@@ -7,7 +7,7 @@
     equalizer, adc_power_management]
   _battery: 4097
   _modelId: 4087C0910000
-  _sensitive: {dpi: true, hires-scroll-mode: ignore, hires-smooth-invert: ignore, hires-smooth-resolution: ignore, rgb_control: true, rgb_zone_1: true,
+  _sensitive: {dpi: ignore, hires-scroll-mode: ignore, hires-smooth-invert: ignore, hires-smooth-resolution: ignore, rgb_control: true, rgb_zone_1: true,
     rgb_zone_2: true}
   _serial: 50E492D5
   _unitId: 50E492D5
