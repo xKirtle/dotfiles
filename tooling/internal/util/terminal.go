@@ -48,3 +48,19 @@ func clearScreenANSI() {
 	// Combining these sequences effectively clears the terminal screen and resets the cursor position
 	fmt.Print("\033[2J\033[H")
 }
+
+func PrintHeaderBanner(text string) {
+	if HasBinary("figlet") {
+		MustRunInteractive("figlet", "-f", "smslant", text)
+	} else {
+		fmt.Printf("==== %s ====\n", text)
+	}
+}
+
+func Prefix(msg string) {
+	const (
+		blue  = "\u001b[34m"
+		reset = "\u001b[0m"
+	)
+	fmt.Printf("%s%s%s %s\n", blue, "::", reset, msg)
+}

@@ -5,12 +5,8 @@ import (
 )
 
 func main() {
-	target, err := util.JoinHome("dotfiles")
-	util.Checkf(err, "failed to get dotfiles path")
-
-	bin := util.MustHaveBinary("code")
-	args := []string{"code", "--new-window", target}
-
-	err = util.Exec(bin, args)
-	util.CheckExec(err, "failed to exec %q", bin)
+	target := util.JoinHome("dotfiles")
+	code := util.MustHaveBinary("code")
+	err := util.Exec(code, "--new-window", target)
+	util.CheckExec(err, "failed to exec %q", code)
 }

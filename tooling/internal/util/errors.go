@@ -11,6 +11,7 @@ import (
 const (
 	ExitSuccess     = 0   // Successful execution
 	ExitFailure     = 1   // General failure
+	ExitMissingArgs = 2   // Not enough arguments provided
 	ExitNotFound    = 127 // Command not found
 	ExitInterrupted = 130 // Script terminated by Control-C
 )

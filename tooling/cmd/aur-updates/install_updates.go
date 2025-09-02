@@ -10,18 +10,18 @@ func RunInstallUpdates(opts InstallOptions) {
 	util.ClearScreen()
 
 	if !opts.NoBanner {
-		printHeaderBanner("AUR Updates")
+		util.PrintHeaderBanner("AUR Updates")
 		fmt.Println()
 	}
 
 	if !opts.AssumeYes {
 		promptStartUpdate()
 	} else {
-		prefix("Starting the update...")
+		util.Prefix("Starting the update...")
 	}
 
-	aurHelper := detectPackageManager()
-	prefix(fmt.Sprintf("Detected AUR helper: \u001b[34m%s\u001b[0m", aurHelper))
+	aurHelper := util.DetectPackageManager()
+	util.Prefix(fmt.Sprintf("Detected AUR helper: \u001b[34m%s\u001b[0m", aurHelper))
 
 	// Run AUR/system update
 	util.MustRunInteractive(aurHelper)
@@ -29,18 +29,18 @@ func RunInstallUpdates(opts InstallOptions) {
 
 	// Flatpak (optional)
 	if !opts.NoFlatpak && util.HasBinary("flatpak") {
-		prefix("Searching for Flatpak updates...")
+		util.Prefix("Searching for Flatpak updates...")
 		util.MustRunInteractive("flatpak", "update", "-y")
 		fmt.Println()
 	}
 
 	// Reload Waybar (best-effort)
 	if util.HasBinary("pkill") {
-		prefix("Restarting Waybar...")
+		util.Prefix("Restarting Waybar...")
 		_, _ = util.RunInteractive("pkill", "-RTMIN+1", "waybar")
 	}
 
-	prefix("Update process complete! Press [ENTER] to close.")
+	util.Prefix("Update process complete! Press [ENTER] to close.")
 	_, _ = fmt.Scanln()
 }
 

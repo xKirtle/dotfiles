@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# nuke-and-stow.sh — Remove existing configs/icons and replace them with symlinks from the repo
+# install.sh — Remove existing configs/icons and replace them with symlinks from the repo
 # Usage:
-#   ./nuke-and-stow.sh [--simulate]
+#   ./install.sh [--simulate]
 #
 # --simulate   Show what would happen without making changes
 #

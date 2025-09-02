@@ -1,3 +1,6 @@
 Make a real custom sddm instead of using sddm-astronaut-theme
 Add calendar popup when clicking on clock on waybar
-Make install script also symlink individual files under ~/.config instead of only folders
+Add README with how to install, use and any other relevant info
+
+paru -Qqe > aur-deps.txt
+flatpak list --app --columns=application | tail -n +1 > flatpak-deps.txt
