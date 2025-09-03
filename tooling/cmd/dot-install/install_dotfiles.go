@@ -4,16 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/xKirtle/dotfiles/tooling/internal/util"
 )
 
-func installDotfiles(simulate bool) {
-	git := util.MustHaveBinary("git")
-	repoDir, _ := util.MustRunCommand(git, "rev-parse", "--show-toplevel")
-	repoDir = strings.TrimSpace(repoDir)
-
+func installDotfiles(repoDir string, simulate bool) {
 	util.PrintHeaderBanner("Install Dotfiles")
 	fmt.Println()
 
@@ -28,7 +23,7 @@ func installDotfiles(simulate bool) {
 func installConfigs(repoDir string, simulate bool) {
 	homeConfig := util.JoinHome(".config")
 	err := util.EnsureDirectory(homeConfig)
-	util.Checkf(err, "Failed to ensure directory: %s", homeConfig)
+	util.Check(err, "Failed to ensure directory: %s", homeConfig)
 
 	util.Prefix("Processing .config subfolders...")
 	repoConfig := filepath.Join(repoDir, ".config")
@@ -39,7 +34,7 @@ func installConfigs(repoDir string, simulate bool) {
 	}
 
 	entries, err := os.ReadDir(repoConfig)
-	util.Checkf(err, "Failed to read directory: %s", repoConfig)
+	util.Check(err, "Failed to read directory: %s", repoConfig)
 
 	for _, entry := range entries {
 		name := entry.Name()
@@ -47,7 +42,7 @@ func installConfigs(repoDir string, simulate bool) {
 		targetPath := filepath.Join(homeConfig, name)
 
 		err := ensureLink(targetPath, sourcePath, simulate)
-		util.Checkf(err, "Failed to link %s -> %s", sourcePath, targetPath)
+		util.Check(err, "Failed to link %s -> %s", sourcePath, targetPath)
 	}
 
 	fmt.Println()
@@ -64,7 +59,7 @@ func installIcons(repoDir string, simulate bool) {
 	homeIcons := util.JoinHome(".icons")
 
 	err := ensureLink(homeIcons, repoIcons, simulate)
-	util.Checkf(err, "Failed to link %s -> %s", repoIcons, homeIcons)
+	util.Check(err, "Failed to link %s -> %s", repoIcons, homeIcons)
 
 	fmt.Println()
 }

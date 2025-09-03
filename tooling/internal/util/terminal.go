@@ -21,14 +21,15 @@ func ClearScreen() {
 
 	// Try using 'tput clear' first, as it respects terminal capabilities
 	if HasBinary("tput") {
-		if _, err := RunInteractive("tput", "clear"); err == nil {
+
+		if _, _, err := RunWith("tput", []string{"clear"}, Interactive()); err == nil {
 			return
 		}
 	}
 
 	// Fallback to 'clear' command if 'tput' is not available
 	if HasBinary("clear") {
-		if _, err := RunInteractive("clear"); err == nil {
+		if _, _, err := RunWith("clear", nil, Interactive()); err == nil {
 			return
 		}
 	}
@@ -51,7 +52,7 @@ func clearScreenANSI() {
 
 func PrintHeaderBanner(text string) {
 	if HasBinary("figlet") {
-		MustRunInteractive("figlet", "-f", "smslant", text)
+		MustRunWith("figlet", []string{"-f", "smslant", text}, Interactive())
 	} else {
 		fmt.Printf("==== %s ====\n", text)
 	}

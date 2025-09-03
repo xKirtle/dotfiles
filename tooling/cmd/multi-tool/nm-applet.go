@@ -10,9 +10,8 @@ func nmApplet() {
 	util.MustHaveBinary("nm-applet")
 	if util.IsProcessRunningByName("nm-applet") {
 		_, _, err := util.KillProcessByName("nm-applet", 500*time.Millisecond, false)
-		util.Checkf(err, "Failed to kill nm-applet")
+		util.Check(err, "Failed to kill nm-applet")
 	} else {
-		err := util.RunCommandDetached("nm-applet", "--indicator")
-		util.Checkf(err, "Failed to start nm-applet")
+		util.MustRunWith("nm-applet", []string{"--indicator"}, util.Detached())
 	}
 }

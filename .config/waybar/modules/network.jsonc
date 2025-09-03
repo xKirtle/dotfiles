@@ -10,6 +10,6 @@
     "tooltip-format-disconnected": "Disconnected",
     "max-length": 50,
     "on-click": "nm-connection-editor",
-    "on-click-right": "~/.config/waybar/scripts/nm-applet.sh toggle"
+    "on-click-right": "~/dotfiles/go-scripts/multi-tool nm-applet"
   }
 }

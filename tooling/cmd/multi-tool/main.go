@@ -35,11 +35,14 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Printf(`Usage: %s <command> [args...]
+	fmt.Printf(`Usage: multi-tool <command> [args...]
 
 Commands:
-  nm-applet       Launch NetworkManager applet (nm-applet)
-  power <action>  Perform a power action (exit, lock, reboot, shutdown, suspend, hibernate)
-  wlogout        Launch the logout menu (wlogout)
-`, os.Args[0])
+  nm-applet             Toggles the NetworkManager applet in the system tray
+  power <action>        Perform a power action (exit, lock, reboot, shutdown, suspend, hibernate)
+  wlogout               Launch the logout menu
+  open-dotfiles         Open the dotfiles directory in VSCode
+  clip-history [d|w]    Show clipboard history menu (d: delete entry, w: wipe all entries, no arg: copy entry to clipboard)
+
+`)
 }

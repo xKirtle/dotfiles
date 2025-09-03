@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ const (
 	ExitSuccess     = 0   // Successful execution
 	ExitFailure     = 1   // General failure
 	ExitMissingArgs = 2   // Not enough arguments provided
+	ExitTimeout     = 124 // Command timed out (like GNU timeout)
 	ExitNotFound    = 127 // Command not found
 	ExitInterrupted = 130 // Script terminated by Control-C
 )
@@ -23,27 +25,25 @@ func Fatalf(code int, format string, args ...any) {
 	os.Exit(code)
 }
 
-// Checkf adds context and exits if err != nil
-func Checkf(err error, format string, args ...any) {
+// Check maps common error kinds to shell-like exit codes and exits.
+func Check(err error, context string, args ...any) {
 	if err == nil {
 		return
 	}
-	msg := fmt.Sprintf(format, args...)
-	Fatalf(ExitFailure, "%s: %v", msg, err)
+	msg := fmt.Sprintf(context, args...)
+	Fatalf(classifyExitCode(err), "%s: %v", msg, err)
 }
 
-// CheckExec maps common exec errors to shell-like exit codes
-func CheckExec(err error, context string, args ...any) {
-	if err == nil {
-		return
-	}
-
+// classifyExitCode centralizes the policy for exit codes.
+func classifyExitCode(err error) int {
 	switch {
 	case errors.Is(err, exec.ErrNotFound):
-		msg := fmt.Sprintf(context, args...)
-		Fatalf(ExitNotFound, "%s: %v", msg, err)
+		return ExitNotFound
+	case errors.Is(err, context.DeadlineExceeded):
+		return ExitTimeout
+	case errors.Is(err, context.Canceled):
+		return ExitInterrupted
 	default:
-		msg := fmt.Sprintf(context, args...)
-		Fatalf(ExitFailure, "%s: %v", msg, err)
+		return ExitFailure
 	}
 }

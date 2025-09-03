@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -48,43 +49,40 @@ func printClipboardHistoryUsage() {
   (no arg): copy selected entry to clipboard`)
 }
 
-func wofiPickItem(prompt string, lines int, styleFlag []string) string {
-	clipHistList, _ := util.MustRunCommand("cliphist", "list")
+func wofiPickItem(prompt string, lines int, styleFlag []string) []byte {
+	list, _ := util.MustRunWith("cliphist", []string{"list"}, util.CaptureOutput())
 	wofiArgs := getWofiArgs(prompt, lines, styleFlag)
-	out, _ := util.MustRunCommandWithInput(clipHistList, "wofi", wofiArgs...)
+	sel, _ := util.MustRunWith("wofi", wofiArgs, util.WithInputBytes(list), util.CaptureOutput())
 
-	return strings.TrimSpace(out)
+	return bytes.TrimSpace(sel)
 }
 
 func wofiCopyItem(styleFlag []string) {
 	util.MustHaveBinary("wl-copy")
 
 	sel := wofiPickItem("Clipboard", 20, styleFlag)
-	if sel == "" {
-		os.Exit(util.ExitSuccess)
+	if len(sel) == 0 {
+		return // no selection or cancelled, exit silently
 	}
 
-	// Decode in bytes to preserve images/files
-	decoded, _ := util.MustRunCommandBytesWithInput([]byte(sel), "cliphist", "decode")
-	util.MustRunInteractiveBytesWithInput(decoded, true, "wl-copy")
+	decoded, _ := util.MustRunWith("cliphist", []string{"decode"}, util.WithInputBytes(sel), util.CaptureOutput())
+	util.MustRunWith("wl-copy", nil, util.WithInputBytes(decoded), util.Interactive(), util.DropStderr())
 }
 
 func wofiDeleteItem(styleFlag []string) {
 	sel := wofiPickItem("Delete clipboard entry", 20, styleFlag)
-	if sel == "" {
-		os.Exit(util.ExitSuccess)
+	if len(sel) == 0 {
+		return // no selection or cancelled, exit silently
 	}
 
-	util.MustRunCommandWithInput(sel, "cliphist", "delete")
+	util.MustRunWith("cliphist", []string{"delete"}, util.WithInputBytes(sel))
 }
 
 func wofiWipeAllEntries(styleFlag []string) {
 	wofiArgs := getWofiArgs("Wipe Clipboard History", 2, styleFlag)
-	out, _ := util.MustRunCommandWithInput("Wipe All\nCancel\n", "wofi", wofiArgs...)
-	out = strings.TrimSpace(out)
-
-	if out == "Wipe All" {
-		util.MustRunCommand("cliphist", "wipe")
+	out, _ := util.MustRunWith("wofi", wofiArgs, util.WithInputString("Wipe All\nCancel\n"), util.CaptureOutput())
+	if strings.TrimSpace(string(out)) == "Wipe All" {
+		util.MustRun("cliphist", "wipe")
 	}
 }
 

@@ -23,34 +23,34 @@ func power(args []string) {
 		util.Prefix("Exit")
 		terminateClients(5 * time.Second)
 		util.MustHaveBinary("hyprctl")
-		util.MustRunInteractive("hyprctl", "dispatch", "exit")
+		util.MustRunWith("hyprctl", []string{"dispatch", "exit"}, util.Detached())
 
 	case "lock":
 		util.Prefix("Lock")
 		util.MustHaveBinary("hyprlock")
-		util.MustRunInteractive("hyprlock")
+		util.MustRunWith("hyprlock", nil, util.Detached())
 
 	case "reboot":
 		util.Prefix("Reboot")
 		terminateClients(5 * time.Second)
 		util.MustHaveBinary("systemctl")
-		util.MustRunInteractive("systemctl", "reboot")
+		util.MustRunWith("systemctl", []string{"reboot"}, util.Detached())
 
 	case "shutdown":
 		util.Prefix("Shutdown")
 		terminateClients(5 * time.Second)
 		util.MustHaveBinary("systemctl")
-		util.MustRunInteractive("systemctl", "poweroff")
+		util.MustRunWith("systemctl", []string{"poweroff"}, util.Detached())
 
 	case "suspend":
 		util.Prefix("Suspend")
 		util.MustHaveBinary("systemctl")
-		util.MustRunInteractive("systemctl", "suspend")
+		util.MustRunWith("systemctl", []string{"suspend"}, util.Detached())
 
 	case "hibernate":
 		util.Prefix("Hibernate")
 		util.MustHaveBinary("systemctl")
-		util.MustRunInteractive("systemctl", "hibernate")
+		util.MustRunWith("systemctl", []string{"hibernate"}, util.Detached())
 
 	default:
 		fmt.Printf("Unknown power action: %s\n\n", args[0])
@@ -91,8 +91,8 @@ func extractClientPIDs(jsonBlob string) []int {
 }
 
 func terminateClients(timeout time.Duration) {
-	out, _ := util.MustRunCommand("hyprctl", "clients", "-j")
-	pids := extractClientPIDs(out)
+	out, _ := util.MustRunWith("hyprctl", []string{"clients", "-j"}, util.CaptureOutput())
+	pids := extractClientPIDs(string(out))
 	if len(pids) == 0 {
 		return
 	}

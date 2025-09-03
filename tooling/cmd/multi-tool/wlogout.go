@@ -22,14 +22,14 @@ func wlogout() {
 	out, err := exec.Command("hyprctl", "-j", "monitors").Output()
 	if err != nil {
 		_, err := fmt.Fprintf(os.Stderr, "failed to run hyprctl: %v\n", err)
-		util.Checkf(err, "failed to write to stderr")
+		util.Check(err, "failed to write to stderr")
 		os.Exit(util.ExitFailure)
 	}
 
 	var mons []monitor
 	if err := json.Unmarshal(out, &mons); err != nil {
 		_, err := fmt.Fprintf(os.Stderr, "invalid hyprctl JSON: %v\n", err)
-		util.Checkf(err, "failed to write to stderr")
+		util.Check(err, "failed to write to stderr")
 		os.Exit(util.ExitFailure)
 	}
 
@@ -43,13 +43,13 @@ func wlogout() {
 
 	if m == nil {
 		_, err := fmt.Fprintln(os.Stderr, "no focused monitor found")
-		util.Checkf(err, "failed to write to stderr")
+		util.Check(err, "failed to write to stderr")
 		os.Exit(util.ExitFailure)
 	}
 
 	if m.Scale == 0 {
 		_, err := fmt.Fprintln(os.Stderr, "monitor scale is zero (unexpected)")
-		util.Checkf(err, "failed to write to stderr")
+		util.Check(err, "failed to write to stderr")
 		os.Exit(util.ExitFailure)
 	}
 
@@ -63,7 +63,7 @@ func wlogout() {
 
 	if err := cmd.Run(); err != nil {
 		_, err := fmt.Fprintf(os.Stderr, "failed to run wlogout: %v\n", err)
-		util.Checkf(err, "failed to write to stderr")
+		util.Check(err, "failed to write to stderr")
 		os.Exit(util.ExitFailure)
 	}
 }

@@ -30,14 +30,11 @@ func installAurDeps(manifestPath string, interactive bool) error {
 	}
 	args = append(args, packages...)
 
-	// Let output stream to the terminal (prompts, progress, errors).
-	code, runErr := util.RunInteractive(helper, args...)
-	if runErr != nil {
-		util.CheckExec(runErr, "running %s %v", helper, packages)
-	}
+	_, code := util.MustRunWith(helper, args, util.Interactive())
 	if code != 0 {
 		return fmt.Errorf("%s exited with code %d", helper, code)
 	}
+
 	return nil
 }
 
@@ -60,15 +57,19 @@ func readPackagesList(path string) ([]string, error) {
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
+
 		if _, ok := seen[line]; ok {
 			continue
 		}
+
 		seen[line] = struct{}{}
 		out = append(out, line)
 	}
+
 	if err := sc.Err(); err != nil {
 		return nil, fmt.Errorf("read manifest: %w", err)
 	}
+
 	return out, nil
 }
 
@@ -92,9 +93,10 @@ func installFlatpakDeps(manifestPath string, interactive bool) error {
 
 	// Ensure the flathub remote exists
 	ensureFlathub := func() error {
-		out, _, _ := util.RunCommand("flatpak", "remote-list", "--columns=name")
+		out, _ := util.MustRunWith("flatpak", []string{"remote-list", "--columns=name"}, util.CaptureOutput())
+
 		has := false
-		for _, line := range strings.Split(out, "\n") {
+		for _, line := range strings.Split(string(out), "\n") {
 			if strings.TrimSpace(line) == "flathub" {
 				has = true
 				break
@@ -103,17 +105,17 @@ func installFlatpakDeps(manifestPath string, interactive bool) error {
 		if has {
 			return nil
 		}
+
 		util.Prefix("Adding Flathub remote…")
-		code, runErr := util.RunInteractive("flatpak", "remote-add", "--if-not-exists",
-			"flathub", "https://flathub.org/repo/flathub.flatpakrepo")
-		if runErr != nil {
-			return runErr
-		}
+		_, code := util.MustRunWith("flatpak", []string{"remote-add", "--if-not-exists"}, util.Interactive())
+
 		if code != 0 {
 			return fmt.Errorf("flatpak remote-add exited with code %d", code)
 		}
+
 		return nil
 	}
+
 	if err := ensureFlathub(); err != nil {
 		return err
 	}
@@ -124,14 +126,10 @@ func installFlatpakDeps(manifestPath string, interactive bool) error {
 		if !interactive {
 			args = append(args, "-y")
 		}
-		args = append(args, "flathub", app)
 
+		args = append(args, "flathub", app)
 		util.Prefix("Installing " + app + "…")
-		code, runErr := util.RunInteractive("flatpak", args...)
-		if runErr != nil {
-			fmt.Printf("flatpak install %s failed: %v\n", app, runErr)
-			continue
-		}
+		_, code := util.MustRunWith("flatpak", args, util.Interactive())
 		if code != 0 {
 			fmt.Printf("flatpak install %s exited with %d\n", app, code)
 			continue

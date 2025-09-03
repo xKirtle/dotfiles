@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/xKirtle/dotfiles/tooling/internal/util"
+	"golang.org/x/sys/unix"
 )
 
 func RunInstallUpdates(opts InstallOptions) {
@@ -24,20 +25,22 @@ func RunInstallUpdates(opts InstallOptions) {
 	util.Prefix(fmt.Sprintf("Detected AUR helper: \u001b[34m%s\u001b[0m", aurHelper))
 
 	// Run AUR/system update
-	util.MustRunInteractive(aurHelper)
+	util.MustRunWith(aurHelper, nil, util.Interactive())
+
 	fmt.Println()
 
 	// Flatpak (optional)
 	if !opts.NoFlatpak && util.HasBinary("flatpak") {
 		util.Prefix("Searching for Flatpak updates...")
-		util.MustRunInteractive("flatpak", "update", "-y")
+		util.MustRunWith("flatpak", []string{"update", "-y"}, util.Interactive())
 		fmt.Println()
 	}
 
 	// Reload Waybar (best-effort)
 	if util.HasBinary("pkill") {
 		util.Prefix("Restarting Waybar...")
-		_, _ = util.RunInteractive("pkill", "-RTMIN+1", "waybar")
+		const SIGRTMIN1 = unix.Signal(35) // usually SIGRTMIN+1
+		_ = util.SignalByName("waybar", SIGRTMIN1)
 	}
 
 	util.Prefix("Update process complete! Press [ENTER] to close.")
@@ -45,11 +48,8 @@ func RunInstallUpdates(opts InstallOptions) {
 }
 
 func promptStartUpdate() {
-	gum := util.MustHaveBinary("gum")
-	code, err := util.RunInteractive(gum, "confirm", "DO YOU WANT TO START THE UPDATE NOW?")
-	if err != nil {
-		util.CheckExec(err, "launching gum confirm")
-	}
+	util.MustHaveBinary("gum")
+	_, code := util.MustRunWith("gum", []string{"confirm", "DO YOU WANT TO START THE UPDATE NOW?"}, util.Interactive())
 
 	switch code {
 	case util.ExitSuccess:
@@ -59,6 +59,6 @@ func promptStartUpdate() {
 	case util.ExitFailure:
 		util.Fatalf(util.ExitFailure, "\u001B[34m::\u001B[0m Update declined by user")
 	default:
-		util.Fatalf(code, "%s exited with code %d", gum, code)
+		util.Fatalf(code, "gum exited with code %d", code)
 	}
 }

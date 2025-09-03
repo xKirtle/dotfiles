@@ -29,9 +29,9 @@ func main() {
 	runFlatpak := *doDepsFlatpak || *doAll
 	runDotfiles := *doDotfiles || *doAll
 
-	git := util.MustHaveBinary("git")
-	repoDir, _ := util.MustRunCommand(git, "rev-parse", "--show-toplevel")
-	repoDir = strings.TrimSpace(repoDir)
+	util.MustHaveBinary("git")
+	repoDirByteArray, _ := util.MustRunWith("git", []string{"rev-parse", "--show-toplevel"}, util.CaptureOutput())
+	repoDir := strings.TrimSpace(string(repoDirByteArray))
 
 	if runAur {
 		aurDepsManifest := filepath.Join(repoDir, "/aur-deps.txt")
@@ -54,6 +54,6 @@ func main() {
 	}
 
 	if runDotfiles {
-		installDotfiles(*simulate)
+		installDotfiles(repoDir, *simulate)
 	}
 }
