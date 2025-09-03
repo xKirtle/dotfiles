@@ -60,7 +60,7 @@ func power(args []string) {
 }
 
 func printPowerUsage() {
-	fmt.Println("Usage: waybar-utils power <exit|lock|reboot|shutdown|suspend|hibernate>")
+	fmt.Println("Usage: multi-tool power <exit|lock|reboot|shutdown|suspend|hibernate>")
 }
 
 func extractClientPIDs(jsonBlob string) []int {

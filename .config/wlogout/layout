@@ -1,30 +1,30 @@
 {
     "label" : "lock",
-    "action" : "~/dotfiles/go-scripts/waybar-utils power lock",
+    "action" : "~/dotfiles/go-scripts/multi-tool power lock",
     "text" : "Lock",
     "keybind" : "l"
 }
 {
     "label" : "logout",
-    "action" : "~/dotfiles/go-scripts/waybar-utils power exit",
+    "action" : "~/dotfiles/go-scripts/multi-tool power exit",
     "text" : "Log Out",
     "keybind" : "e"
 }
 {
     "label" : "suspend",
-    "action" : "~/dotfiles/go-scripts/waybar-utils power suspend",
+    "action" : "~/dotfiles/go-scripts/multi-tool power suspend",
     "text" : "Suspend",
     "keybind" : "u"
 }
 {
     "label" : "reboot",
-    "action" : "~/dotfiles/go-scripts/waybar-utils power reboot",
+    "action" : "~/dotfiles/go-scripts/multi-tool power reboot",
     "text" : "Restart",
     "keybind" : "r"
 }
 {
     "label" : "shutdown",
-    "action" : "~/dotfiles/go-scripts/waybar-utils power shutdown",
+    "action" : "~/dotfiles/go-scripts/multi-tool power shutdown",
     "text" : "Power Off",
     "keybind" : "s"
 }
