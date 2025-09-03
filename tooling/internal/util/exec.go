@@ -71,7 +71,151 @@ func MustRunCommand(bin string, args ...string) (string, int) {
 	if err != nil {
 		CheckExec(err, "running %s %v", bin, args)
 	}
+
 	return out, code
+}
+
+// RunCommandWithInput runs a command with the given input string as stdin and captures stdout+stderr
+// Returns (output, exitCode, error):
+//   - output: combined stdout+stderr
+//   - exitCode: 0 if success, non-zero if program failed, -1 if could not start
+//   - err: non-nil only if the process could not be started at all
+func RunCommandWithInput(input string, bin string, args ...string) (string, int, error) {
+	cmd := exec.Command(bin, args...)
+
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	cmd.Stdin = strings.NewReader(input)
+
+	err := cmd.Run()
+	output := buf.String()
+
+	if err == nil {
+		return output, 0, nil
+	}
+
+	var ee *exec.ExitError
+	if errors.As(err, &ee) {
+		return output, ee.ExitCode(), nil
+	}
+
+	return output, -1, err
+}
+
+// MustRunCommandWithInput is the fatal-on-failure wrapper for RunCommandWithInput
+func MustRunCommandWithInput(input string, bin string, args ...string) (string, int) {
+	out, code, err := RunCommandWithInput(input, bin, args...)
+	if err != nil {
+		CheckExec(err, "running %s %v", bin, args)
+	}
+
+	return out, code
+}
+
+// RunInteractiveWithInput runs bin/args with stdin=input and inherits stdio.
+// If dropStderr is true, stderr goes to /dev/null (useful for wl-copy).
+func RunInteractiveWithInput(input string, dropStderr bool, bin string, args ...string) (int, error) {
+	cmd := exec.Command(bin, args...)
+	cmd.Stdin = strings.NewReader(input)
+	cmd.Stdout = os.Stdout
+
+	if dropStderr {
+		f, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+		if err != nil {
+			return -1, err
+		}
+		defer f.Close()
+		cmd.Stderr = f
+	} else {
+		cmd.Stderr = os.Stderr
+	}
+
+	if err := cmd.Run(); err != nil {
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			return ee.ExitCode(), nil
+		}
+		return -1, err
+	}
+	return 0, nil
+}
+
+// MustRunInteractiveWithInput is the fatal-on-failure variant.
+func MustRunInteractiveWithInput(input string, dropStderr bool, bin string, args ...string) int {
+	code, err := RunInteractiveWithInput(input, dropStderr, bin, args...)
+	if err != nil {
+		CheckExec(err, "running %s %v", bin, args)
+	}
+	return code
+}
+
+// RunCommandBytesWithInput is like RunCommandWithInput but uses []byte for input and output.
+// Returns (output, exitCode, error):
+//   - output: combined stdout+stderr
+//   - exitCode: 0 if success, non-zero if program failed, -1 if could not start
+//   - err: non-nil only if the process could not be started at all
+func RunCommandBytesWithInput(input []byte, bin string, args ...string) ([]byte, int, error) {
+	cmd := exec.Command(bin, args...)
+	cmd.Stdin = bytes.NewReader(input)
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	err := cmd.Run()
+	if err == nil {
+		return buf.Bytes(), 0, nil
+	}
+	var ee *exec.ExitError
+	if errors.As(err, &ee) {
+		return buf.Bytes(), ee.ExitCode(), nil
+	}
+	return buf.Bytes(), -1, err
+}
+
+// MustRunCommandBytesWithInput is the fatal-on-failure wrapper for RunCommandBytesWithInput.
+func MustRunCommandBytesWithInput(input []byte, bin string, args ...string) ([]byte, int) {
+	out, code, err := RunCommandBytesWithInput(input, bin, args...)
+	if err != nil {
+		CheckExec(err, "running %s %v", bin, args)
+	}
+	return out, code
+}
+
+// RunInteractiveBytesWithInput runs bin/args with stdin=data and inherits stdio.
+// If dropStderr is true, stderr goes to /dev/null (helps wl-copy fully detach).
+func RunInteractiveBytesWithInput(data []byte, dropStderr bool, bin string, args ...string) (int, error) {
+	cmd := exec.Command(bin, args...)
+	cmd.Stdin = bytes.NewReader(data)
+	cmd.Stdout = os.Stdout
+
+	if dropStderr {
+		f, err := os.OpenFile(os.DevNull, os.O_WRONLY, 0)
+		if err != nil {
+			return -1, err
+		}
+		defer f.Close()
+		cmd.Stderr = f
+	} else {
+		cmd.Stderr = os.Stderr
+	}
+
+	if err := cmd.Run(); err != nil {
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			return ee.ExitCode(), nil
+		}
+		return -1, err
+	}
+	return 0, nil
+}
+
+// MustRunInteractiveBytesWithInput is the fatal-on-failure variant.
+func MustRunInteractiveBytesWithInput(data []byte, dropStderr bool, bin string, args ...string) int {
+	code, err := RunInteractiveBytesWithInput(data, dropStderr, bin, args...)
+	if err != nil {
+		CheckExec(err, "running %s %v", bin, args)
+	}
+	return code
 }
 
 // RunInteractive runs a command with stdin/stdout/stderr bound to the current process.

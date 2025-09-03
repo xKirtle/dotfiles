@@ -25,6 +25,8 @@ func main() {
 		wlogout()
 	case "open-dotfiles":
 		openDotfiles()
+	case "clip-history":
+		clipboardHistory(args)
 	default:
 		fmt.Printf("Unknown command: %s\n\n", cmd)
 		printUsage()

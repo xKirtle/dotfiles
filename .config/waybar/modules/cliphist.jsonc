@@ -1,9 +1,9 @@
 {
   "custom/cliphist": {
     "format": "",
-    "on-click": "sleep 0.1 && ~/.config/hypr/scripts/cliphist.sh",
-    "on-click-right": "sleep 0.1 && ~/.config/hypr/scripts/cliphist.sh d",
-    "on-click-middle": "sleep 0.1 && ~/.config/hypr/scripts/cliphist.sh w",
+    "on-click": "sleep 0.1 && ~/dotfiles/go-scripts/multi-tool clip-history",
+    "on-click-right": "sleep 0.1 && ~/dotfiles/go-scripts/multi-tool clip-history d",
+    "on-click-middle": "sleep 0.1 && ~/dotfiles/go-scripts/multi-tool clip-history w",
     "tooltip-format": "Left: Open clipboard Manager\nRight: Delete an entry\nMiddle: Clear list"
   }
 }
