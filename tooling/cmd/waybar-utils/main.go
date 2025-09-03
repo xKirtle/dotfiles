@@ -18,7 +18,7 @@ func main() {
 
 	switch cmd {
 	case "nm-applet":
-		nmApplet(args)
+		nmApplet()
 	case "power":
 		power(args)
 	case "wlogout":
@@ -31,5 +31,11 @@ func main() {
 }
 
 func printUsage() {
+	fmt.Printf(`Usage: %s <command> [args...]
 
+Commands:
+  nm-applet       Launch NetworkManager applet (nm-applet)
+  power <action>  Perform a power action (exit, lock, reboot, shutdown, suspend, hibernate)
+  wlogout        Launch the logout menu (wlogout)
+`, os.Args[0])
 }
