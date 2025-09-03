@@ -1,10 +1,8 @@
 package main
 
-import (
-	"github.com/xKirtle/dotfiles/tooling/internal/util"
-)
+import "github.com/xKirtle/dotfiles/tooling/internal/util"
 
-func main() {
+func openDotfiles() {
 	target := util.JoinHome("dotfiles")
 	code := util.MustHaveBinary("code")
 	err := util.Exec(code, "--new-window", target)

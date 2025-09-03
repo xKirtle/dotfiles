@@ -23,6 +23,8 @@ func main() {
 		power(args)
 	case "wlogout":
 		wlogout()
+	case "open-dotfiles":
+		openDotfiles()
 	default:
 		fmt.Printf("Unknown command: %s\n\n", cmd)
 		printUsage()

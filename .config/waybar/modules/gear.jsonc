@@ -3,6 +3,6 @@
     "format": "",
     "tooltip": false,
 //    "on-click": "~/.config/waybar/scripts/code-open-dotfiles.sh"
-    "on-click": "~/dotfiles/go-scripts/open-dotfiles"
+    "on-click": "~/dotfiles/go-scripts/waybar-utils open-dotfiles"
   }
 }
