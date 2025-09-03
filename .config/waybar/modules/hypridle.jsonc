@@ -1,6 +1,7 @@
 {
   "custom/hypridle": {
-    "exec": "~/.config/hypr/scripts/hypridle-inhibit.sh --status",
+//    "exec": "~/.config/hypr/scripts/hypridle-inhibit.sh --status",
+    "exec": "~/dotfiles/go-scripts/hypridle-inhibit --status",
     "interval": 2,
     "return-type": "json",
     "format": "{icon}",
@@ -9,7 +10,8 @@
       "", // inhibited (media/fullscreen conditions)
       ""  // active
     ],
-    "on-click": "~/.config/hypr/scripts/hypridle-inhibit.sh --toggle",
+//    "on-click": "~/.config/hypr/scripts/hypridle-inhibit.sh --toggle",
+    "on-click": "~/dotfiles/go-scripts/hypridle-inhibit --toggle",
     "exec-on-event": true,
     "tooltip": true
   }
