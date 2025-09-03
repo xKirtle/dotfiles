@@ -5,7 +5,11 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
+	"time"
 )
 
 // Exec replaces the current process (handoff)
@@ -100,4 +104,145 @@ func MustRunInteractive(bin string, args ...string) int {
 		CheckExec(err, "running %s %v", bin, args)
 	}
 	return code
+}
+
+func findPIDsByName(name string) ([]int, error) {
+	entries, err := os.ReadDir("/proc")
+	if err != nil {
+		return nil, err
+	}
+
+	useCmdline := len(name) > 15
+	var pids []int
+
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+
+		pidStr := e.Name()
+		pid, err := strconv.Atoi(pidStr)
+		if err != nil {
+			continue // skip non-numeric
+		}
+
+		if useCmdline {
+			data, err := os.ReadFile(filepath.Join("/proc", pidStr, "cmdline"))
+			if err != nil || len(data) == 0 {
+				continue
+			}
+
+			cmdline := strings.ReplaceAll(string(data), "\x00", " ")
+			if strings.Contains(cmdline, name) {
+				pids = append(pids, pid)
+			}
+		} else {
+			data, err := os.ReadFile(filepath.Join("/proc", pidStr, "comm"))
+			if err != nil {
+				continue
+			}
+
+			comm := strings.TrimSpace(string(data))
+			if comm == name {
+				pids = append(pids, pid)
+			}
+		}
+	}
+	return pids, nil
+}
+
+// IsProcessRunningByName checks if a process with the given name is running.
+//   - If name <= 15 chars: checks against /proc/<pid>/comm (fast, exact match).
+//   - If name > 15 chars: falls back to /proc/<pid>/cmdline (full command line).
+//
+// Avoids relying on external commands like pgrep, which may not be available.
+func IsProcessRunningByName(name string) bool {
+	pids, err := findPIDsByName(name)
+	if err != nil {
+		return false
+	}
+
+	return len(pids) > 0
+}
+
+// KillProcessByName is a convenience wrapper around KillPIDs.
+func KillProcessByName(name string, timeout time.Duration, force bool) (int, int, error) {
+	pids, err := findPIDsByName(name) // your hybrid comm/cmdline finder
+	if err != nil {
+		return 0, 0, err
+	}
+	term, kill := KillPIDs(pids, timeout, force)
+	return term, kill, nil
+}
+
+// KillPIDs sends SIGTERM to the given PIDs, waits up to timeout for exit,
+// and if force==true, SIGKILLs any survivors at the end.
+// Returns (terminatedOrGone, killedAfterTimeout).
+func KillPIDs(pids []int, timeout time.Duration, force bool) (int, int) {
+	if len(pids) == 0 {
+		return 0, 0
+	}
+	self := os.Getpid()
+
+	// First pass: TERM
+	termCount := 0
+	for _, pid := range pids {
+		if pid == self {
+			continue
+		}
+		if err := syscall.Kill(pid, syscall.SIGTERM); err == nil || errors.Is(err, syscall.ESRCH) {
+			termCount++
+		}
+	}
+
+	// Wait up to timeout
+	deadline := time.Now().Add(timeout)
+	alive := make([]int, 0, len(pids))
+	for {
+		alive = alive[:0]
+		for _, pid := range pids {
+			if pid == self {
+				continue
+			}
+			if err := syscall.Kill(pid, 0); err == nil {
+				alive = append(alive, pid)
+			}
+		}
+		if len(alive) == 0 || time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	// Optional KILL pass
+	killed := 0
+	if force && len(alive) > 0 {
+		for _, pid := range alive {
+			if err := syscall.Kill(pid, syscall.SIGKILL); err == nil || errors.Is(err, syscall.ESRCH) {
+				killed++
+			}
+		}
+	}
+
+	return termCount, killed
+}
+
+// RunCommandDetached starts a command in a new session, detached from the current terminal.
+// It redirects stdin, stdout, and stderr to /dev/null to prevent blocking.
+// Returns an error if the command could not be started.
+func RunCommandDetached(bin string, args ...string) error {
+	MustHaveBinary(bin)
+
+	cmd := exec.Command(bin, args...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+
+	// Redirect stdin, stdout, stderr to /dev/null
+	// This prevents the command from blocking if it tries to read from stdin or write to stdout/stderr
+	// and the parent process has no terminal attached.
+	null, _ := os.OpenFile(os.DevNull, os.O_RDWR, 0)
+	cmd.Stdin = null
+	cmd.Stdout = null
+	cmd.Stderr = null
+
+	return cmd.Start()
 }
