@@ -27,6 +27,8 @@ func main() {
 		openDotfiles()
 	case "clip-history":
 		clipboardHistory(args)
+	case "cycle-audio-sink":
+		cycleAudioSink(args)
 	default:
 		fmt.Printf("Unknown command: %s\n\n", cmd)
 		printUsage()
@@ -38,11 +40,12 @@ func printUsage() {
 	fmt.Printf(`Usage: multi-tool <command> [args...]
 
 Commands:
-  nm-applet             Toggles the NetworkManager applet in the system tray
-  power <action>        Perform a power action (exit, lock, reboot, shutdown, suspend, hibernate)
-  wlogout               Launch the logout menu
-  open-dotfiles         Open the dotfiles directory in VSCode
-  clip-history [d|w]    Show clipboard history menu (d: delete entry, w: wipe all entries, no arg: copy entry to clipboard)
+  nm-applet                     Toggles the NetworkManager applet in the system tray
+  power <action>                Perform a power action (exit, lock, reboot, shutdown, suspend, hibernate)
+  wlogout                       Launch the logout menu
+  open-dotfiles                 Open the dotfiles directory in VSCode
+  clip-history [d|w]            Show clipboard history menu (d: delete entry, w: wipe all entries, no arg: copy entry to clipboard)
+  cycle-audio-sink <next|prev>  Cycle through audio output sinks
 
 `)
 }

@@ -17,6 +17,7 @@
       "default": ["", "", ""]
     },
     "on-click": "pavucontrol",
-    "on-click-right": "~/.config/hypr/scripts/wpctl-cycle-sink.sh"
+//    "on-click-right": "~/.config/hypr/scripts/wpctl-cycle-sink.sh"
+    "on-click-right": "~/dotfiles/go-scripts/multi-tool cycle-audio-sink next"
   }
 }
