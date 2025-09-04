@@ -7,7 +7,7 @@ set -U fish_greeting ""
 # -----------------------------------------------------
 # Exports
 # -----------------------------------------------------
-export EDITOR=nvim
+export EDITOR=nano
 
 set -U fish_user_paths "/usr/lib/ccache/bin/"
 set -U fish_user_paths "$fish_user_paths" "~/.cargo/bin/"

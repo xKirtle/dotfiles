@@ -12,7 +12,7 @@ alias ll='eza -al --icons=always'
 alias lt='eza -a --tree --level=1 --icons=always'
 alias shutdown='systemctl poweroff'
 alias wifi='nmtui'
-alias wallpaper='~/dotfiles/.config/hypr/scripts/wallpaper.sh --random --sddm'
+alias wallpaper='~/dotfiles/go-scripts/wallpaper --random --sddm'
 
 # -----------------------------------------------------
 # Git

@@ -39,8 +39,8 @@ func RunInstallUpdates(opts InstallOptions) {
 	// Reload Waybar (best-effort)
 	if util.HasBinary("pkill") {
 		util.Prefix("Restarting Waybar...")
-		const SIGRTMIN1 = unix.Signal(35) // usually SIGRTMIN+1
-		_ = util.SignalByName("waybar", SIGRTMIN1)
+		const SIGRTMIN1 = unix.Signal(35)          // usually SIGRTMIN+1
+		_ = util.SignalByName("waybar", SIGRTMIN1) // Reload modules without full restart (refresh data in place)
 	}
 
 	util.Prefix("Update process complete! Press [ENTER] to close.")
