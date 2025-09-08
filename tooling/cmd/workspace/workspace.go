@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"sort"
+	"strconv"
 )
 
 func GetFocusedMonitor(monitors []MonitorDTO, activeWorkspace WorkspaceDTO) (MonitorDTO, bool) {
@@ -64,6 +66,7 @@ func ActiveLocalIndex(localWorkspaces []WorkspaceDTO, active WorkspaceDTO) (int,
 	if err != nil {
 		return -1, err
 	}
+
 	for i, w := range localWorkspaces {
 		s, err := ParseLocalWorkspace(w.Name)
 		if err != nil {
@@ -73,6 +76,7 @@ func ActiveLocalIndex(localWorkspaces []WorkspaceDTO, active WorkspaceDTO) (int,
 			return i, nil
 		}
 	}
+
 	return -1, nil
 }
 
@@ -83,6 +87,7 @@ func LastOccupiedLocalIndex(localWorkspaces []WorkspaceDTO) int {
 			last = i
 		}
 	}
+
 	return last
 }
 
@@ -90,53 +95,76 @@ func LastExistingLocalWorkspace(localWorkspaces []WorkspaceDTO) int {
 	if len(localWorkspaces) == 0 {
 		return -1
 	}
+
 	return len(localWorkspaces) - 1
 }
 
-// DecideTargetIndex given requested 0-based index.
-//   - boundaryIdx = lastOccIdx + 1
-//   - targetIdx = clamp(requested, 0 .. min(boundaryIdx, len(locals)))
-//     (allow exactly len(locals) to mean “create next” when boundary permits)
-//   - no-op if current is empty and targetIdx > curIdx
-//
-// Returns (targetIdx, ok). ok=false => no-op.
-func DecideTargetIndex(requested int, localWorkspaces []WorkspaceDTO, curIndex int) (int, bool) {
+// DecideTargetIndex returns (targetIdx, noOp).
+// 0-based indexes; creation is signaled by targetIdx == len(locals).
+func DecideTargetIndex(requested int, locals []WorkspaceDTO, curIdx int) (int, bool) {
 	if requested < 0 {
 		return 0, true
 	}
-	lastOcc := LastOccupiedLocalIndex(localWorkspaces) // -1 if none
-	boundary := lastOcc + 1                            // 0 if none occupied
 
-	// Max allowed existing index to *focus* is min(boundary, len(localWorkspaces)-1).
-	// We also allow target == len(localWorkspaces) to signal “create next” if boundary >= len(localWorkspaces).
-	maxExistingIdx := len(localWorkspaces) - 1
-	if boundary-1 < maxExistingIdx {
-		maxExistingIdx = boundary - 1
+	lastOcc := LastOccupiedLocalIndex(locals) // -1 if none
+	boundary := lastOcc + 1
+
+	// We allow at most:
+	// - focus up to boundary (which may be an existing empty index)
+	// - and, if boundary == len(locals), allow creation at exactly len(locals)
+	maxAllowedIndex := boundary
+	if maxAllowedIndex > len(locals) { // should only be == or <, but safe
+		maxAllowedIndex = len(locals)
 	}
-
-	allowCreate := boundary >= len(localWorkspaces)
 
 	// Clamp
 	target := requested
-	if target > maxExistingIdx {
-		if allowCreate && target == len(localWorkspaces) {
-			// ok: creation position
-		} else {
-			// clamp down to max we’re allowed to focus
-			target = maxExistingIdx
-		}
+	if target > maxAllowedIndex {
+		target = maxAllowedIndex
 	}
 	if target < 0 {
 		target = 0
 	}
 
-	// empty-upward guard
-	if curIndex >= 0 && target > curIndex && localWorkspaces[curIndex].Windows == 0 {
+	// empty-upward guard: don't move up from an empty current
+	if curIdx >= 0 && target > curIdx && locals[curIdx].Windows == 0 {
 		return 0, true
 	}
+
 	// same index -> no-op
-	if curIndex >= 0 && target == curIndex {
-		return 0, true
+	if curIdx >= 0 && target == curIdx {
+		return target, true
 	}
+
 	return target, false
+}
+
+func TargetNameForSlot(monitorID, slot int) string {
+	return zeroWidthToken(monitorID) + strconv.Itoa(slot)
+}
+
+// CalculateTargetWorkspaceName returns the canonical name for the target index.
+// If targetIndex == len(localWorkspaces), it means "create next" → last slot + 1.
+// Requires monitorID for suffix naming.
+func CalculateTargetWorkspaceName(localWorkspaces []WorkspaceDTO, targetIndex, monitorID int) (string, error) {
+	if len(localWorkspaces) == 0 {
+		return TargetNameForSlot(monitorID, 1), nil
+	}
+
+	if targetIndex >= len(localWorkspaces) {
+		lastSlot, err := ParseLocalWorkspace(localWorkspaces[len(localWorkspaces)-1].Name)
+		if err != nil {
+			return "", fmt.Errorf("parse last local workspace: %w", err)
+		}
+
+		return TargetNameForSlot(monitorID, lastSlot+1), nil
+	}
+
+	// Existing case
+	workspace, err := ParseLocalWorkspace(localWorkspaces[targetIndex].Name)
+	if err != nil {
+		return "", fmt.Errorf("parse target local workspace: %w", err)
+	}
+
+	return TargetNameForSlot(monitorID, workspace), nil
 }
