@@ -33,5 +33,20 @@ type Snapshot struct {
 	Workspaces      []WorkspaceDTO
 	Clients         []ClientDTO
 	ActiveWorkspace WorkspaceDTO
-	ActiveWindow    ClientDTO
+	ActiveWindow    *ClientDTO // nil unless needed (MoveOne)
 }
+
+type Dispatcher interface {
+	Workspace(name string) error
+	MoveWorkspaceToMonitor(name, monitorName string) error
+	RenameWorkspace(from, to string) error
+	MoveToWorkspaceSilent(targetName, windowAddr string) error
+	KillWorkspace(numeric string) error
+}
+
+type MoveMode int
+
+const (
+	MoveOne MoveMode = iota
+	MoveAll
+)

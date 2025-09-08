@@ -97,27 +97,34 @@ func fetchActiveWorkspace() (WorkspaceDTO, error) {
 	return workspaceDTO, nil
 }
 
-func fetchActiveWindow() (ClientDTO, error) {
+func fetchActiveWindow() (*ClientDTO, error) {
 	rawJson, err := hyprJSON("activewindow")
 	if err != nil {
 		// treat "no active window" as none
-		return ClientDTO{}, nil
+		return nil, nil
 	}
 
 	if trimmedJson := bytes.TrimSpace(rawJson); len(trimmedJson) == 0 || bytes.Equal(trimmedJson, []byte("null")) {
-		return ClientDTO{}, nil
+		return nil, nil
 	}
 
-	var clientDTO ClientDTO
-
-	if err := json.Unmarshal(rawJson, &clientDTO); err != nil {
-		return ClientDTO{}, fmt.Errorf("parse activewindow: %w", err)
+	var tmp struct {
+		Address   string
+		Workspace struct {
+			ID   int
+			Name string
+		}
 	}
 
-	if clientDTO.Address == "" && clientDTO.Workspace.ID == 0 {
-		return ClientDTO{}, nil
+	if err := json.Unmarshal(rawJson, &tmp); err != nil {
+		return nil, fmt.Errorf("parse activewindow: %w", err)
 	}
 
+	if tmp.Address == "" && tmp.Workspace.ID == 0 {
+		return nil, nil
+	}
+
+	clientDTO := &ClientDTO{Address: tmp.Address, Workspace: tmp.Workspace}
 	return clientDTO, nil
 }
 

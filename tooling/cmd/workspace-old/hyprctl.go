@@ -8,7 +8,7 @@ import (
 
 type Hyprctl struct{}
 
-func runHypr(args ...string) error {
+func runHyprctl(args ...string) error {
 	_, status, err := util.Run("hyprctl", args...)
 	if err != nil {
 		return err
@@ -22,23 +22,23 @@ func runHypr(args ...string) error {
 }
 
 func (h *Hyprctl) Workspace(name string) error {
-	return runHypr("dispatch", "workspace", "name:"+name)
+	return runHyprctl("dispatch", "workspace", "name:"+name)
 }
 
 func (h *Hyprctl) MoveWorkspaceToMonitor(name, monitorName string) error {
-	return runHypr("dispatch", "moveworkspacetomonitor", "name:"+name, monitorName)
+	return runHyprctl("dispatch", "moveworkspacetomonitor", "name:"+name, monitorName)
 }
 
 func (h *Hyprctl) RenameWorkspace(from, to string) error {
-	return runHypr("dispatch", "renameworkspace", "name:"+from, to)
+	return runHyprctl("dispatch", "renameworkspace", "name:"+from, to)
 }
 
 func (h *Hyprctl) MoveToWorkspaceSilent(targetName, windowAddr string) error {
 	// name:...,address:... must be a single argument
 	arg := fmt.Sprintf("name:%s,address:%s", targetName, windowAddr)
-	return runHypr("dispatch", "movetoworkspacesilent", arg)
+	return runHyprctl("dispatch", "movetoworkspacesilent", arg)
 }
 
 func (h *Hyprctl) KillWorkspace(numeric string) error {
-	return runHypr("dispatch", "killworkspace", numeric)
+	return runHyprctl("dispatch", "killworkspace", numeric)
 }
