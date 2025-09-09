@@ -34,7 +34,7 @@ func TrimZeroWidthToken(slotName string) string {
 }
 
 // ParseLocalWorkspace strips any zero-widths and parses a positive int.
-// Returns error if the core is empty, contains invisibles, or is non-numeric.
+// Returns error if the name is empty, contains zero-width chars, or is non-numeric.
 func ParseLocalWorkspace(name string) (int, error) {
 	workspaceNameStr := TrimZeroWidthToken(name)
 	if workspaceNameStr == "" || workspaceNameStr != name && HasZeroWidthToken(workspaceNameStr) {

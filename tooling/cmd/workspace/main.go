@@ -1,54 +1,124 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+
+	"github.com/xKirtle/dotfiles/tooling/internal/util"
 )
 
 func main() {
-	var (
-		targetWorkspace int
-	)
-
-	flag.IntVar(&targetWorkspace, "targetWorkspace", 0, "Workspace index to switch to [1-9]")
-	flag.Parse()
-	targetWorkspace = targetWorkspace - 1 // Convert to 0-based index for easier calculations
-
-	snapshot, err := TakeSnapshot(MaskGoto)
+	subcmd, subArgs, err := splitSubcommand(os.Args)
 	if err != nil {
-		fmt.Println("Error taking snapshot:", err)
-		return
+		fail(err)
 	}
 
-	monitor, ok := GetFocusedMonitor(snapshot.Monitors, snapshot.ActiveWorkspace)
-	if !ok {
-		fmt.Println("No focused monitor found")
-		return
+	switch subcmd {
+	case "goto":
+		targetIdx, err := parseGotoArgs(subArgs)
+		if err != nil {
+			fail(err)
+		}
+
+		_ = GoToWorkspace(targetIdx)
+
+	case "move":
+		targetIdx, all, err := parseMoveArgs(subArgs)
+		if err != nil {
+			fail(err)
+		}
+
+		// runMove(by, all)
+		_, _ = targetIdx, all // placeholder to avoid unused variable error
+
+	case "cycle":
+		dir, err := parseCycleArgs(subArgs)
+		if err != nil {
+			fail(err)
+		}
+
+		// runCycle(dir)
+		_ = dir // placeholder to avoid unused variable error
+
+	case "help", "-h", "--help", "":
+		printRootUsage()
+
+	default:
+		fail(fmt.Errorf("unknown subcommand: %q", subcmd))
+	}
+}
+
+func parseGotoArgs(args []string) (int, error) {
+	if len(args) != 1 {
+		return 0, errors.New("usage: mytool goto <1..9>")
 	}
 
-	workspaces, err := GetSortedLocalWorkspaces(snapshot.Workspaces, monitor.ID)
+	v, err := strconv.Atoi(args[0])
+	if err != nil || v < 1 || v > 9 {
+		return 0, errors.New("goto index must be a digit 1..9")
+	}
+
+	return v, nil
+}
+
+func parseMoveArgs(args []string) (int, bool, error) {
+	fs := flag.NewFlagSet("move", flag.ContinueOnError)
+	fs.SetOutput(os.Stderr)
+	all := fs.Bool("all", false, "Apply to all")
+
+	// Separate flags from non-flag args
+	if err := fs.Parse(args); err != nil {
+		return 0, false, err
+	}
+
+	// After parsing, any leftover args are positional
+	pos := fs.Args()
+	if len(pos) != 1 {
+		return 0, false, errors.New("usage: workspace move <1..9> [--all]")
+	}
+
+	v, err := strconv.Atoi(pos[0])
 	if err != nil {
-		fmt.Println("Error getting sorted local workspaces:", err)
-		return
+		return 0, false, errors.New("move expects an integer digit")
 	}
 
-	activeLocalIndex, err := ActiveLocalIndex(workspaces, snapshot.ActiveWorkspace)
-	if err != nil {
-		fmt.Println("Error getting active local index:", err)
-		return
+	return v, *all, nil
+}
+
+func parseCycleArgs(args []string) (string, error) {
+	if len(args) != 1 {
+		return "", errors.New("usage: workspace cycle <up|down>")
 	}
 
-	targetIndex, noop := DecideTargetIndex(targetWorkspace, workspaces, activeLocalIndex)
-	if noop {
-		fmt.Println("No operation needed, already on the target workspace")
-		return
+	val := strings.ToLower(args[0])
+	if val != "up" && val != "down" {
+		return "", errors.New("cycle direction must be 'up' or 'down'")
 	}
 
-	workspaceName, err := CalculateTargetWorkspaceName(workspaces, targetIndex, monitor.ID)
-	if err != nil {
-		fmt.Println("Error calculating target workspace name:", err)
-		return
+	return val, nil
+}
+
+func splitSubcommand(argv []string) (string, []string, error) {
+	if len(argv) < 2 {
+		return "", nil, nil
 	}
 
-	_ = Workspace(workspaceName)
+	return argv[1], argv[2:], nil
+}
+
+func printRootUsage() {
+	_, _ = fmt.Fprintln(os.Stderr, `Usage:
+  workspace goto  <1..9>
+  workspace move  <1..9> [--all]
+  workspace cycle <up|down>`)
+}
+
+func fail(err error) {
+	_, _ = fmt.Fprintln(os.Stderr, "Error:", err)
+	printRootUsage()
+	os.Exit(util.ExitMissingArgs)
 }
