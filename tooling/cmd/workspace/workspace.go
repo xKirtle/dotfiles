@@ -91,80 +91,84 @@ func LastOccupiedLocalIndex(localWorkspaces []WorkspaceDTO) int {
 	return last
 }
 
-func LastExistingLocalWorkspace(localWorkspaces []WorkspaceDTO) int {
-	if len(localWorkspaces) == 0 {
-		return -1
+// DecideGoToTargetIndex returns (targetIndex, noOp).
+// 0-based indexes; creation is signaled by targetIndex == len(localWorkspaces).
+func DecideGoToTargetIndex(requested int, localWorkspaces []WorkspaceDTO, curIndex int) (int, bool) {
+	requestedIndex := requested - 1 // convert to 0-based
+
+	if requestedIndex == curIndex {
+		return requested, true
 	}
 
-	return len(localWorkspaces) - 1
-}
-
-// DecideTargetIndex returns (targetIdx, noOp).
-// 0-based indexes; creation is signaled by targetIdx == len(locals).
-func DecideTargetIndex(requested int, locals []WorkspaceDTO, curIdx int) (int, bool) {
-	if requested < 0 {
+	if requestedIndex < 0 {
 		return 0, true
 	}
 
-	lastOcc := LastOccupiedLocalIndex(locals) // -1 if none
+	lastOcc := LastOccupiedLocalIndex(localWorkspaces) // -1 if none
 	boundary := lastOcc + 1
 
 	// We allow at most:
 	// - focus up to boundary (which may be an existing empty index)
-	// - and, if boundary == len(locals), allow creation at exactly len(locals)
-	maxAllowedIndex := boundary
-	if maxAllowedIndex > len(locals) { // should only be == or <, but safe
-		maxAllowedIndex = len(locals)
+	// - and, if boundary == len(localWorkspaces), allow creation at exactly len(localWorkspaces)
+	if boundary > len(localWorkspaces) { // should only be == or <, but safe
+		boundary = len(localWorkspaces)
 	}
 
 	// Clamp
-	target := requested
-	if target > maxAllowedIndex {
-		target = maxAllowedIndex
+	target := requestedIndex
+	if target > boundary {
+		target = boundary
 	}
+
 	if target < 0 {
 		target = 0
 	}
 
 	// empty-upward guard: don't move up from an empty current
-	if curIdx >= 0 && target > curIdx && locals[curIdx].Windows == 0 {
-		return 0, true
+	if curIndex >= 0 && target > curIndex && localWorkspaces[curIndex].Windows == 0 {
+		return curIndex, true
 	}
 
 	// same index -> no-op
-	if curIdx >= 0 && target == curIdx {
+	if curIndex >= 0 && target == curIndex {
 		return target, true
 	}
 
 	return target, false
 }
 
-func TargetNameForSlot(monitorID, slot int) string {
-	return zeroWidthToken(monitorID) + strconv.Itoa(slot)
-}
-
-// CalculateTargetWorkspaceName returns the canonical name for the target index.
-// If targetIndex == len(localWorkspaces), it means "create next" → last slot + 1.
-// Requires monitorID for suffix naming.
-func CalculateTargetWorkspaceName(localWorkspaces []WorkspaceDTO, targetIndex, monitorID int) (string, error) {
+// CompactLocalWorkspacesSimple renames local workspaces on the given monitor to be sequentially numbered from 1.
+func CompactLocalWorkspacesSimple(monitorDTO MonitorDTO, localWorkspaces []WorkspaceDTO) error {
 	if len(localWorkspaces) == 0 {
-		return TargetNameForSlot(monitorID, 1), nil
+		return nil
 	}
 
-	if targetIndex >= len(localWorkspaces) {
-		lastSlot, err := ParseLocalWorkspace(localWorkspaces[len(localWorkspaces)-1].Name)
-		if err != nil {
-			return "", fmt.Errorf("parse last local workspace: %w", err)
+	for i, workspace := range localWorkspaces {
+		targetWorkspaceName := TargetNameForWorkspace(monitorDTO.ID, i+1)
+		if workspace.Name == targetWorkspaceName {
+			continue // noop
 		}
 
-		return TargetNameForSlot(monitorID, lastSlot+1), nil
+		err := HyprctlRenameWorkspace(workspace.ID, targetWorkspaceName)
+		if err != nil {
+			return fmt.Errorf("rename %q -> %q: %w", workspace.Name, targetWorkspaceName, err)
+		}
 	}
 
-	// Existing case
-	workspace, err := ParseLocalWorkspace(localWorkspaces[targetIndex].Name)
-	if err != nil {
-		return "", fmt.Errorf("parse target local workspace: %w", err)
+	return nil
+}
+
+func TargetNameForWorkspace(monitorID, workspaceNumber int) string {
+	return zeroWidthToken(monitorID) + strconv.Itoa(workspaceNumber)
+}
+
+func GetClientsOnWorkspace(workspaceID int, clients []ClientDTO) []ClientDTO {
+	result := make([]ClientDTO, 0)
+	for _, client := range clients {
+		if client.Workspace.ID == workspaceID {
+			result = append(result, client)
+		}
 	}
 
-	return TargetNameForSlot(monitorID, workspace), nil
+	return result
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/xKirtle/dotfiles/tooling/internal/util"
 )
@@ -19,24 +20,36 @@ func runHyprctl(args ...string) error {
 	return nil
 }
 
-func Workspace(name string) error {
+func HyprctlWorkspace(name string) error {
 	return runHyprctl("dispatch", "workspace", "name:"+name)
 }
 
-func MoveWorkspaceToMonitor(name, monitorName string) error {
-	return runHyprctl("dispatch", "moveworkspacetomonitor", "name:"+name, monitorName)
+func HyprctlRenameWorkspace(id int, newName string) error {
+	return runHyprctl("dispatch", "renameworkspace", strconv.Itoa(id), newName)
 }
 
-func RenameWorkspace(from, to string) error {
-	return runHyprctl("dispatch", "renameworkspace", "name:"+from, to)
+func HyprctlMoveToWorkspaceAll(workspaceName string, clients []ClientDTO) error {
+	for _, client := range clients {
+		err := HyprctlMoveToWorkspace(workspaceName, client.Address)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func MoveToWorkspaceSilent(targetName, windowAddr string) error {
+func HyprctlMoveToWorkspace(targetName, windowAddr string) error {
 	// name:...,address:... must be a single argument
 	arg := fmt.Sprintf("name:%s,address:%s", targetName, windowAddr)
-	return runHyprctl("dispatch", "movetoworkspacesilent", arg)
+	err := runHyprctl("dispatch", "movetoworkspace", arg)
+	if err != nil {
+		return fmt.Errorf("moving window %q to workspace %q: %w", windowAddr, targetName, err)
+	}
+
+	return nil
 }
 
-func KillWorkspace(numeric string) error {
-	return runHyprctl("dispatch", "killworkspace", numeric)
+func HyprctlFocusMonitor(monitorId int) error {
+	return runHyprctl("dispatch", "focusmonitor", strconv.Itoa(monitorId))
 }

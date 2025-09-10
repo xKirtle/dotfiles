@@ -19,21 +19,20 @@ func main() {
 
 	switch subcmd {
 	case "goto":
-		targetIdx, err := parseGotoArgs(subArgs)
+		targetIndex, err := parseGotoArgs(subArgs)
 		if err != nil {
 			fail(err)
 		}
 
-		_ = GoToWorkspace(targetIdx)
+		_ = GoToWorkspace(targetIndex)
 
 	case "move":
-		targetIdx, all, err := parseMoveArgs(subArgs)
+		targetIndex, all, err := parseMoveArgs(subArgs)
 		if err != nil {
 			fail(err)
 		}
 
-		// runMove(by, all)
-		_, _ = targetIdx, all // placeholder to avoid unused variable error
+		_ = MoveToWorkspace(targetIndex, all)
 
 	case "cycle":
 		dir, err := parseCycleArgs(subArgs)
@@ -41,8 +40,10 @@ func main() {
 			fail(err)
 		}
 
-		// runCycle(dir)
-		_ = dir // placeholder to avoid unused variable error
+		_ = CycleWorkspace(dir)
+
+	case "init":
+		_ = InitWorkspaces()
 
 	case "help", "-h", "--help", "":
 		printRootUsage()
