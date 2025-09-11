@@ -175,5 +175,5 @@ func InitWorkspaces() error {
 		}
 	}
 
-	return nil
+	return HyprctlFocusMonitor(monitors[0].ID)
 }
