@@ -112,6 +112,7 @@ hypridle
 hyprland
 hyprlock
 hyprpaper
+imv
 inetutils
 iptables-nft
 iwd
@@ -201,6 +202,7 @@ poppler-glib
 postgresql
 postman-bin
 power-profiles-daemon
+powershell-bin
 proton-cachyos
 proton-vpn-gtk-app
 protontricks
