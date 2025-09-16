@@ -1,0 +1,88 @@
+@define-color primary_text   #d8dee9;
+@define-color secondary_text #cfd6dc;
+@define-color muted_text     #a7b0b8;
+
+@define-color base_bg        #0f1115;
+@define-color surface_bg     #1a1e24;
+@define-color surface_sunken #11141a;
+@define-color surface_elev   #2a2f37;
+@define-color border_col     #3a414c;
+
+@define-color accent         #5fb3b3;
+@define-color accent_hover   #58a6a6;
+@define-color accent_active  #4e9797;
+
+@define-color success        #8bbf9f;
+@define-color warning        #c7b38b;
+@define-color danger         #cc6d6d;
+@define-color info           #88a7c9;
+
+/* ---- Wofi widgets ---- */
+window {
+  margin: 0;
+  padding: 0;
+  border: 1px solid @border_col;
+  background-color: alpha(@surface_bg, 0.96);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px alpha(black, 0.40);  /* Shadow overlay */
+}
+
+#outer-box {
+  padding: 12px;
+}
+
+#input {
+  color: @primary_text;
+  background: @surface_sunken;
+  border: 1px solid @border_col;
+  border-radius: 12px;
+  padding: 16px 18px;
+  font-size: 20px;
+}
+#input:focus {
+  border-color: @accent_active;
+}
+
+#prompt {
+  color: @muted_text;
+  margin-bottom: 8px;
+}
+
+#scroll {
+  margin-top: 10px;
+}
+
+#entry {
+  padding: 14px 16px;
+  margin: 2px 0;
+  border-radius: 10px;
+  color: @secondary_text;
+  background: transparent;
+  font-size: 20px;
+}
+#entry:selected {
+  color: @primary_text;
+  background: alpha(@surface_elev, 0.85);
+  border: 1px solid alpha(@accent, 0.35);
+}
+#entry:focus {
+  outline: none;
+}
+
+#text {
+  margin-left: 6px;
+  color: inherit;
+  font-size: 20px;
+}
+
+#img {
+  margin-right: 8px;
+  /* keeps icons visible on dark bg */
+  -gtk-icon-shadow: 0 0 0 alpha(black, 0.0);
+}
+
+/* Subtle separator styling for categories (if shown) */
+#category {
+  color: @muted_text;
+  margin: 6px 2px;
+}

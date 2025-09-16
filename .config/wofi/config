@@ -1,0 +1,21 @@
+-- Behavior
+show=drun
+allow_images=true
+allow_markup=false
+insensitive=true
+no_actions=true
+hide_scroll=true
+dynamic_lines=true
+term=kitty
+
+-- Layout
+location=center
+width=900
+prompt=Search…
+filter_rate=100
+matching=fuzzy
+columns=1
+
+-- Keybinds inside wofi (optional)
+key_submit=Return
+key_exit=Escape
