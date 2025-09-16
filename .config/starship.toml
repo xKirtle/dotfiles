@@ -1,0 +1,64 @@
+add_newline = true
+
+# Layout: directory → git → langs → prompt char
+format = "$directory$git_branch$git_status$nodejs$rust$golang$python$java$dotnet$line_break$character"
+
+# --- Path ---
+[directory]
+truncation_length = 3
+truncation_symbol = "~/"
+style = "white"
+format = "[$path]($style) "
+
+# --- Git ---
+[git_branch]
+symbol = " "
+style = "fg:#5fb3b3"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "fg:#5fb3b3"
+format = "[$all_status $ahead_behind]($style) "
+conflicted = " !"
+stashed    = " ≡"
+modified   = " ~"
+staged     = " +"
+renamed    = " »"
+deleted    = " ✖"
+untracked  = " *"
+
+# --- Languages (only appear in relevant dirs) ---
+[nodejs]
+symbol = " "
+style = "dimmed white"
+format = "[$symbol]($style) "
+
+[rust]
+symbol = " "
+style = "dimmed white"
+format = "[$symbol]($style) "
+
+[golang]
+symbol = " "
+style = "dimmed white"
+format = "[$symbol]($style) "
+
+[python]
+symbol = " "
+style = "dimmed white"
+format = "[$symbol]($style) "
+
+[java]
+symbol = " "
+style = "dimmed white"
+format = "[$symbol]($style) "
+
+[dotnet]
+symbol = " "
+style = "dimmed white"
+format = "[$symbol]($style) "
+
+# --- Prompt character ---
+[character]
+success_symbol = "[❯](fg:#5fb3b3)"
+error_symbol   = "[❯](bold red)"
