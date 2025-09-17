@@ -1,0 +1,74 @@
+* {
+    font-family: "Noto Sans", monospace;
+	font-size: 40px;
+	background-image: none;
+	transition: 20ms;
+	box-shadow: none;
+}
+
+window {
+	background-color: #1e1e1e;
+	background-size: cover;
+	font-size: 16pt;
+
+}
+
+button {
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 20%;
+	animation: gradient_f 20s ease-in infinite;
+	border-radius: 80px;
+	border:0px;
+	transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
+	color: white;
+}
+
+button:focus {
+    background-size: 22%;
+	border: 0px;
+}
+
+button:hover {
+    background-color: #0b534f;
+	opacity: 0.8;
+    color: white;
+    background-size: 30%;
+    margin: 30px;
+    border-radius: 80px;
+    box-shadow: 0 0 50px #000000;
+}
+
+button span {
+    font-size: 1.2em;
+}
+
+#lock {
+	margin: 10px;
+	border-radius: 20px;
+	background-image: image(url("icons/lock.png"));
+}
+
+#logout {
+	margin: 10px;
+	border-radius: 20px;
+	background-image: image(url("icons/logout.png"));
+}
+
+#suspend {
+	margin: 10px;
+	border-radius: 20px;
+	background-image: image(url("icons/suspend.png"));
+}
+
+#shutdown {
+	margin: 10px;
+	border-radius: 20px;
+	background-image: image(url("icons/shutdown.png"));
+}
+
+#reboot {
+	margin: 10px;
+	border-radius: 20px;
+	background-image: image(url("icons/reboot.png"));
+}

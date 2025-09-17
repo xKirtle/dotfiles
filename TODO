@@ -1,2 +1,4 @@
 mimeapps.list cannot be symlinked (some apps then don't respect it)
 Possibly, the best setup would be, move mimeapps.list to ~/.config and then create symlink on dotfiles repository so we can still have a single source of truth
+
+Configure swaync's layout + style

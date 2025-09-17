@@ -19,7 +19,8 @@
     "~/.config/waybar/modules/language.jsonc",
     "~/.config/waybar/modules/privacy.jsonc",
     "~/.config/waybar/modules/pulseaudio.jsonc",
-    "~/.config/waybar/modules/aur-updates.jsonc"
+    "~/.config/waybar/modules/aur-updates.jsonc",
+    "~/.config/waybar/modules/notifications.jsonc"
   ],
 
   // Module placement
@@ -37,6 +38,7 @@
     "pulseaudio",
     "hyprland/language",
     "tray",
+    "custom/notifications",
     "custom/shutdown"
   ]
 }

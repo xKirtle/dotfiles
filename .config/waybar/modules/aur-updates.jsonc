@@ -8,6 +8,9 @@
     },
     "exec-if": "which waybar-updates",
     "exec": "waybar-updates",
+    "hide-empty-text": true,
+    "interval": 1800,
+    "tooltip": false,
     "on-click": "setsid -f kitty -e bash -c 'figlet -f smslant \"Updates\"; gum confirm \"DO YOU WANT TO START THE UPDATE NOW?\" || exit; paru'"
   }
 }

@@ -84,6 +84,15 @@ window#waybar {
     margin-right: 10px;
 }
 
+#custom-notifications {
+    background-color: #2a2a2a;
+    border-radius: 16px;
+    color: #d4d4d4;
+    padding: 0px 18px 0px 10px;
+    margin-right: 10px;
+    font-size: 34px;
+}
+
 #custom-shutdown {
     background-color: #2a2a2a;
     border-radius: 16px;
