@@ -45,19 +45,30 @@ window#waybar {
     margin-right: 10px;
 }
 
-#pulseaudio {
+#privacy {
+    background-color: #286464;
+    border-radius: 16px;
+    color: #d4d4d4;
+    padding: 0px 10px 0px 12px;
+    margin-right: 10px;
+}
+
+#custom-aur-updates {
     background-color: #2a2a2a;
     border-radius: 16px;
     color: #d4d4d4;
     padding: 0px 10px;
     margin-right: 10px;
 }
+#custom-aur-updates.pending-updates {
+	background-color: #b76f03;
+}
 
-#privacy {
-    background-color: #286464;
+#pulseaudio {
+    background-color: #2a2a2a;
     border-radius: 16px;
     color: #d4d4d4;
-    padding: 0px 10px 0px 12px;
+    padding: 0px 10px;
     margin-right: 10px;
 }
 

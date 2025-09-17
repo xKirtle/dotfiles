@@ -18,9 +18,8 @@
     "~/.config/waybar/modules/mpris.jsonc",
     "~/.config/waybar/modules/language.jsonc",
     "~/.config/waybar/modules/privacy.jsonc",
-    "~/.config/waybar/modules/pulseaudio.jsonc"
-    // "~/.config/waybar/modules/updates.jsonc",
-    // "~/.config/waybar/modules/bluetooth.jsonc"
+    "~/.config/waybar/modules/pulseaudio.jsonc",
+    "~/.config/waybar/modules/aur-updates.jsonc"
   ],
 
   // Module placement
@@ -34,6 +33,7 @@
   ],
   "modules-right": [
     "privacy",
+    "custom/aur-updates",
     "pulseaudio",
     "hyprland/language",
     "tray",
