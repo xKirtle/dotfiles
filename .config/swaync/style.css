@@ -1,0 +1,68 @@
+/* https://man.archlinux.org/man/swaync.5.en */
+* {
+    font-family: "Fira Sans", "JetBrains Mono", monospace;
+    --notification-icon-size: 36px;
+    --mpris-album-art-icon-size: 50px;
+}
+
+.control-center {
+    border: 3px solid #286464;
+    background-color: #232323;
+}
+
+.widget-mpris, .widget-mpris-player {
+    padding: 0px;
+    margin: 0px;
+} 
+.widget-mpris-subtitle {
+    margin-bottom: 20px;
+}
+
+button {
+    border: 0px;
+    min-width: 50px;
+    background: #286464;
+    color: white;
+}
+button:hover {
+    background: #2e9e9e;
+}
+
+.notification-group-header {
+    font-size: 14px;
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button {
+    margin: 5px;
+}
+
+.notification {
+    border: 1px solid #286464;
+	border-radius: 10px;
+    padding: 10px;
+}
+
+.notification-default-action:hover,
+.notification-action:hover {
+    color: #ffffff;
+    background: transparent;
+}
+
+.close-button {
+    background: #286464;
+    text-shadow: none;
+    padding: 0px;
+    border-radius: 15px;
+    margin-top: 9px;
+    margin-right: 10px;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+.close-button:hover {
+    background: #2e9e9e;
+}
+
+.notification-group .notification-group-close-button .close-button {
+    margin: 15px 22px;
+}

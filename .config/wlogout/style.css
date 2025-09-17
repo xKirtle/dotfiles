@@ -1,5 +1,5 @@
 * {
-    font-family: "Noto Sans", monospace;
+    font-family: " Sans", monospace;
 	font-size: 40px;
 	background-image: none;
 	transition: 20ms;
@@ -30,7 +30,7 @@ button:focus {
 }
 
 button:hover {
-    background-color: #0b534f;
+    background-color: #0d7973;
 	opacity: 0.8;
     color: white;
     background-size: 30%;
