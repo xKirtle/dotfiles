@@ -60,9 +60,6 @@ window#waybar {
     padding: 0px 10px;
     margin-right: 10px;
 }
-#custom-aur-updates.pending-updates {
-	background-color: #b76f03;
-}
 
 #pulseaudio {
     background-color: #2a2a2a;

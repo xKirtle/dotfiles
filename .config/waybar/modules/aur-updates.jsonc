@@ -1,6 +1,6 @@
 {
   "custom/aur-updates": {
-    "format": "{icon}{0}",
+    "format": "{icon} {0}",
     "return-type": "json",
     "format-icons": {
       "pending-updates": "  ",
