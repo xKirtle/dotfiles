@@ -1,0 +1,29 @@
+{
+  /* Spotify Only. Could be extended for other players but I don't use any others */
+  "mpris": {
+    "player": "spotify",
+    // "ignore-players": [],
+    "format": "{status_icon} {dynamic}",
+    "tooltip-format": "{dynamic}",
+    "title-len": 60,
+    "artist-len": 20,
+
+    "dynamic-order": ["title", "artist", "position", "length"],
+    "dynamic-importante-order": ["title", "position", "length", "artist"],
+    "dynamic-separator": " - ",
+    "dynamic-len": 80,
+
+    "player-icons": {
+        "spotify": " "
+    },
+    "status-icons": {
+        "playing": "",
+        "paused": ""
+    },
+    "interval": 1,
+
+    /* Disable default click actions */
+    "on-click-middle": "",
+    "on-click-right": ""
+  }
+}

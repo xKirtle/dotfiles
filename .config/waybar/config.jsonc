@@ -1,0 +1,42 @@
+{
+  // General
+  "layer": "top",
+  "margin-top": 0,
+  "margin-bottom": 10,
+  "margin-left": 4,
+  "margin-right": 4,
+  "spacing": 0,
+  "reload_style_on_change": true,
+
+  // Pull in all module definitions from ./modules
+  "include": [
+    "~/.config/waybar/modules/clock.jsonc",
+    "~/.config/waybar/modules/workspaces.jsonc",
+    "~/.config/waybar/modules/empty.jsonc",
+    "~/.config/waybar/modules/tray.jsonc",
+    "~/.config/waybar/modules/shutdown.jsonc",
+    "~/.config/waybar/modules/mpris.jsonc",
+    "~/.config/waybar/modules/language.jsonc",
+    "~/.config/waybar/modules/privacy.jsonc",
+    "~/.config/waybar/modules/pulseaudio.jsonc"
+    // "~/.config/waybar/modules/updates.jsonc",
+    // "~/.config/waybar/modules/bluetooth.jsonc"
+  ],
+
+  // Module placement
+  "modules-left": [
+    "clock",
+    "hyprland/workspaces"
+  ],
+  "modules-center": [
+    "mpris",
+    "custom/empty"
+  ],
+  "modules-right": [
+    "privacy",
+    "pulseaudio",
+    "hyprland/language",
+    "tray",
+    "custom/shutdown"
+  ]
+}

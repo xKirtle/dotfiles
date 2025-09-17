@@ -1,0 +1,6 @@
+{
+  "custom/shutdown": {
+    "format": " ",
+    "on-click": "~/.config/hypr/scripts/multi-tool wlogout"
+  }
+}

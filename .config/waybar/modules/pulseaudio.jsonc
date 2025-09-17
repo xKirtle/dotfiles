@@ -1,0 +1,18 @@
+{
+  "pulseaudio": {
+    "scroll-step": 5,
+    "format": "{icon} {volume}% {format_source}",
+    "format-muted": "{icon} 0% {format_source}",
+    "format-source": "| 󰍬",
+    "format-source-muted": "| 󰍭",
+    "format-icons": {
+      "alsa_output.pci-0000_16_00.6.iec958-stereo": "󰓃",
+      "alsa_output.pci-0000_16_00.6.iec958-stereo-muted": "󰓄 ",
+      "alsa_output.usb-Focusrite_Scarlett_Solo_4th_Gen_S14AD9G3B27480-00.HiFi__Line1__sink": "󰋋 ",
+      "alsa_output.usb-Focusrite_Scarlett_Solo_4th_Gen_S14AD9G3B27480-00.HiFi__Line1__sink-muted": "󰟎 ",
+      "default": ["  ", "", "", " ", " ", " ", "  ", "  ", "  ", "  "]
+    },
+    "on-click": "pavucontrol",
+    "on-click-right": "~/.config/hypr/scripts/multi-tool cycle-audio-sink next"
+  }
+}

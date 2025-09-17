@@ -1,0 +1,7 @@
+{
+  "hyprland/workspaces": {
+    "format": "{name}",
+    "active-only": false,
+    "all-outputs": false
+  }
+}

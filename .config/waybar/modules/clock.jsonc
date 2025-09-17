@@ -1,0 +1,9 @@
+{
+  "clock": {
+    "format": "{:%H:%M %A, %d %b}",
+    "on-click": "flatpak run com.ml4w.calendar",
+    "timezone": "",
+    "tooltip": false,
+    "tooltip-format": "{:%A, %d %B %Y}"
+  }
+}
