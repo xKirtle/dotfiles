@@ -34,11 +34,11 @@ A minimal, Bootstrap-style palette you can copy into any config. No terminal/ANS
 ### CSS Variables (Waybar, Wofi, etc.)
 ```css
 :root {
-  --color-primary: #d8dee9;      /* text */
+  --color-primary: #d8dee9;
   --color-secondary: #cfd6dc;
   --color-muted: #a7b0b8;
 
-  --bg: #0f1115;                 /* background */
+  --bg: #0f1115;
   --surface: #1a1e24;
   --surface-sunken: #11141a;
   --surface-elevated: #2a2f37;
@@ -79,7 +79,6 @@ A minimal, Bootstrap-style palette you can copy into any config. No terminal/ANS
 
 ## Hyprland (ARGB)
 ```css
-/* Use these in hyprland.conf */
 col.active_border   = 0xff5fb3b3  # accent
 col.inactive_border = 0xff3a414c  # border
 col.group_border    = 0xff4e9797  # accent-active
