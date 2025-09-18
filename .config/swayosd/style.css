@@ -1,0 +1,47 @@
+
+window#osd {
+  border: none;
+  border-radius: 16px;
+  /* Make the bg a gray-ish tint relative to window background.
+     In light themes (near white), this becomes light gray.
+     In dark themes, it becomes a deeper gray. Tweak 0.90 ↔ 0.80 as you like. */
+  background-color: shade(@window_bg_color, 0.90);
+  color: @window_fg_color;
+  background-clip: padding-box;
+}
+
+window#osd #container { margin: 16px; }
+
+/* Accent for the icon + label in BOTH themes */
+window#osd image,
+window#osd label {
+  color: @accent_bg_color;
+}
+
+/* Slider */
+window#osd progressbar {
+  min-height: 6px;
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+}
+
+/* Track: subtle, derived from fg so it has contrast in both modes */
+window#osd progressbar trough {
+  min-height: inherit;
+  border: none;
+  border-radius: inherit;
+  background-color: alpha(@window_fg_color, 0.15);
+}
+
+/* Filled part: accent color (stays on-brand across themes) */
+window#osd progressbar progress {
+  min-height: inherit;
+  border: none;
+  border-radius: inherit;
+  background-color: @accent_bg_color;
+}
+
+/* Optional: disabled visuals */
+window#osd progressbar:disabled,
+window#osd image:disabled { opacity: 0.5; }
