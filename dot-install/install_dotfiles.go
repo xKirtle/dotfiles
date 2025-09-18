@@ -28,8 +28,8 @@ func installDotConfig(repoDir string, simulate bool) error {
 		return fmt.Errorf("failed to ensure ~/.config directory exists: %w", err)
 	}
 
-	fmt.Printf("Linking config files from %s to %s\n", repoDir, targetDir)
 	sourceDir := filepath.Join(repoDir, ".config")
+	fmt.Printf("Linking config files from %s to %s\n", sourceDir, targetDir)
 
 	if !isDirectory(sourceDir) {
 		return fmt.Errorf("source .config directory does not exist in the repository: %s", sourceDir)
