@@ -1,2 +1,5 @@
-gtk-theme-name=Colloid-Teal-Light|Dark
-gtk-application-prefer-dark-theme=0|1 for light|dark themes
+workspace 1 and 2, both with a terminal open
+close terminal on ws1, can't move to ws 2 anymore.
+Have to spawn another tile on ws1 to be able to move out.
+
+Make my own aur-updates script

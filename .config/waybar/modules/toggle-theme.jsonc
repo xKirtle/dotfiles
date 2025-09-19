@@ -1,0 +1,11 @@
+{
+  "custom/toggle-theme": {
+    "format": "{text}",
+    "exec": "~/.config/waybar/scripts/toggle-theme.sh status",
+    "return-type": "json",
+    "exec-on-event": true,
+    "on-click": "~/.config/waybar/scripts/toggle-theme.sh toggle",
+    "signal": 8,
+    "tooltip": true
+  }
+}
