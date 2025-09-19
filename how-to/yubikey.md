@@ -1,158 +1,170 @@
-# YubiKey + PAM Setup on Arch Linux
+# YubiKey + Git & GPG on Arch Linux
 
-## 1. Install required packages
+## 1. YubiKey for PAM (login / sudo)
+
+### 1.1 Install packages
 
 ```bash
 paru -S pam-u2f yubikey-manager
 ```
 
-## 2. Enroll YubiKeys
-Create a directory to store U2F mappings:
+### 1.2 Enroll your YubiKeys
 
 ```bash
 mkdir -p ~/.config/Yubico
-pamu2fcfg > ~/.config/Yubico/u2f_keys # Touch YubiKey when it blinks.
-
-# if using multiple yubikeys, append to file
-pamu2fcfg >> ~/.config/Yubico/u2f_keys
+pamu2fcfg  > ~/.config/Yubico/u2f_keys     # Touch YubiKey when it blinks
+pamu2fcfg >> ~/.config/Yubico/u2f_keys     # Run again to append a 2nd key
 ```
 
-## 3. Enable YubiKey for specific services
-PAM configuration lives in `/etc/pam.d/`
-Each service has its own file.
-
-You will always want to add something like the snippet below at the very top (1st auth rule), if you want to only rely on your YubiKey.
+### 1.3 Enable PAM support (Pluggable Authentication Modules)
 
 ```bash
-auth sufficient pam_u2f.so cue 
+auth sufficient pam_u2f.so cue
+```
+- `cue` shows a visual prompt - remove if you prefer silent.
+- Use `required` instead of `sufficient` to require both YubiKey **and** password.
+
+Typical targets:
+- `/etc/pam.d/system-local-login` - covers TTY, display managers, screen lockers.
+- `/etc/pam.d/sudo` - protects `sudo`.
+
+### 1.4 Test before logging out
+
+```bash
+sudo -k      # clear sudo cache
+sudo -v      # should now require a YubiKey touch (if sudo target was changed)
 ```
 
-You can remove the `cue` parameter if you don't want visual cues telling you to touch the FIDO authenticator. Additionally, you can replace `sufficient` with `required` to require both your YubiKey + sudo password.
+## 2. Using YubiKeys for SSH (Git)
 
-You can usually get away with just modifying `/etc/pam.d/system-local-login` since every local login relies on it (TTY, display managers, screen lockers, etc...). For `sudo` operations, modify `/etc/pam.d/sudo`.
+### 2.1 Make sure PC/SC is running
 
-## 4. Verify it's working
-Before logging out (and potentially bricking your access), try authenticating on a new shell. Use `sudo -k` to clear your access cache, and try authenticating again using `sudo -v`.
-
-___
-
-
-# Managing SSH connections for Git with YubiKeys
-
-Make sure the PC/SC daemon is running:
 ```bash
-systemctl status pcsdcd
-
-# Run if disabled
-sudo systemctl enable --now pcscd
+systemctl status pcscd
+sudo systemctl enable --now pcscd   # if not active
 ```
 
-For the next steps, please configure one key at a time. Alternatively, you can target a specific key on your `ykman` commands. Check your keys with `ykman list` and start any command with `ykman --device [serial] ...`.
+### 2.2 Generate an on-device keypair
 
-### 1. Generate a key-pair inside each YubiKey
+Work with one key at a time or target by serial from `ykman list`. Remove `--device <serial>` from the following snippets if only working with one yubikey at a time.
+
 ```bash
-# Key slot 9a is the standard for SSH
-ykman --device [serial] piv keys generate \
+ykman --device <serial> piv keys generate \
     --algorithm RSA2048 \
     --pin-policy once \
     --touch-policy never \
-    9a pubkey-[serial]-rsa.pem
-
+    9a pubkey-<serial>.pem
 ```
 
-You can modify `--pin-policy` and `--touch-policy` to whatever you prefer. `(never/once/always)`
+Adjust `--pin-policy`/`--touch-policy` (`never | once | always`) to taste.
 
-Then, create a matching self-signed certificate (needed so the slot is considered valid):
+Create a self-signed certificate (slot 9a is standard for SSH):
 ```bash
-ykman --device [serial] piv certificates generate \
-      9a pubkey-[serial]-rsa.pem \
-      --subject "CN=Azure DevOps Key [serial] (RSA)" # Or whatever you want to call it
-
+ykman --device <serial> piv certificates generate \
+      9a pubkey-<serial>.pem \
+      --subject "CN=Azure DevOps Key <serial> (RSA)"
 ```
 
-### 2. Install the PKCS#11 provider
+### 2.3 Install PKCS#11 provider & export the public key
+
 ```bash
 paru -S opensc
+ssh-keygen -D /usr/lib/opensc-pkcs11.so > yubikey-<serial>.pub
 ```
 
-and expore the public keys for where you want to use them with:
-```bash
-ssh-keygen -D /usr/lib/opensc-pkcs11.so > yubikey-[serial].pub
-```
+Upload the resulting ```ssh-rsa ...` key to GitHub/Azure DevOps.
 
-It should output something like this:
-```bash
-ssh-rsa AAAAE2VjZHNh...
-```
-
-If using multiple keys, it's probably best to only have one key connected at a time to easily know which pubkey is for which YubiKey.
-
-Now you should have one or more `*.pub` files. Upload those public keys to whatever service you want to use them on.
-
-### 3. Actually using it
-This guide is more focused towards Azure DevOps, but if when trying to do an ssh request and it asks for a password (and not the PIN configured in your key), follow these steps:
+### 2.4 using the key
 
 ```bash
-# Start/ensure an agent is running
-eval "$(ssh-agent -s)"
-
-# (Re)add your token keys from the PKCS#11 module
+eval "$(ssh-agent -s)"                     # start agent if needed
 ssh-add -e /usr/lib/opensc-pkcs11.so 2>/dev/null || true
-ssh-add -s /usr/lib/opensc-pkcs11.so
-
-# Confirm the agent sees them and verify fingerprints match
-ssh-add -l
-
-# Try Azure DevOps
-ssh -T git@ssh.dev.azure.com
+ssh-add -s /usr/lib/opensc-pkcs11.so       # add YubiKey key(s)
+ssh-add -l                                 # confirm fingerprints
+ssh -T git@ssh.dev.azure.com               # should print “Shell access is not supported.”
 ```
+`eval` ensures ssh-agent is only available on the current shell.
 
-Azure DevOps does not offer you a shell back, so you should see something like `remote: Shell access is not supported`.
+### 2.5 Optional helper function
 
-To simplify things, add this function to your fish shell so that you can load your ssh keys on demand at `~/.config/fish/functions/yk-ssh.fish`. Fish will automatically load it for you for each shell you open.
+#### Fish (`~/.config/fish/functions/yk-ssh.fish`)
 ```fish
 function yk-ssh
-    # Start an ssh-agent if we don’t already have one
-    if not ssh-add -l ^/dev/null
+    if not ssh-add -l >/dev/null 2>&1
         eval (ssh-agent -c)
     end
-
-    # If no YubiKey PIV keys are loaded, add the PKCS#11 module (will prompt for your PIV PIN once)
-    if not ssh-add -l ^/dev/null | grep -q 'PIV AUTH pubkey'
+    if not ssh-add -l >/dev/null 2>&1 | grep -q 'PIV AUTH pubkey'
         ssh-add -s /usr/lib/opensc-pkcs11.so
     end
 end
 ```
 
-Or if using bash (or derivatives):
-```bash
-yk_ensure_ssh() {
-  # Start an ssh-agent if we don’t already have one
-  if ! ssh-add -l >/dev/null 2>&1; then
-    eval "$(ssh-agent -s)" >/dev/null
-  fi
+## 3. Local SSH key without YubiKey
 
-  # If no YubiKey PIV keys are loaded, add the PKCS#11 module (will prompt for your PIV PIN once)
-  if ! ssh-add -l 2>/dev/null | grep -q 'PIV AUTH pubkey'; then
-    ssh-add -s /usr/lib/opensc-pkcs11.so
-  fi
-}
-# optional convenience alias: run once before git/ssh
-alias yk-ssh='yk_ensure_ssh'
-```
+Install Seahorse (`paru -S seahorse`) and create a new **Secure Shell Key**. 
+   The private key is stored in `~/.ssh/id_rsa`. Replace `id_rsa` with whatever name you picked (if any).
 
-### 4. For SSH without a YubiKey
-
-Install `seahorse` and use it in tandem with GNOME's keyring. Simply use the `seahorse` interface to create a new SSH key and retrieve the public key to upload where you want to use it. The default path for the key created is `~/.ssh/id_rsa`. All that's left to do is bind that key to an ssh origin (Host). Edit your `~/.ssh/config` to configure it.
-
+Add to `~/.ssh/config`:
 ```bash
 Host github.com
     User git
-    IdentityFile ~/.ssh/id_rsa # or another name if you changed it
+    IdentityFile ~/.ssh/id_rsa
     IdentitiesOnly yes
 
 Host ssh.dev.azure.com
     User git
-    IdentityFile ~/.ssh/id_rsa # or another name if you changed it
+    IdentityFile ~/.ssh/id_rsa
     IdentitiesOnly yes
 ```
+
+## 4. GPG Commit Signing
+
+### 4.1 Keys
+
+Create two GPG keys in Seahorse:
+- **Work (Azure DevOps)** - real name + company email.
+- **Personal (GitHub)** - alias + personal email.
+
+Copy the public key for each to:
+- **GitHub**: Settings -> SSH and GPG keys -> New GPG key.
+- **Azure DevOps**: no upload page - it verifies signatures directly from the commit.
+
+### 4.2 Git helper functions
+
+Add two Fish functions. One file each under `~/.config/fish/functions/` to benefit from Fish's autoloading (no need to source files).
+
+Create two Fish functions under `~/.config/fish/functions/`. One named `git-personal.fish` and another `git-work.fish`. We create two separate files to benefit from Fish's autoloading of functions, so that we don't need to source those files ourselves. Both functions should look like this:
+
+```fish
+function git-personal --description "Configure current Git repo for personal commits"
+    # Make sure we’re inside a Git repository
+    if not git rev-parse --is-inside-work-tree >/dev/null 2>&1
+        echo "Not a git repository."
+        return 1
+    end
+
+    git config user.name  "Work/Personal Name"
+    git config user.email "Work/Personal Email"
+    git config user.signingkey Work/Personal GPG Key Id # No quotes
+    git config commit.gpgSign true
+
+    echo "Configured this repository to use the following identity:"
+    git config --get user.name
+    git config --get user.email
+    git config --get user.signingkey
+end
+```
+
+Run `git-personal` or `git-work` once inside each repository to set its identity.
+
+### 4.3 Protect private data in your dotfiles repository
+
+After adding real names/emails to those function files:
+
+```bash
+git update-index --assume-unchanged \
+    .config/fish/functions/git-personal.fish \
+    .config/fish/functions/git-work.fish
+```
+
+This keeps local edits out of future commits.
