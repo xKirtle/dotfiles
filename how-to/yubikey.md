@@ -60,7 +60,7 @@ ykman --device [serial] piv keys generate \
 
 ```
 
-You can modify `--pin-policy` and `--touch-policy` to whatever you prefer.
+You can modify `--pin-policy` and `--touch-policy` to whatever you prefer. `(never/once/always)`
 
 Then, create a matching self-signed certificate (needed so the slot is considered valid):
 ```bash
@@ -139,4 +139,20 @@ yk_ensure_ssh() {
 }
 # optional convenience alias: run once before git/ssh
 alias yk-ssh='yk_ensure_ssh'
+```
+
+### 4. For SSH without a YubiKey
+
+Install `seahorse` and use it in tandem with GNOME's keyring. Simply use the `seahorse` interface to create a new SSH key and retrieve the public key to upload where you want to use it. The default path for the key created is `~/.ssh/id_rsa`. All that's left to do is bind that key to an ssh origin (Host). Edit your `~/.ssh/config` to configure it.
+
+```bash
+Host github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa # or another name if you changed it
+    IdentitiesOnly yes
+
+Host ssh.dev.azure.com
+    User git
+    IdentityFile ~/.ssh/id_rsa # or another name if you changed it
+    IdentitiesOnly yes
 ```

@@ -7,7 +7,6 @@ alias ll='eza -al --icons=always'
 alias lt='eza -a --tree --level=1 --icons=always'
 alias logout='hyprctl dispatch exit'
 
-
 # Enable starship prompt
 starship init fish | source
 
