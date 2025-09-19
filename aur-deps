@@ -5,6 +5,7 @@ aur-check-updates
 azure-cli
 base
 base-devel
+bibata-cursor-theme
 blueman
 bluez
 bluez-utils
@@ -13,6 +14,8 @@ breeze-gtk
 breeze5
 chromium
 cliphist
+colloid-gtk-theme-git
+colloid-icon-theme-git
 discord
 dkms
 dolphin
@@ -26,7 +29,6 @@ fastfetch
 figlet
 firefox
 firefox-developer-edition
-firefoxpwa
 fish
 flatpak
 freelens-bin
@@ -34,6 +36,7 @@ gdm
 git
 go
 grim
+grimblast-git
 gst-plugin-pipewire
 gum
 heroic-games-launcher
@@ -55,6 +58,7 @@ limine
 linux
 linux-firmware
 linux-headers
+lxqt-openssh-askpass
 nano
 network-manager-applet
 networkmanager
@@ -83,6 +87,7 @@ qt5ct
 qt6-wayland
 qt6ct
 rsync
+seahorse
 slurp
 smartmontools
 solaar
@@ -95,6 +100,7 @@ teams-for-linux-git
 thunar
 ttf-fira-sans
 ttf-jetbrains-mono-nerd
+tumbler
 uwsm
 ventoy-bin
 vim

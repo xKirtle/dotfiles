@@ -26,7 +26,7 @@ func installAurDeps(depsFilePath string, simulate bool) error {
 	}
 
 	if simulate {
-		args = append(args, "--print")
+		// args = append(args, "--print")
 		log.Printf("[Simulate] Installing %d AUR dependencies using %s. [%s..%s]",
 			len(deps), aurHelper, deps[0], deps[len(deps)-1])
 
