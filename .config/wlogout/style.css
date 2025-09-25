@@ -7,7 +7,7 @@
 }
 
 window {
-	background-color: #1e1e1e;
+	background-color: shade(@theme_bg_color, 0.8);
 	background-size: cover;
 	font-size: 16pt;
 
@@ -21,7 +21,8 @@ button {
 	border-radius: 80px;
 	border:0px;
 	transition: all 0.3s cubic-bezier(.55, 0.0, .28, 1.682), box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
-	color: white;
+	color: @theme_fg_color;
+	background-color: shade(@theme_bg_color, 0.6);
 }
 
 button:focus {
@@ -32,7 +33,7 @@ button:focus {
 button:hover {
     background-color: #0d7973;
 	opacity: 0.8;
-    color: white;
+    color: @theme_fg_color;
     background-size: 30%;
     margin: 30px;
     border-radius: 80px;
@@ -43,32 +44,27 @@ button span {
     font-size: 1.2em;
 }
 
-#lock {
+#lock, #logout, #suspend, #shutdown, #reboot {
 	margin: 10px;
 	border-radius: 20px;
+}
+
+#lock {
 	background-image: image(url("icons/lock.png"));
 }
 
 #logout {
-	margin: 10px;
-	border-radius: 20px;
 	background-image: image(url("icons/logout.png"));
 }
 
 #suspend {
-	margin: 10px;
-	border-radius: 20px;
 	background-image: image(url("icons/suspend.png"));
 }
 
 #shutdown {
-	margin: 10px;
-	border-radius: 20px;
 	background-image: image(url("icons/shutdown.png"));
 }
 
 #reboot {
-	margin: 10px;
-	border-radius: 20px;
 	background-image: image(url("icons/reboot.png"));
 }
