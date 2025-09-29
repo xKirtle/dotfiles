@@ -3,3 +3,5 @@ close terminal on ws1, can't move to ws 2 anymore.
 Have to spawn another tile on ws1 to be able to move out.
 
 Make my own aur-updates script
+
+hyprlock lock screen does not update clock? (only sometimes??)
