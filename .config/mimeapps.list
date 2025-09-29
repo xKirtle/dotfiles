@@ -185,6 +185,9 @@ text/x-vhdl=code.desktop
 text/x-vpy=code.desktop
 text/x-xmi=code.desktop
 text/x-xslfo=code.desktop
+application/pgp-encrypted=code.desktop
+application/octet-stream=code.desktop
+x-scheme-handler/terminal=kitty.desktop
 
 [Added Associations]
 x-scheme-handler/http=firefox.desktop;
@@ -197,3 +200,5 @@ application/x-extension-shtml=firefox.desktop;
 application/xhtml+xml=firefox.desktop;
 application/x-extension-xhtml=firefox.desktop;
 application/x-extension-xht=firefox.desktop;
+application/pgp-encrypted=code.desktop;
+application/octet-stream=code.desktop;

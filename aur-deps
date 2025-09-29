@@ -1,5 +1,6 @@
 7zip
 amd-ucode
+arch-update-git
 aspnet-runtime
 aur-check-updates
 azure-cli
@@ -34,11 +35,14 @@ flatpak
 freelens-bin
 gdm
 git
+gnome-control-center
 go
 grim
 grimblast-git
 gst-plugin-pipewire
+gtk4-demos
 gum
+gvfs-smb
 heroic-games-launcher
 htop
 hypridle
@@ -78,6 +82,7 @@ pipewire-alsa
 pipewire-jack
 pipewire-pulse
 playerctl
+plymouth
 polkit-kde-agent
 postman-bin
 protonup-qt
@@ -96,7 +101,7 @@ starship
 steam
 swaync
 swayosd
-teams-for-linux-git
+teams-for-linux-bin
 thunar
 ttf-fira-sans
 ttf-jetbrains-mono-nerd

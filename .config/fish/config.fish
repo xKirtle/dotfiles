@@ -1,5 +1,6 @@
 # Set editor
 set -Ux EDITOR code
+set -Ux TERMINAL kitty
 
 # Aliases
 alias ls='eza -a --icons=always'
