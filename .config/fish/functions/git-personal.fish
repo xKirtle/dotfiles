@@ -5,9 +5,9 @@ function git-personal --description "Configure current Git repo for personal com
         return 1
     end
 
-    git config user.name  "Your Personal Alias"
-    git config user.email "you@personal.email"
-    git config user.signingkey <PERSONAL_GPG_KEY_ID>
+    git config user.name  "xKirtle"
+    git config user.email "rodm.martins@proton.me"
+    git config user.signingkey 8ECF2A4CCAC44B13
     git config commit.gpgSign true
 
     echo "Configured this repository to use the following identity:"
