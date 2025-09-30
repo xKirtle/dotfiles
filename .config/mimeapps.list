@@ -188,6 +188,8 @@ text/x-xslfo=code.desktop
 application/pgp-encrypted=code.desktop
 application/octet-stream=code.desktop
 x-scheme-handler/terminal=kitty.desktop
+inode/directory=thunar.desktop
+x-directory/normal=thunar.desktop
 
 [Added Associations]
 x-scheme-handler/http=firefox.desktop;
