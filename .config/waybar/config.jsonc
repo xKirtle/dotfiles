@@ -1,47 +1,94 @@
-{
-  // General
-  "output": "DP-1",
-  "layer": "top",
-  "margin-top": 4,
-  "margin-bottom": 10,
-  "margin-left": 4,
-  "margin-right": 4,
-  "spacing": 0,
-  "reload_style_on_change": true,
+[
+  {
+    // General
+    "output": "DP-1",
+    "layer": "top",
+    "margin-top": 4,
+    "margin-bottom": 10,
+    "margin-left": 4,
+    "margin-right": 4,
+    "spacing": 0,
+    "reload_style_on_change": true,
 
-  // Pull in all module definitions from ./modules
-  "include": [
-    "~/.config/waybar/modules/clock.jsonc",
-    "~/.config/waybar/modules/workspaces.jsonc",
-    "~/.config/waybar/modules/empty.jsonc",
-    "~/.config/waybar/modules/tray.jsonc",
-    "~/.config/waybar/modules/shutdown.jsonc",
-    "~/.config/waybar/modules/mpris.jsonc",
-    "~/.config/waybar/modules/language.jsonc",
-    "~/.config/waybar/modules/privacy.jsonc",
-    "~/.config/waybar/modules/pulseaudio.jsonc",
-    "~/.config/waybar/modules/aur-updates.jsonc",
-    "~/.config/waybar/modules/notifications.jsonc",
-    "~/.config/waybar/modules/toggle-theme.jsonc"
-  ],
+    // Pull in all module definitions from ./modules
+    "include": [
+      "~/.config/waybar/modules/clock.jsonc",
+      "~/.config/waybar/modules/workspaces.jsonc",
+      "~/.config/waybar/modules/empty.jsonc",
+      "~/.config/waybar/modules/tray.jsonc",
+      "~/.config/waybar/modules/shutdown.jsonc",
+      "~/.config/waybar/modules/mpris.jsonc",
+      "~/.config/waybar/modules/language.jsonc",
+      "~/.config/waybar/modules/privacy.jsonc",
+      "~/.config/waybar/modules/pulseaudio.jsonc",
+      "~/.config/waybar/modules/aur-updates.jsonc",
+      "~/.config/waybar/modules/notifications.jsonc",
+      "~/.config/waybar/modules/toggle-theme.jsonc"
+    ],
 
-  // Module placement
-  "modules-left": [
-    "clock",
-    "hyprland/workspaces"
-  ],
-  "modules-center": [
-    "mpris",
-    "custom/empty"
-  ],
-  "modules-right": [
-    "privacy",
-    "custom/aur-updates",
-    "pulseaudio",
-    "hyprland/language",
-    "tray",
-    "custom/toggle-theme",
-    "custom/notifications",
-    "custom/shutdown"
-  ]
-}
+    // Module placement
+    "modules-left": [
+      "clock",
+      "hyprland/workspaces"
+    ],
+    "modules-center": [
+      "mpris",
+      "custom/empty"
+    ],
+    "modules-right": [
+      "privacy",
+      "custom/aur-updates",
+      "pulseaudio",
+      "hyprland/language",
+      "tray",
+      "custom/toggle-theme",
+      "custom/notifications",
+      "custom/shutdown"
+    ]
+  },
+    {
+    // General
+    "output": "!DP-1",
+    "layer": "top",
+    "margin-top": 4,
+    "margin-bottom": 10,
+    "margin-left": 4,
+    "margin-right": 4,
+    "spacing": 0,
+    "reload_style_on_change": true,
+
+    // Pull in all module definitions from ./modules
+    "include": [
+      "~/.config/waybar/modules/clock.jsonc",
+      "~/.config/waybar/modules/workspaces.jsonc",
+      "~/.config/waybar/modules/empty.jsonc",
+      "~/.config/waybar/modules/tray.jsonc",
+      "~/.config/waybar/modules/shutdown.jsonc",
+      "~/.config/waybar/modules/language.jsonc",
+      "~/.config/waybar/modules/privacy.jsonc",
+      "~/.config/waybar/modules/pulseaudio.jsonc",
+      "~/.config/waybar/modules/aur-updates.jsonc",
+      "~/.config/waybar/modules/notifications.jsonc",
+      "~/.config/waybar/modules/toggle-theme.jsonc"
+    ],
+
+    // Module placement
+    "modules-left": [
+      "clock",
+      "hyprland/workspaces"
+    ],
+    "modules-center": [
+      "custom/empty"
+    ],
+    "modules-right": [
+      "privacy",
+      "custom/aur-updates",
+      "pulseaudio",
+      "hyprland/language",
+      "tray",
+      "custom/toggle-theme",
+      "custom/notifications",
+      "custom/shutdown"
+    ]
+  }
+]

@@ -24,6 +24,7 @@ dosfstools
 dotnet-runtime
 dotnet-sdk
 efibootmgr
+ethtool
 exfatprogs
 eza
 fastfetch
@@ -45,6 +46,7 @@ gum
 gvfs-smb
 heroic-games-launcher
 htop
+hypr-local-workspaces
 hypridle
 hyprland
 hyprlang
@@ -85,12 +87,15 @@ playerctl
 plymouth
 polkit-kde-agent
 postman-bin
+proton-pass
 protonup-qt
+protonvpn-applet
 python312
 qt5-wayland
 qt5ct
 qt6-wayland
 qt6ct
+rclone
 rsync
 seahorse
 slurp
@@ -110,6 +115,7 @@ uwsm
 ventoy-bin
 vim
 visual-studio-code-bin
+vlc
 waybar
 waybar-updates
 wget
