@@ -21,7 +21,6 @@
       "~/.config/waybar/modules/language.jsonc",
       "~/.config/waybar/modules/privacy.jsonc",
       "~/.config/waybar/modules/pulseaudio.jsonc",
-      "~/.config/waybar/modules/aur-updates.jsonc",
       "~/.config/waybar/modules/notifications.jsonc",
       "~/.config/waybar/modules/toggle-theme.jsonc"
     ],
@@ -37,7 +36,6 @@
     ],
     "modules-right": [
       "privacy",
-      "custom/aur-updates",
       "pulseaudio",
       "hyprland/language",
       "tray",
@@ -67,7 +65,6 @@
       "~/.config/waybar/modules/language.jsonc",
       "~/.config/waybar/modules/privacy.jsonc",
       "~/.config/waybar/modules/pulseaudio.jsonc",
-      "~/.config/waybar/modules/aur-updates.jsonc",
       "~/.config/waybar/modules/notifications.jsonc",
       "~/.config/waybar/modules/toggle-theme.jsonc"
     ],
@@ -82,7 +79,6 @@
     ],
     "modules-right": [
       "privacy",
-      "custom/aur-updates",
       "pulseaudio",
       "hyprland/language",
       "tray",

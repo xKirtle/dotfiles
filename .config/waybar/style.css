@@ -1,6 +1,6 @@
 * {
     font-family: "Fira Sans", "JetBrains Mono", monospace;
-    font-size: 26px;
+    font-size: 20px;
     border: none;
     border-radius: 0px;
 }
@@ -21,7 +21,7 @@ window#waybar {
     border-radius: 20px;
     padding: 0px 5px;
     margin: 5px 4px;
-    min-width: 24px;
+    min-width: 16px;
 }
 #workspaces button.active {
     background: #d4d4d4;
@@ -50,14 +50,6 @@ window#waybar {
     border-radius: 16px;
     color: #d4d4d4;
     padding: 0px 10px 0px 12px;
-    margin-right: 10px;
-}
-
-#custom-aur-updates {
-    background-color: #2a2a2a;
-    border-radius: 16px;
-    color: #d4d4d4;
-    padding: 0px 10px;
     margin-right: 10px;
 }
 
@@ -90,7 +82,7 @@ window#waybar {
     color: #d4d4d4;
     padding: 0px 16px;
     margin-right: 10px;
-    font-size: 34px;
+    font-size: 28px;
 }
 /* Sun icon adjustment */
 #custom-toggle-theme.light {
@@ -103,7 +95,7 @@ window#waybar {
     color: #d4d4d4;
     padding: 0px 18px 0px 10px;
     margin-right: 10px;
-    font-size: 34px;
+    font-size: 28px;
 }
 
 #custom-shutdown {
@@ -113,4 +105,5 @@ window#waybar {
     /* Power icon is too big so it's formatted as "{icon}{space}" */
     /* Padding only left centers it */
     padding-left: 10px;
+    font-size: 28px;
 }
