@@ -13,7 +13,7 @@ location=center
 width=900
 prompt=Search…
 filter_rate=100
-matching=fuzzy
+# matching=fuzzy
 columns=1
 
 -- Keybinds inside wofi (optional)
