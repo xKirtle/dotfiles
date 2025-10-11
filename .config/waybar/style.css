@@ -59,6 +59,7 @@ window#waybar {
     color: #d4d4d4;
     padding: 0px 10px;
     margin-right: 10px;
+    font-size: 24px;
 }
 
 #language {
@@ -67,6 +68,7 @@ window#waybar {
     color: #d4d4d4;
     padding: 0px 10px;
     margin-right: 10px;
+    font-size: 24px;
 }
 
 #tray {
