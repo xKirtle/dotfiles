@@ -1,6 +1,3 @@
-workspace 1 and 2, both with a terminal open
-close terminal on ws1, can't move to ws 2 anymore.
-Have to spawn another tile on ws1 to be able to move out.
+Make my own aur-updates script for a waybar module
 
-Make my own aur-updates script
-Convert services initialized on autostart.conf to systemd services
+Use systemd user services to ensure things like waybar, swaync and swayosd don't die on `systemctl dpms off` or `systemctl suspend`
