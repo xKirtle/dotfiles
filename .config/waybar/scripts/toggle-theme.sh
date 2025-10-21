@@ -4,10 +4,10 @@ set -euo pipefail
 
 ### --- Configuration ---
 # Colloid theme name changed?
-# THEME_LIGHT="Colloid-Teal-Light"
-# THEME_DARK="Colloid-Teal-Dark"
-THEME_LIGHT="arch-update-Teal-Light"
-THEME_DARK="arch-update-Teal-Dark"
+THEME_LIGHT="Colloid-Teal-Light"
+THEME_DARK="Colloid-Teal-Dark"
+# THEME_LIGHT="arch-update-Teal-Light"
+# THEME_DARK="arch-update-Teal-Dark"
 
 ICON_LIGHT="Colloid-Teal"
 ICON_DARK="Colloid-Teal"
