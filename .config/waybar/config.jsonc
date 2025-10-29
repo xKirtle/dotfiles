@@ -1,7 +1,7 @@
 [
   {
     // General
-    "output": "DP-1",
+    "output": "LG Electronics LG ULTRAGEAR+ 411NTTQ06481",
     "layer": "top",
     "margin-top": 4,
     "margin-bottom": 10,
@@ -48,7 +48,7 @@
   },
     {
     // General
-    "output": "!DP-1",
+    "output": "!LG Electronics LG ULTRAGEAR+ 411NTTQ06481",
     "layer": "top",
     "margin-top": 4,
     "margin-bottom": 10,
