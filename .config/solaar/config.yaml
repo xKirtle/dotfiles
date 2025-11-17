@@ -32,7 +32,7 @@
   _serial: 097ACBE3
   _unitId: 097ACBE3
   _wpid: 408E
-  brightness_control: 100
+  brightness_control: 50
   change-host: null
   divert-gkeys: false
   divert-keys: {209: 0, 210: 0}
