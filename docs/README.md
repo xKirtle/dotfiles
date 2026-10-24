@@ -13,6 +13,7 @@ lives, why, and how to undo or tweak it.
 | [05-audio.md](05-audio.md) | Scarlett Solo, WirePlumber rules, mic/output shortcuts |
 | [06-gaming-and-steam.md](06-gaming-and-steam.md) | Steam scaling, Proton builds, primary monitor, download-speed findings |
 | [07-system-and-packages.md](07-system-and-packages.md) | paru, pacman, bash, network, timezone, removed packages |
+| [08-calendar.md](08-calendar.md) | Proton Calendar sync (vdirsyncer + khal), reminders, agenda panel |
 
 These notes are `docs/` in the dotfiles repo `~/Dev/Personal/dotfiles` (git + GNU Stow;
 `~/Documents/system-setup` is a symlink here). Most configs are symlinks into that repo, so the
@@ -34,6 +35,7 @@ paths below still work as written. The repo's `README.md` covers the layout and 
 | `~/.config/hypr/*.lua` | `hyprctl reload`, then `hyprctl configerrors` (empty = OK) |
 | Hyprland env vars / `hyprland.start` autostart | log out and back in |
 | `~/.config/caelestia/shell.json.template` or `.env` | `./install.sh caelestia` (renders `shell.json`), then restart the shell: **Ctrl+Super+Alt+R** (only read at startup) |
+| `PROTON_CALENDAR_URL` in `.env` | `systemctl --user start calendar-sync.service` (read at run time; no render) |
 | `~/.config/wireplumber/…` | `systemctl --user restart wireplumber` (≈1 s audio blip) |
 | `/etc/greetd/*` | takes effect at next login screen (log out / reboot) |
 | Steam `config.vdf` / `steam_dev.cfg` | quit Steam fully first (it overwrites `config.vdf` on exit) |

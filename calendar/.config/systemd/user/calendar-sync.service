@@ -1,0 +1,6 @@
+[Unit]
+Description=Sync the Proton Calendar ICS link into ~/.local/share/calendars (vdirsyncer)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/calendarctl sync

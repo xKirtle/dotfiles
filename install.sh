@@ -78,7 +78,8 @@ stow --target="$HOME" --restow "${packages[@]}"
 echo "linked: ${packages[*]}"
 
 systemctl --user daemon-reload
-for unit in awww.service themectl-sync.service paru-aur-completion.timer; do
+for unit in awww.service themectl-sync.service paru-aur-completion.timer \
+            calendar-sync.timer calendar-remind.service; do
     [[ -e ~/.config/systemd/user/$unit ]] && systemctl --user enable "$unit" >/dev/null 2>&1 && echo "enabled $unit"
 done
 echo "done. Apply Hyprland changes with: hyprctl reload"

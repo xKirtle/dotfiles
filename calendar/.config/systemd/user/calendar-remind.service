@@ -1,0 +1,15 @@
+[Unit]
+Description=Calendar reminders (notify-send before events)
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/calendarctl remind
+# Minutes before a timed event, and when the all-day events notice is shown on their day.
+Environment=CALENDAR_REMIND_MINUTES=10
+Environment=CALENDAR_ALLDAY_TIME=09:00
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=graphical-session.target

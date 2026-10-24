@@ -116,6 +116,10 @@ hl.bind(mainMod .. " + N",           hl.dsp.global("caelestia:sidebar"))
 hl.bind(mainMod .. " + SHIFT + N",   hl.dsp.global("caelestia:clearNotifs"))
 hl.bind(mainMod .. " + D",           hl.dsp.global("caelestia:showall"))
 
+-- Keep awake: toggle Caelestia's idle inhibitor (no auto-lock / screen off), with a notification
+-- saying the new state (the only other indicator is the "Keep awake" card in the utilities drawer)
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd([[caelestia shell idleInhibitor toggle; if [ "$(caelestia shell idleInhibitor isEnabled)" = true ]; then notify-send -a caelestia-shell -i caffeine-cup-full "Keep awake: on" "The screen won't lock or turn off"; else notify-send -a caelestia-shell -i caffeine-cup-empty "Keep awake: off" "Auto-lock is back on"; fi]]))
+
 -- Restart the shell if it ever dies
 -- (wait for the old instance to fully exit, or the new one quits seeing it still running)
 -- (match only Caelestia's qs, other Quickshell configs run too; '^' keeps it off this sh's own command line)
@@ -137,6 +141,9 @@ hl.bind(mainMod .. " + grave",       hl.dsp.exec_cmd(os.getenv("HOME") .. "/.loc
 -- Omarchy-style pickers: theme (scheme + its wallpaper) / wallpaper within the current theme
 hl.bind("CTRL + SHIFT + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker themes"))
 hl.bind("CTRL + " .. mainMod .. " + space",         hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker wallpapers"))
+
+-- Agenda panel: Proton Calendar, today + next days (calendar package, qs -c agenda)
+hl.bind(mainMod .. " + A",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/calendarctl panel"))
 
 -- Thunar picks up Caelestia's GTK theme (replaces dolphin)
 hl.unbind(mainMod .. " + E")

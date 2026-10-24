@@ -1,0 +1,353 @@
+#!/usr/bin/env python3
+"""calendarctl: Proton Calendar sync, reminders and agenda data (dotfiles `calendar` package).
+
+  calendarctl sync              vdirsyncer: Proton ICS link -> ~/.local/share/calendars/proton
+                                (calendar-sync.timer, every 15 min)
+  calendarctl remind            daemon: notify-send before events (calendar-remind.service)
+  calendarctl remind --once [--dry-run]
+                                one check (dry run: print instead of notifying, don't record)
+  calendarctl agenda [--days N] [--offset D]
+                               JSON for the agenda panel: N days (default 5) starting D days from today
+  calendarctl panel             toggle the agenda panel (qs -c agenda)
+  calendarctl url               print PROTON_CALENDAR_URL from the dotfiles .env (vdirsyncer's url.fetch)
+
+Settings (environment; set in the units or with `systemctl --user edit calendar-remind`):
+  CALENDAR_REMIND_MINUTES   minutes before a timed event to notify (default 10)
+  CALENDAR_ALLDAY_TIME      HH:MM for the all-day events notice on their first day (default 09:00)
+  DOTFILES_ENV              .env to read (default: <dotfiles repo>/.env, found via this script's symlink)
+  CALENDARCTL_KHAL_CONFIG, CALENDARCTL_VDIR, CALENDARCTL_STATE, VDIRSYNCER_CONFIG   test overrides
+"""
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+from datetime import date, datetime, timedelta
+from pathlib import Path
+
+HOME = Path.home()
+SCRIPT = Path(__file__).resolve()          # <repo>/calendar/.local/bin/calendarctl
+REPO = SCRIPT.parents[3]
+ENV_FILE = Path(os.environ.get("DOTFILES_ENV", REPO / ".env"))
+STATE = Path(os.environ.get("CALENDARCTL_STATE", HOME / ".local/state/calendar"))
+VDIR = Path(os.environ.get("CALENDARCTL_VDIR", HOME / ".local/share/calendars/proton"))
+KHAL_CONFIG = os.environ.get("CALENDARCTL_KHAL_CONFIG")
+SYNC_STATUS = STATE / "sync.json"
+NOTIFIED = STATE / "notified.json"
+# The session PATH (Hyprland/uwsm) lacks ~/.local/bin, but khal/vdirsyncer/notify-send are in /usr/bin.
+os.environ["PATH"] = os.environ.get("PATH", "/usr/bin") + ":/usr/bin"
+
+REMIND_MIN = int(os.environ.get("CALENDAR_REMIND_MINUTES", "10"))
+ALLDAY_TIME = os.environ.get("CALENDAR_ALLDAY_TIME", "09:00")
+GRACE = timedelta(minutes=5)   # still notify an event that started this recently (late timer, resume)
+FIELDS = ["uid", "title", "start", "end", "all-day", "location", "repeat-symbol", "description", "url"]
+
+
+def log(*a):
+    print(*a, file=sys.stderr, flush=True)
+
+
+# ---------------------------------------------------------------- .env
+
+def read_env(path=ENV_FILE):
+    """KEY=value lines; blank/# lines skipped; one pair of surrounding quotes stripped (as install.sh)."""
+    out = {}
+    try:
+        lines = path.read_text().splitlines()
+    except FileNotFoundError:
+        return out
+    for line in lines:
+        s = line.strip()
+        if not s or s.startswith("#") or "=" not in s:
+            continue
+        k, v = s.split("=", 1)
+        if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+            v = v[1:-1]
+        out[k.strip()] = v
+    return out
+
+
+def calendar_url():
+    return read_env().get("PROTON_CALENDAR_URL", "").strip()
+
+
+def cmd_url():
+    url = calendar_url()
+    if not url:
+        sys.exit(f"PROTON_CALENDAR_URL is not set in {ENV_FILE}")
+    print(url)
+
+
+# ---------------------------------------------------------------- sync
+
+def write_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data))
+    tmp.replace(path)
+
+
+def read_json(path, default):
+    try:
+        return json.loads(path.read_text())
+    except (FileNotFoundError, ValueError):
+        return default
+
+
+def cmd_sync():
+    VDIR.mkdir(parents=True, exist_ok=True)
+    status = {"time": datetime.now().isoformat(timespec="seconds"), "ok": False, "error": ""}
+    if not calendar_url():
+        status["error"] = "PROTON_CALENDAR_URL not set in .env"
+        write_json(SYNC_STATUS, status)
+        log(f"{status['error']} ({ENV_FILE}); nothing to sync")
+        return
+    if not shutil.which("vdirsyncer"):
+        status["error"] = "vdirsyncer is not installed (sudo pacman -S vdirsyncer khal)"
+        write_json(SYNC_STATUS, status)
+        sys.exit(status["error"])
+    vds = ["vdirsyncer"]
+    if os.environ.get("VDIRSYNCER_CONFIG"):
+        vds += ["-c", os.environ["VDIRSYNCER_CONFIG"]]
+    # The pair must be discovered once (and again if the config changes).
+    r = subprocess.run(vds + ["sync", "proton"], capture_output=True, text=True)
+    if r.returncode != 0 and "discover" in (r.stdout + r.stderr):
+        subprocess.run(vds + ["discover", "proton"], capture_output=True, text=True)
+        r = subprocess.run(vds + ["sync", "proton"], capture_output=True, text=True)
+    out = (r.stdout + r.stderr).strip()
+    if out:
+        log(out)
+    if r.returncode == 0:
+        status["ok"] = True
+    else:
+        lines = [l for l in out.splitlines() if "critical" in l.lower() or "error" in l.lower()]
+        status["error"] = (lines[-1] if lines else out.splitlines()[-1] if out else "vdirsyncer failed")[:300]
+    write_json(SYNC_STATUS, status)
+    if r.returncode != 0:
+        sys.exit(r.returncode)
+
+
+# ---------------------------------------------------------------- events
+
+def khal_events(start: date, days: int):
+    """Event instances overlapping [start, start+days), recurring ones expanded, each listed once."""
+    VDIR.mkdir(parents=True, exist_ok=True)
+    if not shutil.which("khal"):
+        raise RuntimeError("khal is not installed (sudo pacman -S vdirsyncer khal)")
+    cmd = ["khal"] + (["-c", KHAL_CONFIG] if KHAL_CONFIG else []) + ["list"]
+    for f in FIELDS:
+        cmd += ["--json", f]
+    cmd += [start.isoformat(), f"{days}d"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    if r.returncode != 0:
+        raise RuntimeError("khal: " + ((r.stderr or r.stdout).strip().splitlines() or ["failed"])[-1])
+    seen, events = set(), []
+    # One JSON array per listed day; multi-day events repeat on each day they cover.
+    for line in r.stdout.splitlines():
+        line = line.strip()
+        if not line.startswith("["):
+            continue
+        for e in json.loads(line):
+            key = (e["uid"], e["start"])
+            if key in seen:
+                continue
+            seen.add(key)
+            allday = e.get("all-day") == "True"
+            if allday:
+                s = datetime.fromisoformat(e["start"])
+                en = datetime.fromisoformat(e["end"]) + timedelta(days=1)   # khal's end is inclusive
+            else:
+                s = datetime.strptime(e["start"], "%Y-%m-%d %H:%M")
+                en = datetime.strptime(e["end"], "%Y-%m-%d %H:%M")
+            events.append({
+                "uid": e["uid"], "title": e.get("title") or "(no title)", "allDay": allday,
+                "start": s, "end": en, "location": e.get("location", ""),
+                "description": e.get("description", ""), "url": e.get("url", ""),
+                "recurring": bool(e.get("repeat-symbol", "").strip()),
+            })
+    events.sort(key=lambda e: (e["start"], not e["allDay"], e["title"]))
+    return events
+
+
+def fmt_span(e, day=None):
+    if e["allDay"]:
+        n = (e["end"] - e["start"]).days
+        if n <= 1:
+            return "all day"
+        if day is None:
+            return f"all day, {n} days"
+        i = (datetime.combine(day, datetime.min.time()) - e["start"]).days + 1
+        return f"all day, day {i}/{n}"
+    s, en = e["start"], e["end"]
+    if day is not None and s.date() < day:
+        return f"until {en:%H:%M}" if en.date() == day else "all day (continues)"
+    if en.date() > s.date():
+        return f"{s:%H:%M} → {en:%a %H:%M}"
+    return f"{s:%H:%M}–{en:%H:%M}" if en > s else f"{s:%H:%M}"
+
+
+# ---------------------------------------------------------------- reminders
+
+def notify(title, body, urgency="normal"):
+    subprocess.run(["notify-send", "-a", "Calendar", "-i", "x-office-calendar", "-u", urgency,
+                    title, body], check=False)
+
+
+def due_notices(events, now, notified):
+    """(key, title, body) for every notice due now that hasn't been sent yet."""
+    lead = timedelta(minutes=REMIND_MIN)
+    hh, mm = (int(x) for x in ALLDAY_TIME.split(":"))
+    out = []
+    allday_today = []
+    for e in events:
+        if e["allDay"]:
+            # One morning notice on the event's first day (from ALLDAY_TIME until the day ends).
+            if e["start"].date() == now.date() and now >= e["start"].replace(hour=hh, minute=mm):
+                key = f"{e['uid']}|{e['start']:%Y-%m-%d}|allday"
+                if key not in notified:
+                    allday_today.append((key, e))
+            continue
+        if e["start"] - lead <= now < e["start"] + GRACE:
+            key = f"{e['uid']}|{e['start'].isoformat()}"
+            if key in notified:
+                continue
+            mins = round((e["start"] - now).total_seconds() / 60)
+            when = f"in {mins} min" if mins > 0 else "now" if mins == 0 else f"started {-mins} min ago"
+            body = f"{fmt_span(e)} ({when})"
+            if e["location"]:
+                body += f"\n{e['location']}"
+            out.append((key, e["title"], body, "normal"))
+    if allday_today:
+        if len(allday_today) == 1:
+            key, e = allday_today[0]
+            out.append((key, f"Today: {e['title']}", fmt_span(e) + (f"\n{e['location']}" if e["location"] else ""), "low"))
+        else:
+            # Several all-day events: one grouped notice, but record each key.
+            body = "\n".join(f"• {e['title']}" + (f" ({fmt_span(e)})" if fmt_span(e) != "all day" else "")
+                             for _, e in allday_today)
+            out.append(([k for k, _ in allday_today], f"Today: {len(allday_today)} all-day events", body, "low"))
+    return out
+
+
+def remind_once(dry_run=False, events=None, now=None):
+    now = now or datetime.now()
+    if events is None:
+        events = khal_events(now.date(), 2)
+    notified = read_json(NOTIFIED, {})
+    sent = False
+    for key, title, body, urgency in due_notices(events, now, notified):
+        if dry_run:
+            print(f"NOTIFY [{urgency}] {title} | {body.replace(chr(10), ' / ')}")
+            continue
+        notify(title, body, urgency)
+        log(f"notified: {title} ({body.splitlines()[0]})")
+        for k in key if isinstance(key, list) else [key]:
+            notified[k] = now.isoformat(timespec="seconds")
+        sent = True
+    if sent:
+        cutoff = (now - timedelta(days=3)).isoformat()
+        write_json(NOTIFIED, {k: v for k, v in notified.items() if v >= cutoff})
+
+
+def vdir_stamp():
+    try:
+        return max([VDIR.stat().st_mtime] + [p.stat().st_mtime for p in VDIR.iterdir()])
+    except FileNotFoundError:
+        return 0
+
+
+def cmd_remind_daemon():
+    log(f"reminders: {REMIND_MIN} min before timed events, all-day notice at {ALLDAY_TIME}")
+    events, loaded, stamp, day, last_err = None, 0.0, None, None, None
+    while True:
+        now = datetime.now()
+        try:
+            # Re-read khal when the vdir changes, the day rolls over, or every 10 min.
+            st = vdir_stamp()
+            if events is None or st != stamp or now.date() != day or time.time() - loaded > 600:
+                events, loaded, stamp, day = khal_events(now.date(), 2), time.time(), st, now.date()
+            remind_once(events=events, now=now)
+            if last_err:
+                log("reminder checks working again")
+            last_err = None
+        except Exception as e:  # keep the daemon alive; log (once per new error) and retry next round
+            if str(e) != last_err:
+                log(f"reminder check failed: {e}")
+            last_err, events = str(e), None
+        time.sleep(60 - datetime.now().second % 60 + 1)   # just after each full minute
+
+
+# ---------------------------------------------------------------- agenda
+
+def cmd_agenda(days=5, offset=0):
+    today = date.today()
+    first = today + timedelta(days=offset)
+    now = datetime.now()
+    sync = read_json(SYNC_STATUS, {})
+    out = {"generated": now.isoformat(timespec="seconds"), "configured": bool(calendar_url()),
+           "synced": sync.get("time", ""), "syncOk": sync.get("ok", False),
+           "error": sync.get("error", ""), "offset": offset, "days": []}
+    try:
+        events = khal_events(first, days)
+    except Exception as e:
+        out["error"] = str(e)
+        events = []
+    for i in range(days):
+        d = first + timedelta(days=i)
+        d0 = datetime.combine(d, datetime.min.time())
+        d1 = d0 + timedelta(days=1)
+        items = []
+        for e in events:
+            if e["start"] < d1 and (e["end"] > d0 or e["start"] >= d0):
+                items.append({
+                    "title": e["title"], "time": fmt_span(e, d), "allDay": e["allDay"],
+                    "location": e["location"], "recurring": e["recurring"],
+                    "description": e["description"], "url": e["url"],
+                    "start": e["start"].isoformat(), "end": e["end"].isoformat(),
+                    "now": not e["allDay"] and e["start"] <= now < e["end"],
+                    "past": not e["allDay"] and e["end"] <= now,
+                })
+        rel = (d - today).days
+        label = {0: "Today", 1: "Tomorrow", -1: "Yesterday"}.get(rel, d.strftime("%A"))
+        out["days"].append({"date": d.isoformat(), "label": label,
+                            "subtitle": d.strftime("%a %-d %b"), "events": items})
+    print(json.dumps(out, ensure_ascii=False))
+
+
+# ---------------------------------------------------------------- panel
+
+def cmd_panel():
+    ipc = ["qs", "-c", "agenda", "ipc", "call", "agenda", "toggle"]
+    if subprocess.run(ipc, capture_output=True).returncode != 0:
+        subprocess.Popen(["qs", "-c", "agenda", "-d"], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+        for _ in range(30):
+            time.sleep(0.1)
+            if subprocess.run(ipc, capture_output=True).returncode == 0:
+                break
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else ""
+    if cmd == "sync" and len(args) == 1:
+        cmd_sync()
+    elif cmd == "remind" and "--once" in args:
+        remind_once(dry_run="--dry-run" in args)
+    elif cmd == "remind" and len(args) == 1:
+        cmd_remind_daemon()
+    elif cmd == "agenda":
+        days = int(args[args.index("--days") + 1]) if "--days" in args else 5
+        offset = int(args[args.index("--offset") + 1]) if "--offset" in args else 0
+        cmd_agenda(max(1, min(14, days)), offset)
+    elif cmd == "panel":
+        cmd_panel()
+    elif cmd == "url":
+        cmd_url()
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main()

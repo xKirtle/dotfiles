@@ -72,6 +72,9 @@ Theme everywhere: **Catppuccin Mocha**.
 - No option to move the bar off the left edge; it's built vertical.
 - Logs of the running instance: `/run/user/1000/quickshell/by-id/*/log.qslog` (binary-ish; use `strings`).
 - Test-run in the foreground to see errors: `timeout 8 qs -c caelestia -n`.
+- **Keep awake** (idle inhibitor): **Super+Shift+I** toggles it and notifies the new state; CLI
+  `caelestia shell idleInhibitor toggle|enable|disable|isEnabled`. Only on-screen indicator: the
+  "Keep awake" card in the utilities drawer ("Preventing sleep mode", "Active since …"); no bar icon.
 - **No plugin system yet** (2.5.0): Nexus has a "Plugins" entry, but `AboutPage.qml` says it isn't
   wired up. Bar entries are a fixed list (logo, workspaces, activeWindow, tray, clock, statusIcons,
   power), so custom bar widgets go through the **tray** (any StatusNotifierItem shows there; hovering

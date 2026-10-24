@@ -11,6 +11,7 @@ touching, **before** changing anything:
 - `05-audio.md`: Scarlett Solo 4th Gen, WirePlumber rules, audio shortcuts
 - `06-gaming-and-steam.md`: Steam scaling, Proton, primary monitor, download-speed findings
 - `07-system-and-packages.md`: paru workaround, pacman, bash, network
+- `08-calendar.md`: Proton Calendar sync (vdirsyncer/khal), reminders, agenda panel (`calendarctl`)
 
 ## Dotfiles repo
 
@@ -25,7 +26,12 @@ touching, **before** changing anything:
   the tracked `.env.example`). The repo is **public**: never commit them. Apps that can't read env vars get a
   tracked `<file>.template` with `${VAR}` placeholders; `./install.sh <pkg>` renders it to `<file>` with
   `envsubst` (only the variables `.env` defines) before stowing, and the rendered file is gitignored. Edit the
-  template, never the rendered file (e.g. Caelestia's `shell.json`).
+  template, never the rendered file (e.g. Caelestia's `shell.json`). Scripts can read `.env` at run time
+  instead (`calendarctl url` for vdirsyncer's `url.fetch`).
+- **Edit file-level links through the repo path.** `~/.local/bin/*`, `~/.config/systemd/user/*`,
+  `~/.bashrc` etc. are single-file symlinks: `sed -i` on them replaces the link with a plain file
+  (cut loose from the repo), and the Edit tool refuses to write through them. Edit
+  `~/Dev/Personal/dotfiles/<pkg>/...` instead. Files inside folder-linked dirs (`~/.config/hypr/...`) are fine.
 - Commit or push only when the user asks. Pre-stow originals: `~/.dotfiles-pre-stow/`.
 - `claude-usage-tray` is its own repo (`~/Dev/Personal/claude-usage-tray`, installed via its `install.sh`).
 
@@ -71,7 +77,7 @@ touching, **before** changing anything:
   (launch via `hyprctl dispatch 'hl.dsp.exec_cmd("…")'` so it outlives your shell). Don't wait on
   `pgrep -x qs`: other Quickshell configs (claude-usage, theme-picker) run too. Afterwards confirm a new
   PID with `pgrep -af '^qs -c caelestia'`; if the bar is gone, run `caelestia shell -d` again.
-- The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`) don't live-reload: `qs -c <name> kill`,
+- The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`, `qs -c agenda`) don't live-reload: `qs -c <name> kill`,
   then they restart on next use. Processes they start get the session PATH, which lacks `~/.local/bin`,
   so use absolute paths.
 

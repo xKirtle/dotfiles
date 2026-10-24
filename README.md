@@ -18,6 +18,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `thunar`, `swappy`, `chromium` | Thunar actions + shortcuts, screenshot editor, Chromium flags |
 | `audio` | WirePlumber rules (Scarlett Solo) + output switch script |
 | `paru` | paru config + AUR completion refresh timer |
+| `calendar` | Proton Calendar: vdirsyncer + khal configs, `calendarctl` (sync, reminders), agenda panel, user units |
 | `system` | Reference copies of `/etc` files, installed by hand ([system/README.md](system/README.md)) |
 | `docs` | The setup notes |
 

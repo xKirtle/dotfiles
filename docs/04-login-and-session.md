@@ -65,4 +65,6 @@ become `app-<name>@autostart.service` user units.
 | `claude-usage-tray.service` | Claude usage tray icon + menu for the Caelestia bar (see 03) |
 | `awww.service` | wallpaper daemon (Caelestia's own wallpaper layer is off; see 03) |
 | `themectl-sync.service` | mirrors Caelestia's wallpaper onto awww with the grow transition (see 03) |
+| `calendar-sync.timer` | syncs the Proton Calendar link every 15 min (vdirsyncer; see 08) |
+| `calendar-remind.service` | calendar reminders via notify-send (see 08) |
 | `dunst.service` | **masked**; Caelestia handles notifications |

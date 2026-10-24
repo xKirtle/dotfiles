@@ -1,0 +1,22 @@
+# khal on the Proton Calendar vdir synced by vdirsyncer (see ~/.config/vdirsyncer/config).
+# calendarctl (reminders + agenda panel) parses khal's output, so keep these formats as they are.
+
+[calendars]
+[[proton]]
+path = ~/.local/share/calendars/proton/
+type = calendar
+readonly = True
+
+[locale]
+local_timezone = Europe/Lisbon
+default_timezone = Europe/Lisbon
+timeformat = %H:%M
+dateformat = %Y-%m-%d
+longdateformat = %Y-%m-%d
+datetimeformat = %Y-%m-%d %H:%M
+longdatetimeformat = %Y-%m-%d %H:%M
+firstweekday = 0
+weeknumbers = off
+
+[default]
+timedelta = 7d

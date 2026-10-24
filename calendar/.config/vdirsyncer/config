@@ -1,0 +1,22 @@
+# Proton Calendar (read-only ICS link) -> local vdir that khal and calendarctl read.
+# The link is secret, so it isn't written here: vdirsyncer runs `calendarctl url`, which prints
+# PROTON_CALENDAR_URL from the dotfiles' .env. Sync: `calendarctl sync` (calendar-sync.timer, 15 min).
+
+[general]
+status_path = "~/.local/share/vdirsyncer/status/"
+
+[pair proton]
+a = "proton_remote"
+b = "proton_local"
+collections = null
+# The remote is read-only; any local edit is reverted on the next sync.
+conflict_resolution = "a wins"
+
+[storage proton_remote]
+type = "http"
+url.fetch = ["command", "~/.local/bin/calendarctl", "url"]
+
+[storage proton_local]
+type = "filesystem"
+path = "~/.local/share/calendars/proton/"
+fileext = ".ics"

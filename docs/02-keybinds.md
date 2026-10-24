@@ -19,8 +19,10 @@ Custom binds live in `~/.config/hypr/qol.lua`; defaults in `hyprland.lua`; a few
 | Super + Shift + N | clear notifications | qol |
 | Super + D | show all panels | qol |
 | Ctrl + Super + Alt + R | restart Caelestia shell | qol |
+| Super + Shift + I | keep awake on/off (Caelestia idle inhibitor: no auto-lock or screen off; notifies the new state) | qol |
 | Super + Ctrl + Shift + Space | theme picker (Enter = choose wallpaper, Shift+Enter = apply with first wallpaper) | qol |
 | Super + Ctrl + Space | wallpaper picker (current theme) | qol |
+| Super + A | agenda panel: Proton Calendar, today + next 4 days (←/→ = previous/next 5 days, T = today, ↑/↓ = select event, Enter/click = details (click links, drag to select, Ctrl+C copies), O = open its first link, R = sync now, Esc = close; see 08) | qol |
 
 ## Screenshots, clipboard, pickers
 
