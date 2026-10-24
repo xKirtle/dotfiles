@@ -82,7 +82,7 @@ Other autostart comes from systemd user units and `~/.config/autostart/` (see 04
 
 | Rule | Effect |
 |---|---|
-| `float-dialogs` | pavucontrol, nm-connection-editor, nwg-look, qt6ct, kvantummanager, File Roller: floating, centred, 60%×70% |
+| `float-dialogs` | pavucontrol, nm-connection-editor, nwg-look, qt6ct, kvantummanager: floating, centred, 60%×70% |
 | `imv-float` | image viewer floats, centred |
 | `steam-friends-narrow` | Steam "Friends List" tiles as a narrow column: `scrolling_width = 0.15` |
 | `fullscreen-no-idle` | any window (`class = ".*"`): `idle_inhibit = "fullscreen"` |

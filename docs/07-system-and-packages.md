@@ -49,12 +49,13 @@ Appended section `# ---- QoL ----`:
 | What | Why |
 |---|---|
 | `dolphin` | replaced by Thunar |
+| `file-roller`, `thunar-archive-plugin` | replaced by our Thunar archive actions (see 03) |
 | `polkit-kde-agent` (+ 7 KDE libs) | duplicate of `hyprpolkitagent` |
 | `sddm` (disabled, still installed) | replaced by greetd |
 | `dunst` (masked, still installed) | Caelestia handles notifications |
 
 ## Extra tools installed
 
-`alsa-utils`, `alsa-scarlett-gui` (AUR), `7zip`, `gnome-keyring`, `hyprpicker`, `trash-cli`, `mpv`, `imv`, `file-roller`,
+`alsa-utils`, `alsa-scarlett-gui` (AUR), `7zip`, `gnome-keyring`, `hyprpicker`, `trash-cli`, `mpv`, `imv`, `fuse-archive` (AUR), `fuse-overlayfs`,
 `playerctl`, `nwg-look`, `qt6ct`, `kvantum`, `python-cairo` (missing dependency of HyprMod's
 monitor view; marked as a dependency).

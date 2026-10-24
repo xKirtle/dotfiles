@@ -39,4 +39,42 @@
 	<patterns>* (archive *)</patterns>
 	<directories/>
 </action>
+<action>
+	<icon>archive-extract</icon>
+	<name>Extract here</name>
+	<submenu></submenu>
+	<unique-id>1792850000000003-1</unique-id>
+	<command>sh -c 'exec "$HOME/.local/bin/archive-tool" extract-here "$@"' sh %F</command>
+	<description>Extract next to the archive (into a folder named after it, unless it holds a single item)</description>
+	<range></range>
+	<patterns>*.zip;*.7z;*.rar;*.tar;*.tar.gz;*.tgz;*.tar.xz;*.txz;*.tar.zst;*.tzst;*.tar.bz2;*.tbz;*.tbz2;*.tar.lz;*.tar.lzma;*.iso;*.cab;*.jar;*.cpio;*.xar;*.ZIP;*.7Z;*.RAR</patterns>
+	<other-files/>
+</action>
+<action>
+	<icon>archive-extract</icon>
+	<name>Extract to folder</name>
+	<submenu></submenu>
+	<unique-id>1792850000000004-1</unique-id>
+	<command>sh -c 'exec "$HOME/.local/bin/archive-tool" extract-to "$@"' sh %F</command>
+	<description>Extract into a folder named after the archive</description>
+	<range></range>
+	<patterns>*.zip;*.7z;*.rar;*.tar;*.tar.gz;*.tgz;*.tar.xz;*.txz;*.tar.zst;*.tzst;*.tar.bz2;*.tbz;*.tbz2;*.tar.lz;*.tar.lzma;*.iso;*.cab;*.jar;*.cpio;*.xar;*.ZIP;*.7Z;*.RAR</patterns>
+	<other-files/>
+</action>
+<action>
+	<icon>archive-insert</icon>
+	<name>Compress to .zip</name>
+	<submenu></submenu>
+	<unique-id>1792850000000005-1</unique-id>
+	<command>sh -c 'exec "$HOME/.local/bin/archive-tool" compress "$@"' sh %F</command>
+	<description>Zip the selected files and folders</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
 </actions>

@@ -325,7 +325,7 @@ end
 
 hl.window_rule({
     name  = "float-dialogs",
-    match = { class = "^(pavucontrol|org.pulseaudio.pavucontrol|nm-connection-editor|nwg-look|qt6ct|kvantummanager|org.gnome.FileRoller)$" },
+    match = { class = "^(pavucontrol|org.pulseaudio.pavucontrol|nm-connection-editor|nwg-look|qt6ct|kvantummanager)$" },
     float = true,
     size  = "monitor_w*0.6 monitor_h*0.7",
     center = true,
