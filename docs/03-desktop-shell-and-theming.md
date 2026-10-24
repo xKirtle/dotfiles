@@ -251,7 +251,27 @@ Replaces Omarchy's Claude usage indicator. **Source of truth: `~/Dev/Personal/cl
 - `thunar`, `thunar-archive-plugin`, `thunar-volman`, `gvfs`, `tumbler`, `ffmpegthumbnailer`.
 - Default for folders: `xdg-mime default thunar.desktop inode/directory`.
 - Themed by Caelestia's `gtk-3.0/thunar.css`. Dolphin was removed because it looked bad with the theme.
-- Archives: `file-roller` + `7zip`.
+- Archives: `file-roller` + `7zip` for extracting/creating (right-click "Extract here" via `thunar-archive-plugin`).
+  File Roller can't drag files out of an archive on Wayland (its drag-out uses the X11-only XDS protocol).
+- **Browse archive** (double-click or right-click an archive; ours): opens it as a folder in Thunar so files
+  can be **dragged out** like from any folder. Two FUSE layers (both just `fuse3` + `libarchive`):
+  **`fuse-archive`** (AUR) mounts the archive read-only in `$XDG_RUNTIME_DIR/archives/.lower/<id>`, and
+  **`fuse-overlayfs`** puts a throwaway writable layer on top (`~/.cache/archive-mount/layers/<id>`), mounted
+  at `$XDG_RUNTIME_DIR/archives/"<name> (archive <id>)"`. Why the overlay: Thunar on Wayland treats a
+  drag-out as a **move** (copy, then delete the source), and on the read-only mount alone the delete failed
+  with "Error removing file … Read-only file system" (read-only permission masks didn't change that). With
+  the overlay the delete only hides the file in the browsed view; **the archive itself is never modified**.
+  **Close archive** (right-click the folder or its background) does *lazy* unmounts of both layers and deletes
+  the writable layer; lazy because the Thunar window showing the archive keeps it busy, so a normal unmount
+  from its own menu always failed ("still in use"). Everything also goes at logout.
+  Script: `~/.local/bin/archive-mount open|close|list` (`thunar` package; `-o lazycache`, cache on disk).
+  Ark (KDE) would also do drag-out but pulls ~40 KDE packages.
+  - **Double-click** opens archives this way: `~/.local/share/applications/archive-browse.desktop`
+    (`thunar` package, hidden from launchers) is the default for zip, 7z, rar, tar.*, iso, cab and cpio
+    (`xdg-mime default archive-browse.desktop <types>`; the list is its `MimeType=` line; backup
+    `~/.config/mimeapps.list.bak-pre-archive-browse`). File Roller stays under "Open With".
+    `~/.local/share/applications` must exist before stowing (install.sh creates it) so stow links the
+    single file instead of folding the whole folder into the repo.
 - **Open Terminal Here** (right-click, or **F4**): custom action in `~/.config/Thunar/uca.xml`, changed to
   run `kitty --directory` directly (the stock `exo-open … TerminalEmulator` had no preferred terminal set).
   The F4 bind is in `accels.scm` as `<Actions>/ThunarActions/uca-action-1792778832572115-1`.

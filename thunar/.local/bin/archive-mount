@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# Browse archives as folders in Thunar, so files can be dragged out.
+#   archive-mount open <archive>   mount it (or reuse its mount) and open it in Thunar
+#   archive-mount close <path>     unmount: <path> is the archive, its folder, or anything inside it
+#   archive-mount list             show what's mounted
+# Two layers: fuse-archive mounts the archive read-only (hidden, $base/.lower/<id>), and
+# fuse-overlayfs puts a throwaway writable layer on top, mounted at $base/"<name> (archive <id>)".
+# Thunar on Wayland treats a drag-out as a move, i.e. copy + delete the source; on the read-only
+# mount alone that delete fails with "Read-only file system". With the overlay the delete just
+# hides the file in the browsed view. Nothing is ever written to the archive itself; close throws
+# the writable layer away. Mounts live under $XDG_RUNTIME_DIR, so they also go at logout.
+# Used by Thunar's "Browse archive" / "Close archive" actions and archive-browse.desktop.
+set -euo pipefail
+
+base="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/archives"
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/archive-mount"  # decompression cache + writable layers, on disk
+
+notify() { notify-send -a Thunar -i package-x-generic "$@" 2>/dev/null || echo "$*" >&2; }
+
+is_mounted() { findmnt -rn -M "$1" >/dev/null 2>&1; }
+
+# Short id per archive path. Overlay option paths must not contain ',' or ':', so every
+# internal path uses only the id; the readable name is only in the browsed folder's name.
+id_for() { realpath -- "$1" | tr -d '\n' | sha1sum | cut -c1-6; }
+
+merged_for() { printf '%s/%s (archive %s)' "$base" "$(basename -- "$(realpath -- "$1")")" "$(id_for "$1")"; }
+
+# Browsed folder that contains <path> (a dir inside it, or the folder itself).
+mount_containing() {
+    local p
+    p=$(realpath -- "$1")
+    while [[ "$p" == "$base"/* ]]; do
+        [[ "$(dirname -- "$p")" == "$base" ]] && { printf '%s' "$p"; return 0; }
+        p=$(dirname -- "$p")
+    done
+    return 1
+}
+
+# Unmount and remove everything belonging to <id>. Lazy unmounts (-z): the Thunar window showing
+# the archive keeps the folder busy, so a normal unmount from its own right-click menu would always
+# fail; a lazy one detaches now and lets anything still reading (a viewer, a copy) finish.
+teardown() {
+    local id=$1 merged=${2:-}
+    [[ -n "$merged" ]] && is_mounted "$merged" && fusermount3 -u -z -- "$merged" 2>/dev/null
+    [[ -n "$merged" ]] && { rmdir -- "$merged" 2>/dev/null || true; }
+    is_mounted "$base/.lower/$id" && fusermount3 -u -z -- "$base/.lower/$id" 2>/dev/null
+    rmdir -- "$base/.lower/$id" 2>/dev/null || true
+    rm -rf -- "${cache:?}/layers/$id"
+}
+
+cmd_open() {
+    local archive=$1 id merged lower layer err
+    [[ -f "$archive" ]] || { notify "Browse archive" "Not a file: $archive"; exit 1; }
+    command -v fuse-overlayfs >/dev/null || { notify "Browse archive" "Needs fuse-overlayfs: sudo pacman -S fuse-overlayfs"; exit 1; }
+    id=$(id_for "$archive")
+    merged=$(merged_for "$archive")
+    lower="$base/.lower/$id"
+    layer="$cache/layers/$id"
+    if ! is_mounted "$merged"; then
+        teardown "$id"  # leftovers from a half-finished open (browsed folder not mounted)
+        mkdir -p "$merged" "$lower" "$layer/upper" "$layer/work"
+        if ! err=$(TMPDIR="$cache" fuse-archive -q -o lazycache "$archive" "$lower" 2>&1); then
+            rmdir -- "$merged" 2>/dev/null || true
+            teardown "$id"
+            notify "Couldn't open $(basename -- "$archive")" "${err:-fuse-archive failed}"
+            exit 1
+        fi
+        if ! err=$(fuse-overlayfs -o "lowerdir=$lower,upperdir=$layer/upper,workdir=$layer/work" "$merged" 2>&1); then
+            rmdir -- "$merged" 2>/dev/null || true
+            teardown "$id"
+            notify "Couldn't open $(basename -- "$archive")" "${err:-fuse-overlayfs failed}"
+            exit 1
+        fi
+    fi
+    exec thunar "$merged"
+}
+
+cmd_close() {
+    local target=$1 merged id
+    if [[ -f "$target" ]]; then
+        merged=$(merged_for "$target")
+    else
+        merged=$(mount_containing "$target") || { notify "Close archive" "Not inside a browsed archive"; exit 1; }
+    fi
+    id=${merged##* (archive }; id=${id%)}
+    if is_mounted "$merged"; then
+        teardown "$id" "$merged"
+        notify "Closed $(basename -- "${merged% (archive *}")"
+    else
+        teardown "$id" "$merged"
+        notify "Close archive" "It wasn't open"
+    fi
+}
+
+cmd_list() {
+    findmnt -rn -t fuse.fuse-overlayfs -o TARGET 2>/dev/null | sed 's/\\x20/ /g' | grep -F "$base/" || true
+}
+
+case "${1:-}" in
+    open)  [[ $# -eq 2 ]] && cmd_open "$2" ;;
+    close) [[ $# -eq 2 ]] && cmd_close "$2" ;;
+    list)  cmd_list ;;
+    *)     sed -n '2,5p' "$0" >&2; exit 2 ;;
+esac

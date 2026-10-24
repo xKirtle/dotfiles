@@ -21,7 +21,7 @@ fi
 
 # Make sure shared parents exist as real dirs, so stow links the per-app dirs inside them
 # instead of folding e.g. all of ~/.config/systemd/user into one package.
-mkdir -p ~/.config/systemd/user ~/.local/bin ~/.config/quickshell
+mkdir -p ~/.config/systemd/user ~/.local/bin ~/.config/quickshell ~/.local/share/applications
 
 # --- Render *.template files with the values from .env ---------------------------------
 # Only ${VAR} / $VAR names defined in .env are replaced, so any other `$` text is left alone.

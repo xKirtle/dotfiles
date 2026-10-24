@@ -17,4 +17,26 @@
 	<text-files/>
 	<video-files/>
 </action>
+<action>
+	<icon>package-x-generic</icon>
+	<name>Browse archive</name>
+	<submenu></submenu>
+	<unique-id>1792850000000001-1</unique-id>
+	<command>sh -c 'exec "$HOME/.local/bin/archive-mount" open "$1"' sh %f</command>
+	<description>Open the archive as a read-only folder (drag files out of it)</description>
+	<range>1-1</range>
+	<patterns>*.zip;*.7z;*.rar;*.tar;*.tar.gz;*.tgz;*.tar.xz;*.txz;*.tar.zst;*.tzst;*.tar.bz2;*.tbz;*.tbz2;*.tar.lz;*.tar.lzma;*.iso;*.cab;*.jar;*.cpio;*.xar;*.ZIP;*.7Z;*.RAR</patterns>
+	<other-files/>
+</action>
+<action>
+	<icon>media-eject</icon>
+	<name>Close archive</name>
+	<submenu></submenu>
+	<unique-id>1792850000000002-1</unique-id>
+	<command>sh -c 'exec "$HOME/.local/bin/archive-mount" close "$1"' sh %f</command>
+	<description>Unmount this browsed archive</description>
+	<range>1-1</range>
+	<patterns>* (archive *)</patterns>
+	<directories/>
+</action>
 </actions>
