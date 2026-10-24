@@ -293,7 +293,7 @@ def on_scheme_change():
             c = json.load(f)["colours"]
     except (OSError, ValueError, KeyError):
         return
-    for apply in (hypr_borders, chromium_theme):
+    for apply in (hypr_borders, chromium_theme, serein_theme):
         try:
             apply(c)
         except (KeyError, OSError, subprocess.SubprocessError) as e:
@@ -322,6 +322,62 @@ def chromium_theme(c):
     if subprocess.run(["pgrep", "-x", "chromium"], capture_output=True).returncode == 0:
         subprocess.Popen(["chromium", "--refresh-platform-policy", "--no-startup-window"],
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+SEREIN_THEMES = f"{os.environ.get('XDG_DATA_HOME', HOME + '/.local/share')}/serein/extensions/themes"
+SEREIN_THEME_ID = "caelestia-scheme"
+
+
+def serein_theme(c):
+    """Serein (native Discord client) theme, written as a local theme into its own store
+    (themes/<id>/package.json, the format Settings > Themes > Create theme saves). Serein only
+    reads the store at startup, so a running Serein shows new colours after a restart."""
+    if not os.path.isdir(SEREIN_THEMES):
+        return  # Serein not installed / never started
+    import hashlib
+
+    def h(key, alpha=""):
+        return "#" + c[key].lower() + alpha
+
+    colors = {
+        "base": h("surfaceContainerLowest"),   # server rail / window
+        "sidebar": h("surface"),              # channel + member lists
+        "chat": h("surfaceContainerLow"),     # message area
+        "raised": h("surfaceContainer"),      # cards, popouts
+        "hover": h("surfaceContainerHigh"),
+        "selected": h("surfaceContainerHighest"),
+        "border": h("outlineVariant"),
+        "text_strong": h("onSurface"),
+        "text": h("onSurfaceVariant"),
+        "muted": h("outline"),
+        "link": h("tertiary"),
+        "accent": h("primary"),
+        "accent_text": h("onPrimary"),
+        "positive": h("success" if "success" in c else "term2"),
+        "warning": h("yellow" if "yellow" in c else "term3"),
+        "danger": h("error"),
+        "mention_bg": h("primary", "26"),     # ~15% primary over the message row
+        "mention_text": h("primary"),
+    }
+    palette = {"colors": colors, "backdrop": None}
+    package = {
+        "manifest": {"api_version": 1, "id": SEREIN_THEME_ID, "name": "Caelestia",
+                     "version": "1.0.0", "author": "themectl", "license": "MIT", "source": "",
+                     "kind": "theme", "capabilities": [], "actions": []},
+        # Same palette for both appearances, so Serein matches the desktop either way.
+        "theme": {"light": palette, "dark": palette, "style": {}},
+    }
+    encoded = json.dumps(package, separators=(",", ":")).encode()
+    stored = {"local_theme": True, "package": package, "grants": [], "reviewed": False,
+              "sha256": hashlib.sha256(encoded).hexdigest(), "download_bytes": len(encoded)}
+    directory = f"{SEREIN_THEMES}/{SEREIN_THEME_ID}"
+    if os.path.exists(f"{directory}.disabled"):
+        return  # Serein is cleaning up after "Disable"; leave it alone
+    os.makedirs(directory, exist_ok=True)
+    tmp = f"{directory}/package.partial"  # Serein's own temp name; it deletes leftovers on load
+    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+        json.dump(stored, f, separators=(",", ":"))
+    os.replace(tmp, f"{directory}/package.json")
 
 
 def main():

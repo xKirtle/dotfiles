@@ -12,12 +12,13 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 |---|---|
 | `hypr` | Hyprland: `hyprland.lua` (input), `hyprland-gui.lua` (**HyprMod-managed; don't hand-edit**), `qol.lua` (everything else) |
 | `caelestia` | Caelestia shell config (`shell.json.template`, rendered to `shell.json`) |
-| `themectl` | Theme + wallpaper pickers, awww transitions, scheme sync (`themectl`, Quickshell picker, user units) |
+| `themectl` | Theme + wallpaper pickers, awww transitions, scheme sync to Hyprland/Chromium/Serein (`themectl`, Quickshell picker, user units) |
 | `kitty`, `shell`, `bash` | Terminal, starship prompt, bash |
 | `gtk`, `qt`, `fonts` | GTK 3/4 settings, qt6ct + Kvantum, fontconfig |
 | `thunar`, `swappy`, `chromium` | Thunar actions + shortcuts, screenshot editor, Chromium flags |
 | `audio` | WirePlumber rules (Scarlett Solo) + output switch script |
 | `paru` | paru config + AUR completion refresh timer |
+| `spotifast` | Copies Caelestia's rendered Spotifast palette into Spotifast's themes (`spotifast-caelestia-theme`, run by Caelestia's postHook) |
 | `calendar` | Proton Calendar: vdirsyncer + khal configs, `calendarctl` (sync, reminders), agenda panel, user units |
 | `system` | Reference copies of `/etc` files, installed by hand ([system/README.md](system/README.md)) |
 | `docs` | The setup notes |

@@ -53,9 +53,22 @@ Theme everywhere: **Catppuccin Mocha**.
     Zed, Warp; **running terminals** (it writes OSC colour sequences to every `/dev/pts/*`);
     **new terminals** (our `~/.bashrc` runs `command cat ~/.local/state/caelestia/sequences.txt`; `command`
     because `cat` is aliased to `bat`, which adds a "File:" header; backup
-    `.bashrc.bak-pre-sequences`); **Hyprland borders** and **Chromium** (via `themectl sync`, see below).
+    `.bashrc.bak-pre-sequences`); **Hyprland borders**, **Chromium** and **Serein** (via `themectl sync`, see below;
+    Serein only after a restart); **Spotifast** (live, see next point).
     Custom templates for other apps can go in `~/.config/caelestia/templates/` (`{{ primary.hex }}`-style
-    fields; written to `~/.local/state/caelestia/theme/`).
+    fields, also `.hexalpha`/`.rgb`/`.hsl` and `{{ mode }}`; an unknown name is left unfilled; written to
+    `~/.local/state/caelestia/theme/<same name>`). After rendering, Caelestia runs `theme.postHook` from
+    `~/.config/caelestia/cli.json` (tracked; it's a single shell string, so chain any new hook onto it).
+  - **Spotifast** (Spotify client): palettes are `~/.config/spotifast/themes/<Name>.json`
+    (`{"base": "dark|light", "colors": {window, panel, surface, surface_hover, surface_active, outline,
+    text, secondary, dim, accent, accent_hover, on_accent, danger, warning, overlay, shadow, tint}}`,
+    `#RRGGBB[AA]`, omitted keys inherit; **no symlinks**). Template `templates/spotifast.json`; the
+    postHook runs `~/.local/bin/spotifast-caelestia-theme` (`spotifast` package), which validates the
+    render and copies it atomically to `themes/Caelestia.json` (modelled on the Omarchy hook in
+    `/usr/share/spotifast/omarchy/`), then runs `spotifast reload-themes`. Spotifast's inotify watcher
+    also reloads it live without interrupting playback. Select it once in Settings > Appearance > Theme >
+    **Caelestia** (stored as `custom_theme` in `settings.json`; don't edit that while it runs). With
+    "accent from album art" on, album art may still override the accent.
   - **What doesn't:** Qt apps stay on Kvantum Catppuccin (Caelestia targets `qtengine`, unused here;
     OpenRGB is the only Qt app, so it's not worth switching to Fusion). kitty's own
     `catppuccin-mocha.conf` is just the base the sequences override.
@@ -124,11 +137,40 @@ A **theme** is a folder in `~/Pictures/Wallpapers/<theme>/` plus a Caelestia col
   the dir is user-writable (one-time `sudo install -d -o username -g username /etc/chromium/policies/managed`),
   and it only runs `chromium --refresh-platform-policy` if Chromium is already running (otherwise that
   flag starts a hidden instance). Side effect: Chromium shows "Managed by your organization".
+  It also writes a **Serein** theme (`serein_theme`, see "Discord client: Serein" below).
   Caelestia writes `scheme.json` **atomically** (temp file + `os.replace`), which arrives as a
   RENAMED event whose *destination* is the watched file; the watcher matches both ends. To test,
   rewrite it the same way (a plain `cat >` only exercises the in-place path).
   The service's memory peak is ~470 MB, from `awww img` decoding the 5K/6K PNGs; it's short-lived.
   Check: `awww query`; logs: `journalctl --user -u themectl-sync`.
+
+## Discord client: Serein
+
+`serein-bin` (AUR nightly, native Rust/egui client, window class `cz.viceverse.serein`).
+- **Data:** `~/.local/share/serein/` (`client.sqlite3` = settings, logins, cache; `extensions/`). No
+  `~/.config/serein`. Upstream docs: `docs/theme-api.md` and `docs/extensions.md` in
+  github.com/ViceVerse-cz/Serein (the package only ships the README).
+- **Themes:** JSON, no CSS. Each installed theme is `extensions/themes/<id>/package.json` =
+  `{"local_theme", "package": {"manifest", "theme": {"light"|"dark": {"colors", "backdrop"}, "style"}},
+  "grants", "reviewed", "sha256", "download_bytes"}` (all `deny_unknown_fields`). The selection is
+  `extensions/themes/active.json`, holding just the id (no newline). At most 8 themes. Colour keys
+  (`#RRGGBB[AA]`): `base sidebar chat raised hover selected border text_strong text muted link accent
+  accent_text positive warning danger mention_bg mention_text`; `style` = font sizes, radii, control
+  height. Settings > Themes: Use theme / Create theme / Disable; **Ctrl+Shift+F12** resets to built-in.
+  A custom accent in Appearance (`primary_color`) overrides the theme accent.
+- **No live reload:** it reads the store only at startup (and on logout/account switch); no inotify, and
+  plugins can't read files. A changed theme shows after **quitting and restarting Serein**.
+- **Ours: theme "Caelestia"** (`caelestia-scheme`, a local theme), written by `themectl sync`
+  (`serein_theme` in themectl) on every `scheme.json` change, the same palette in light and dark:
+  base = surfaceContainerLowest, sidebar = surface, chat = surfaceContainerLow, raised =
+  surfaceContainer, hover/selected = surfaceContainerHigh/Highest, border = outlineVariant, text_strong =
+  onSurface, text = onSurfaceVariant, muted = outline, link = tertiary, accent/accent_text =
+  primary/onPrimary, positive = success, warning = yellow, danger = error, mention = primary (bg at 15%).
+  `active.json` was switched to it (backup `active.json.bak-pre-scheme`, was `black-theme`).
+  **BlackTheme** stays installed: Settings > Themes > BlackTheme > Use theme to go back. Editing
+  "Caelestia" inside Serein works but is overwritten on the next scheme change.
+- **Checking a package:** Serein's own parser: clone the repo, add an example to `crates/extensions` that
+  deserialises the stored record and calls `Package::validate()`, `cargo run -p extensions --example …`.
 
 ## Claude usage tray (ours)
 

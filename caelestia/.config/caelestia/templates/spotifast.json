@@ -1,0 +1,19 @@
+{
+  "base": "{{ mode }}",
+  "colors": {
+    "window": "#{{ surface.hex }}",
+    "panel": "#{{ surfaceContainerLow.hex }}",
+    "surface": "#{{ surfaceContainer.hex }}",
+    "surface_hover": "#{{ surfaceContainerHigh.hex }}",
+    "surface_active": "#{{ surfaceContainerHighest.hex }}",
+    "outline": "#{{ outlineVariant.hex }}",
+    "text": "#{{ onSurface.hex }}",
+    "secondary": "#{{ onSurfaceVariant.hex }}",
+    "dim": "#{{ outline.hex }}",
+    "accent": "#{{ primary.hex }}",
+    "accent_hover": "#{{ primary.hex }}d9",
+    "on_accent": "#{{ onPrimary.hex }}",
+    "danger": "#{{ error.hex }}",
+    "warning": "#{{ yellow.hex }}"
+  }
+}

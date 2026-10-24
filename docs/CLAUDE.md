@@ -77,6 +77,9 @@ touching, **before** changing anything:
   (launch via `hyprctl dispatch 'hl.dsp.exec_cmd("…")'` so it outlives your shell). Don't wait on
   `pgrep -x qs`: other Quickshell configs (claude-usage, theme-picker) run too. Afterwards confirm a new
   PID with `pgrep -af '^qs -c caelestia'`; if the bar is gone, run `caelestia shell -d` again.
+- Serein (Discord) reads its theme store only at startup: `themectl sync` regenerates its "Caelestia" theme,
+  but don't restart Serein to check (the user chats in it); validate packages with Serein's own crate
+  (`03-desktop-shell-and-theming.md`, Serein).
 - The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`, `qs -c agenda`) don't live-reload: `qs -c <name> kill`,
   then they restart on next use. Processes they start get the session PATH, which lacks `~/.local/bin`,
   so use absolute paths.

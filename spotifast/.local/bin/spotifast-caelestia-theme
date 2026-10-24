@@ -1,0 +1,23 @@
+#!/bin/bash
+# Copy Caelestia's rendered Spotifast palette into Spotifast's themes folder as "Caelestia".
+# Run by Caelestia's postHook (~/.config/caelestia/cli.json) after every `caelestia scheme set`,
+# once the user templates are rendered. Spotifast rejects symlinked palettes, hence the copy.
+# Modelled on /usr/share/spotifast/omarchy/spotifast-theme.
+set -euo pipefail
+
+source_file=${XDG_STATE_HOME:-$HOME/.local/state}/caelestia/theme/spotifast.json
+themes_dir=${XDG_CONFIG_HOME:-$HOME/.config}/spotifast/themes
+
+[[ -f $source_file && -d $themes_dir ]] || exit 0  # no render yet / Spotifast never started
+# Never hand Spotifast a broken file (e.g. an unfilled {{ field }}); it keeps the last one.
+python3 -m json.tool "$source_file" >/dev/null 2>&1 || exit 0
+
+temporary=$(mktemp "$themes_dir/.caelestia.XXXXXX")
+trap 'rm -f -- "$temporary"' EXIT
+cp -- "$source_file" "$temporary"
+chmod 644 "$temporary"
+mv -f -- "$temporary" "$themes_dir/Caelestia.json"
+
+# Spotifast's Linux file watcher picks the change up on its own; this is a belt-and-braces
+# nudge. It only talks to a running instance and never starts the app.
+timeout 5 spotifast reload-themes >/dev/null 2>&1 || true
