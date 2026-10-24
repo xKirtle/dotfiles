@@ -64,6 +64,26 @@ straight from DSP Outputs 1/2, not from a Mixer Output. Read it from the CLI:
   (PipeWire software level, on top of the interface's gain knob; capped at 100%)
 - Visual: Caelestia bar mic icon (crossed out when muted) + mic OSD (see 03).
 
+## Dictation (speech to text, F9)
+
+`~/.local/bin/dictate` (package `dictate`) records the **default mic** and transcribes it locally with
+whisper.cpp, then types the text into the focused window (`wtype`) and copies it to the clipboard.
+
+- **F9** starts recording ("Listening…" notification); **F9** again stops and transcribes.
+  **Shift+F9** cancels. A press while it's still transcribing is ignored.
+- Model: `~/.local/share/whisper/ggml-large-v3-turbo.bin` (1.6 GB, from Hugging Face
+  `ggerganov/whisper.cpp`; the script downloads it if missing). Language is auto-detected (`-l auto`).
+- **VRAM only while transcribing:** no daemon. `whisper-cli` loads the model on the GPU, transcribes
+  and exits. Nothing stays resident between uses. Measured on the 11 s `jfk.wav` sample: 0.33 s
+  load + ~0.2 s transcription. The very first run (and the first after a driver update) took ~10 s
+  while the driver compiled and cached the Vulkan shaders.
+- GPU backend is **Vulkan** (`ggml-vulkan`, 44 MB), not CUDA: `ggml-cuda` pulls in the 5 GB `cuda`
+  toolkit. Packages: `whisper-cpp ggml-vulkan wtype` (official repos).
+- Recording: `pw-record` at 16 kHz mono into `$XDG_RUNTIME_DIR/dictate/rec.wav` (deleted after).
+  Under 0.5 s is skipped. `[BLANK_AUDIO]` markers are stripped.
+- Chosen over `hyprwhspr` (AUR) because that keeps the model loaded in a service all the time
+  (it can only unload/reload by hand, and refuses to record while unloaded).
+
 ## Other notes
 
 - The other output, `AD102 … (HDMI) [LG ULTRAGEAR+]`, is monitor audio through the GPU.

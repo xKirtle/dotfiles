@@ -58,4 +58,4 @@ Appended section `# ---- QoL ----`:
 
 `alsa-utils`, `alsa-scarlett-gui` (AUR), `7zip`, `gnome-keyring`, `hyprpicker`, `trash-cli`, `mpv`, `imv`, `fuse-archive` (AUR), `fuse-overlayfs`,
 `playerctl`, `nwg-look`, `qt6ct`, `kvantum`, `python-cairo` (missing dependency of HyprMod's
-monitor view; marked as a dependency).
+monitor view; marked as a dependency), `whisper-cpp` + `ggml-vulkan` + `wtype` (dictation, see 05).

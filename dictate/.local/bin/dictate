@@ -1,0 +1,88 @@
+#!/bin/bash
+# dictate: speech to text with whisper.cpp (GPU via ggml-vulkan).
+#   dictate          toggle: start recording the default mic / stop, transcribe, type the text
+#   dictate cancel   stop recording and throw it away
+# The model is only loaded (into VRAM) while whisper-cli runs, then freed.
+# The text is typed into the focused window with wtype and also copied to the clipboard.
+
+MODEL="${XDG_DATA_HOME:-$HOME/.local/share}/whisper/ggml-large-v3-turbo.bin"
+MODEL_URL="https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"
+RUN="${XDG_RUNTIME_DIR:-/tmp}/dictate"
+PIDFILE="$RUN/rec.pid"
+WAV="$RUN/rec.wav"
+NOTIFY_ID="$RUN/notify.id"
+
+mkdir -p "$RUN"
+
+notify() {  # notify <summary> [body] [notify-send args...]; replaces the previous popup
+    local id
+    id=$(cat "$NOTIFY_ID" 2>/dev/null)
+    notify-send -a dictate -i audio-input-microphone -p ${id:+-r "$id"} "${@:3}" "$1" "${2:-}" > "$NOTIFY_ID"
+}
+
+recording_pid() {
+    local pid
+    pid=$(cat "$PIDFILE" 2>/dev/null) || return 1
+    [[ "$(ps -p "$pid" -o comm= 2>/dev/null)" == pw-record ]] && echo "$pid"
+}
+
+stop_recording() {
+    local pid=$1
+    kill -INT "$pid"  # pw-record finishes the WAV header on SIGINT
+    while kill -0 "$pid" 2>/dev/null; do sleep 0.05; done
+    rm -f "$PIDFILE"
+}
+
+# One instance at a time, so a press during transcription is ignored.
+# Background processes (pw-record, wl-copy) get this fd closed so they don't keep the lock.
+exec 9>"$RUN/lock"
+flock -n 9 || { notify-send -a dictate -i audio-input-microphone -t 2000 "Dictation" "Still transcribing…"; exit 0; }
+
+if [[ "$1" == cancel ]]; then
+    pid=$(recording_pid) || exit 0
+    stop_recording "$pid"
+    rm -f "$WAV"
+    notify "Dictation cancelled" "" -t 2000
+    exit 0
+fi
+
+for cmd in pw-record whisper-cli wtype wl-copy; do
+    command -v "$cmd" >/dev/null || { notify "Dictation" "Missing: $cmd" -u critical; exit 1; }
+done
+
+if pid=$(recording_pid); then
+    stop_recording "$pid"
+    # 16 kHz mono s16 = 32000 bytes/s; ignore anything under half a second
+    if (( $(stat -c %s "$WAV" 2>/dev/null || echo 0) < 16000 )); then
+        notify "Dictation" "Too short, nothing to transcribe" -t 2000
+        exit 0
+    fi
+    notify "Transcribing…" "" -t 0
+    text=$(whisper-cli -m "$MODEL" -f "$WAV" -l auto -nt -np 2>/dev/null \
+        | sed 's/\[BLANK_AUDIO\]//g' | tr '\n' ' ' | tr -s ' ' | sed 's/^ //; s/ $//')
+    rm -f "$WAV"
+    if [[ -z "$text" ]]; then
+        notify "Dictation" "No speech recognised" -t 2000
+        exit 0
+    fi
+    printf '%s' "$text" | wl-copy 9>&-  # wl-copy stays running to serve the clipboard
+    wtype -- "$text"
+    notify "Dictated" "$text" -t 4000
+    exit 0
+fi
+
+if [[ ! -f "$MODEL" ]]; then
+    notify "Dictation" "Downloading the Whisper model (1.6 GB)…" -t 0
+    mkdir -p "$(dirname "$MODEL")"
+    if ! curl -fsL --retry 3 -o "$MODEL.part" "$MODEL_URL"; then
+        rm -f "$MODEL.part"
+        notify "Dictation" "Model download failed" -u critical
+        exit 1
+    fi
+    mv "$MODEL.part" "$MODEL"
+fi
+
+rm -f "$WAV" "$NOTIFY_ID"  # new popup per dictation; replacing an expired one may not show
+pw-record --rate 16000 --channels 1 --format s16 "$WAV" 9>&- &
+echo $! > "$PIDFILE"
+notify "Listening…" "F9 to stop, Shift+F9 to cancel" -t 0

@@ -140,6 +140,10 @@ hl.bind(mainMod .. " + SHIFT + C",   hl.dsp.exec_cmd("hyprpicker -a"))
 -- Toggle audio output: Scarlett headphones <-> S/PDIF speakers
 hl.bind(mainMod .. " + grave",       hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/cycle-audio-output.sh"))
 
+-- Dictation: F9 starts / stops recording, then whisper.cpp types the text (dictate package)
+hl.bind("F9",                        hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate"))
+hl.bind("SHIFT + F9",                hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate cancel"))
+
 -- Omarchy-style pickers: theme (scheme + its wallpaper) / wallpaper within the current theme
 hl.bind("CTRL + SHIFT + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker themes"))
 hl.bind("CTRL + " .. mainMod .. " + space",         hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker wallpapers"))

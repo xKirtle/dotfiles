@@ -86,6 +86,8 @@ landscape action, portrait action).
 | Super + Mute | mute / unmute **microphone** |
 | Super + Volume Up / Down | mic level ±5% (max 100%) |
 | Play/Pause/Next/Prev | media via Caelestia (OSD) |
+| F9 | dictation: start / stop recording; the text is typed into the focused window and copied (see 05) |
+| Shift + F9 | cancel dictation |
 
 ## Keyboard
 

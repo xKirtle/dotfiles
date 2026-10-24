@@ -17,6 +17,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `gtk`, `qt`, `fonts` | GTK 3/4 settings, qt6ct + Kvantum, fontconfig |
 | `thunar`, `swappy`, `chromium` | Thunar actions + shortcuts, screenshot editor, Chromium flags |
 | `audio` | WirePlumber rules (Scarlett Solo) + output switch script |
+| `dictate` | F9 speech to text: `dictate` (pw-record + whisper.cpp on the GPU, types with wtype) |
 | `paru` | paru config + AUR completion refresh timer |
 | `spotifast` | Copies Caelestia's rendered Spotifast palette into Spotifast's themes (`spotifast-caelestia-theme`, run by Caelestia's postHook) |
 | `calendar` | Proton Calendar: vdirsyncer + khal configs, `calendarctl` (sync, reminders), agenda panel, user units |
