@@ -264,6 +264,13 @@ Replaces Omarchy's Claude usage indicator. **Source of truth: `~/Dev/Personal/cl
 - `~/.config/swappy/config`: `save_dir=$HOME/Pictures/Screenshots`, name `screenshot-%Y%m%d-%H%M%S.png`.
 - Caelestia also has clipboard-only actions (`caelestia:screenshotClip`, `screenshotFreezeClip`),
   currently unbound.
+- **Recording:** Ctrl+Print runs `caelestia record -r`, a toggle: the first press picks a region with slurp
+  and starts **gpu-screen-recorder** (NVENC, no audio; fps = the highest refresh rate of the monitors the
+  region touches), the next press stops it. While recording, the file is `~/.local/state/caelestia/record/recording.mp4`;
+  on stop it moves to `~/Videos/Recordings/recording_<date>.mp4` (`CAELESTIA_RECORDINGS_DIR` overrides) and a
+  notification offers Watch / Open / Delete. Options: `-s` adds desktop audio, `-p` pauses/resumes,
+  `-c` copies the file to the clipboard; extra recorder flags go in `record.extraArgs` in `~/.config/caelestia/cli.json`.
+  gpu-screen-recorder takes slurp's logical coordinates directly (scale 1.25 is handled).
 
 ## Clipboard history
 

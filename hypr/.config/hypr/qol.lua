@@ -129,6 +129,8 @@ hl.bind("CTRL + " .. mainMod .. " + ALT + R", hl.dsp.exec_cmd("qs -c caelestia k
 hl.bind("Print",                     hl.dsp.global("caelestia:screenshot"))
 hl.bind("SHIFT + Print",             hl.dsp.exec_cmd("caelestia screenshot"))
 hl.bind(mainMod .. " + Print",       hl.dsp.global("caelestia:screenshotFreeze"))
+-- Ctrl+Print = record a region (gpu-screen-recorder via Caelestia); press again to stop
+hl.bind("CTRL + Print",              hl.dsp.exec_cmd("caelestia record -r"))
 
 -- Clipboard history / emoji picker / color picker
 hl.bind(mainMod .. " + SHIFT + V",   hl.dsp.exec_cmd("pkill fuzzel || caelestia clipboard"))

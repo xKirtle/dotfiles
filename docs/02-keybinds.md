@@ -31,6 +31,7 @@ Custom binds live in `~/.config/hypr/qol.lua`; defaults in `hyprland.lua`; a few
 | Print | select region → opens in **swappy** (Ctrl+C copy, Ctrl+S save) |
 | Shift + Print | full-screen screenshot |
 | Super + Print | freeze screen, then select region |
+| Ctrl + Print | record a region (select with slurp); press again to stop → `~/Videos/Recordings` |
 | Super + Shift + V | clipboard history |
 | Super + . | emoji picker |
 | Super + Shift + C | colour picker (copies hex) |
