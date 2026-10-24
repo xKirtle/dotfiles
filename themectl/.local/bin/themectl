@@ -9,6 +9,7 @@
                                 toggle a picker (~/.config/quickshell/theme-picker)
   themectl sync                 daemon: mirror Caelestia's wallpaper onto awww with a
                                 grow-from-cursor transition (themectl-sync.service)
+  themectl vscode               install the "Caelestia" VS Code theme (once; sync keeps it current)
 
 Wallpapers always go through `caelestia wallpaper`, so Caelestia's own picker, the lock screen
 and the dynamic scheme stay in sync; `sync` then draws them with awww (Caelestia's own
@@ -293,7 +294,7 @@ def on_scheme_change():
             c = json.load(f)["colours"]
     except (OSError, ValueError, KeyError):
         return
-    for apply in (hypr_borders, chromium_theme, serein_theme):
+    for apply in (hypr_borders, chromium_theme, serein_theme, vscode_theme):
         try:
             apply(c)
         except (KeyError, OSError, subprocess.SubprocessError) as e:
@@ -380,6 +381,302 @@ def serein_theme(c):
     os.replace(tmp, f"{directory}/package.json")
 
 
+VSCODE_EXTENSIONS = f"{HOME}/.vscode/extensions"
+VSCODE_EXT_ID = "themectl.caelestia-theme"
+VSCODE_EXT_VERSION = "1.0.0"
+
+
+def vscode_install():
+    """Build a minimal VSIX for the "Caelestia" theme and install it with `code`. VS Code ignores
+    extension folders it didn't install itself, hence the package. `_watch` makes VS Code reload
+    the theme file whenever it changes, so vscode_theme() recolours open windows live."""
+    import tempfile
+    import zipfile
+    publisher, name = VSCODE_EXT_ID.split(".")
+    theme = {"path": "./themes/caelestia.json", "_watch": True}
+    package = {
+        "name": name, "displayName": "Caelestia", "publisher": publisher,
+        "version": VSCODE_EXT_VERSION, "description": "Colours from the current Caelestia scheme (themectl)",
+        "engines": {"vscode": "^1.60.0"}, "categories": ["Themes"],
+        # Same file twice: pick by base. "Caelestia Light" is for light schemes / autoDetectColorScheme.
+        "contributes": {"themes": [{"label": "Caelestia", "uiTheme": "vs-dark", **theme},
+                                   {"label": "Caelestia Light", "uiTheme": "vs", **theme}]},
+    }
+    manifest = f"""<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
+  <Metadata>
+    <Identity Language="en-US" Id="{name}" Version="{VSCODE_EXT_VERSION}" Publisher="{publisher}"/>
+    <DisplayName>Caelestia</DisplayName>
+    <Description xml:space="preserve">{package["description"]}</Description>
+    <Categories>Themes</Categories>
+    <Properties><Property Id="Microsoft.VisualStudio.Code.Engine" Value="^1.60.0"/></Properties>
+  </Metadata>
+  <Installation><InstallationTarget Id="Microsoft.VisualStudio.Code"/></Installation>
+  <Dependencies/>
+  <Assets><Asset Type="Microsoft.VisualStudio.Code.Manifest" Path="extension/package.json" Addressable="true"/></Assets>
+</PackageManifest>
+"""
+    types = ('<?xml version="1.0" encoding="utf-8"?><Types xmlns="http://schemas.openxmlformats.org/'
+             'package/2006/content-types"><Default Extension=".json" ContentType="application/json"/>'
+             '<Default Extension=".vsixmanifest" ContentType="text/xml"/></Types>')
+    with tempfile.TemporaryDirectory() as tmp:
+        vsix = f"{tmp}/caelestia-theme.vsix"
+        with zipfile.ZipFile(vsix, "w") as z:
+            z.writestr("[Content_Types].xml", types)
+            z.writestr("extension.vsixmanifest", manifest)
+            z.writestr("extension/package.json", json.dumps(package, indent=2))
+            z.writestr("extension/themes/caelestia.json", "{}")
+        run("code", "--install-extension", vsix, "--force")
+    with open(CAELESTIA_SCHEME) as f:
+        vscode_theme(json.load(f)["colours"])
+    print('Installed. Pick it once: Ctrl+K Ctrl+T > "Caelestia".')
+
+
+def vscode_theme(c):
+    """The VS Code colour theme (see vscode_install), rewritten in the installed extension.
+    UI = the same Material roles as Serein; syntax = Caelestia's named colours with a
+    Catppuccin-style mapping; integrated terminal = term0-15 (matches kitty)."""
+    import glob
+    dirs = sorted(glob.glob(f"{VSCODE_EXTENSIONS}/{VSCODE_EXT_ID}-*/themes"))
+    if not dirs:
+        return  # not installed (themectl vscode)
+
+    def h(key, alpha=""):
+        return "#" + c[key].lower() + alpha
+
+    def n(key, fallback):
+        """A named colour (rosewater..lavender); older schemes may lack them."""
+        return h(key if key in c else fallback)
+
+    s = c["surface"]
+    light = sum(int(s[i:i + 2], 16) for i in (0, 2, 4)) > 3 * 128
+    ok = "success" if "success" in c else "term2"
+    warn = "yellow" if "yellow" in c else "term3"
+    colors = {
+        # base
+        "foreground": h("onSurface"), "descriptionForeground": h("onSurfaceVariant"),
+        "disabledForeground": h("outline"), "errorForeground": h("error"),
+        "icon.foreground": h("onSurfaceVariant"), "focusBorder": h("primary", "99"),
+        "contrastBorder": "#00000000", "widget.shadow": h("shadow", "66"),
+        "selection.background": h("primary", "40"), "sash.hoverBorder": h("primary"),
+        "textLink.foreground": h("tertiary"), "textLink.activeForeground": h("tertiaryFixed"),
+        "textBlockQuote.background": h("surfaceContainer"), "textBlockQuote.border": h("primary"),
+        "textCodeBlock.background": h("surfaceContainer"), "textPreformat.foreground": h("tertiary"),
+        "textSeparator.foreground": h("outlineVariant"), "progressBar.background": h("primary"),
+        # editor
+        "editor.background": h("surface"), "editor.foreground": h("onSurface"),
+        "editorCursor.foreground": h("primary"),
+        "editor.lineHighlightBackground": h("surfaceContainerLow"),
+        "editor.lineHighlightBorder": "#00000000",
+        "editor.selectionBackground": h("primary", "40"),
+        "editor.inactiveSelectionBackground": h("primary", "26"),
+        "editor.selectionHighlightBackground": h("primary", "1f"),
+        "editor.wordHighlightBackground": h("secondary", "26"),
+        "editor.wordHighlightStrongBackground": h("secondary", "40"),
+        "editor.findMatchBackground": h("tertiary", "55"), "editor.findMatchBorder": h("tertiary"),
+        "editor.findMatchHighlightBackground": h("tertiary", "2e"),
+        "editor.findRangeHighlightBackground": h("surfaceContainerHigh", "80"),
+        "editor.rangeHighlightBackground": h("surfaceContainerHigh", "80"),
+        "editor.hoverHighlightBackground": h("primary", "1f"),
+        "editorLink.activeForeground": h("tertiary"),
+        "editorLineNumber.foreground": h("outline", "99"),
+        "editorLineNumber.activeForeground": h("onSurfaceVariant"),
+        "editorIndentGuide.background1": h("outlineVariant", "80"),
+        "editorIndentGuide.activeBackground1": h("outline"),
+        "editorWhitespace.foreground": h("outlineVariant"), "editorRuler.foreground": h("outlineVariant"),
+        "editorCodeLens.foreground": h("outline"),
+        "editorBracketMatch.background": h("primary", "26"), "editorBracketMatch.border": h("primary", "80"),
+        "editorBracketHighlight.foreground1": h("primary"),
+        "editorBracketHighlight.foreground2": h("tertiary"),
+        "editorBracketHighlight.foreground3": h("secondary"),
+        "editorBracketHighlight.foreground4": n("blue", "term4"),
+        "editorBracketHighlight.foreground5": n("peach", "term3"),
+        "editorBracketHighlight.foreground6": n("green", "term2"),
+        "editorBracketHighlight.unexpectedBracket.foreground": h("error"),
+        "editorError.foreground": h("error"), "editorWarning.foreground": h(warn),
+        "editorInfo.foreground": n("blue", "term4"), "editorHint.foreground": h(ok),
+        "editorInlayHint.foreground": h("outline"), "editorInlayHint.background": h("surfaceContainer", "b3"),
+        "editorGhostText.foreground": h("outline"),
+        "editorGutter.background": h("surface"),
+        "editorGutter.addedBackground": h(ok), "editorGutter.modifiedBackground": n("blue", "term4"),
+        "editorGutter.deletedBackground": h("error"),
+        "editorOverviewRuler.border": "#00000000",
+        "editorStickyScroll.background": h("surface"),
+        "editorStickyScrollHover.background": h("surfaceContainerLow"),
+        "diffEditor.insertedTextBackground": h(ok, "26"), "diffEditor.removedTextBackground": h("error", "26"),
+        "diffEditor.insertedLineBackground": h(ok, "14"), "diffEditor.removedLineBackground": h("error", "14"),
+        "merge.currentHeaderBackground": h(ok, "66"), "merge.incomingHeaderBackground": n("blue", "term4") + "66",
+        # widgets, menus, inputs
+        "editorWidget.background": h("surfaceContainer"), "editorWidget.border": h("outlineVariant"),
+        "editorHoverWidget.background": h("surfaceContainer"), "editorHoverWidget.border": h("outlineVariant"),
+        "editorSuggestWidget.background": h("surfaceContainer"), "editorSuggestWidget.border": h("outlineVariant"),
+        "editorSuggestWidget.selectedBackground": h("surfaceContainerHighest"),
+        "editorSuggestWidget.highlightForeground": h("primary"),
+        "editorSuggestWidget.focusHighlightForeground": h("primary"),
+        "quickInput.background": h("surfaceContainer"),
+        "quickInputList.focusBackground": h("surfaceContainerHighest"),
+        "pickerGroup.foreground": h("primary"), "pickerGroup.border": h("outlineVariant"),
+        "menu.background": h("surfaceContainer"), "menu.foreground": h("onSurface"),
+        "menu.selectionBackground": h("surfaceContainerHighest"), "menu.selectionForeground": h("onSurface"),
+        "menu.separatorBackground": h("outlineVariant"), "menu.border": h("outlineVariant"),
+        "notifications.background": h("surfaceContainer"), "notifications.border": h("outlineVariant"),
+        "notificationCenterHeader.background": h("surfaceContainerHigh"),
+        "notificationsErrorIcon.foreground": h("error"), "notificationsWarningIcon.foreground": h(warn),
+        "notificationsInfoIcon.foreground": n("blue", "term4"),
+        "input.background": h("surfaceContainerHigh"), "input.foreground": h("onSurface"),
+        "input.border": h("outlineVariant"), "input.placeholderForeground": h("outline"),
+        "inputOption.activeBackground": h("primary", "33"), "inputOption.activeBorder": h("primary"),
+        "inputOption.activeForeground": h("onSurface"),
+        "inputValidation.errorBackground": h("errorContainer"), "inputValidation.errorBorder": h("error"),
+        "inputValidation.warningBackground": h("surfaceContainerHigh"), "inputValidation.warningBorder": h(warn),
+        "inputValidation.infoBackground": h("surfaceContainerHigh"), "inputValidation.infoBorder": n("blue", "term4"),
+        "dropdown.background": h("surfaceContainerHigh"), "dropdown.border": h("outlineVariant"),
+        "dropdown.listBackground": h("surfaceContainer"),
+        "checkbox.background": h("surfaceContainerHigh"), "checkbox.border": h("outlineVariant"),
+        "button.background": h("primary"), "button.foreground": h("onPrimary"),
+        "button.hoverBackground": h("primaryFixedDim" if light else "primaryFixed"),
+        "button.secondaryBackground": h("secondaryContainer"),
+        "button.secondaryForeground": h("onSecondaryContainer"),
+        "button.secondaryHoverBackground": h("surfaceContainerHighest"),
+        "badge.background": h("primary"), "badge.foreground": h("onPrimary"),
+        "scrollbar.shadow": "#00000000",
+        "scrollbarSlider.background": h("onSurface", "1a"),
+        "scrollbarSlider.hoverBackground": h("onSurface", "33"),
+        "scrollbarSlider.activeBackground": h("onSurface", "4d"),
+        "keybindingLabel.background": h("surfaceContainerHigh"), "keybindingLabel.foreground": h("onSurface"),
+        "keybindingLabel.border": h("outlineVariant"), "keybindingLabel.bottomBorder": h("outlineVariant"),
+        # lists and trees
+        "list.hoverBackground": h("surfaceContainerHigh"),
+        "list.activeSelectionBackground": h("surfaceContainerHighest"),
+        "list.activeSelectionForeground": h("onSurface"),
+        "list.inactiveSelectionBackground": h("surfaceContainerHigh"),
+        "list.focusOutline": h("primary", "80"), "list.highlightForeground": h("primary"),
+        "list.errorForeground": h("error"), "list.warningForeground": h(warn),
+        "tree.indentGuidesStroke": h("outlineVariant"),
+        # workbench parts
+        "titleBar.activeBackground": h("surfaceContainerLowest"),
+        "titleBar.activeForeground": h("onSurfaceVariant"),
+        "titleBar.inactiveBackground": h("surfaceContainerLowest"), "titleBar.inactiveForeground": h("outline"),
+        "titleBar.border": h("outlineVariant"),
+        "commandCenter.background": h("surfaceContainer"), "commandCenter.foreground": h("onSurfaceVariant"),
+        "commandCenter.border": h("outlineVariant"),
+        "activityBar.background": h("surfaceContainerLowest"), "activityBar.foreground": h("onSurface"),
+        "activityBar.inactiveForeground": h("outline"), "activityBar.activeBorder": h("primary"),
+        "activityBar.border": h("outlineVariant"),
+        "activityBarBadge.background": h("primary"), "activityBarBadge.foreground": h("onPrimary"),
+        "sideBar.background": h("surfaceContainerLow"), "sideBar.foreground": h("onSurfaceVariant"),
+        "sideBar.border": h("outlineVariant"), "sideBarTitle.foreground": h("onSurface"),
+        "sideBarSectionHeader.background": h("surfaceContainerLow"),
+        "sideBarSectionHeader.foreground": h("onSurface"), "sideBarSectionHeader.border": h("outlineVariant"),
+        "editorGroup.border": h("outlineVariant"),
+        "editorGroupHeader.tabsBackground": h("surfaceContainerLow"),
+        "editorGroupHeader.tabsBorder": h("outlineVariant"),
+        "tab.activeBackground": h("surface"), "tab.activeForeground": h("onSurface"),
+        "tab.activeBorderTop": h("primary"), "tab.inactiveBackground": h("surfaceContainerLow"),
+        "tab.inactiveForeground": h("outline"), "tab.hoverBackground": h("surfaceContainer"),
+        "tab.border": h("outlineVariant"), "tab.unfocusedActiveBorderTop": h("outlineVariant"),
+        "breadcrumb.foreground": h("outline"), "breadcrumb.focusForeground": h("onSurface"),
+        "breadcrumb.activeSelectionForeground": h("primary"), "breadcrumbPicker.background": h("surfaceContainer"),
+        "panel.background": h("surfaceContainerLow"), "panel.border": h("outlineVariant"),
+        "panelTitle.activeForeground": h("onSurface"), "panelTitle.inactiveForeground": h("outline"),
+        "panelTitle.activeBorder": h("primary"),
+        "statusBar.background": h("surfaceContainerLowest"), "statusBar.foreground": h("onSurfaceVariant"),
+        "statusBar.border": h("outlineVariant"),
+        "statusBar.noFolderBackground": h("surfaceContainerLowest"),
+        "statusBar.debuggingBackground": h("tertiaryContainer"),
+        "statusBar.debuggingForeground": h("onTertiaryContainer"),
+        "statusBarItem.hoverBackground": h("surfaceContainerHigh"),
+        "statusBarItem.remoteBackground": h("primary"), "statusBarItem.remoteForeground": h("onPrimary"),
+        "statusBarItem.errorBackground": h("errorContainer"),
+        "statusBarItem.errorForeground": h("onErrorContainer"),
+        "peekView.border": h("primary"), "peekViewTitle.background": h("surfaceContainer"),
+        "peekViewEditor.background": h("surfaceContainerLow"),
+        "peekViewResult.background": h("surfaceContainer"),
+        "peekViewEditor.matchHighlightBackground": h("tertiary", "40"),
+        "peekViewResult.matchHighlightBackground": h("tertiary", "40"),
+        "peekViewResult.selectionBackground": h("surfaceContainerHighest"),
+        "minimap.selectionHighlight": h("primary", "66"),
+        "minimapSlider.background": h("onSurface", "1a"),
+        "welcomePage.tileBackground": h("surfaceContainer"),
+        "settings.headerForeground": h("onSurface"), "settings.modifiedItemIndicator": h("primary"),
+        # git / SCM decorations
+        "gitDecoration.addedResourceForeground": h(ok),
+        "gitDecoration.untrackedResourceForeground": h(ok),
+        "gitDecoration.modifiedResourceForeground": n("blue", "term4"),
+        "gitDecoration.deletedResourceForeground": h("error"),
+        "gitDecoration.conflictingResourceForeground": n("peach", "term3"),
+        "gitDecoration.ignoredResourceForeground": h("outline"),
+        # integrated terminal
+        "terminal.background": h("surfaceContainerLow"), "terminal.foreground": h("onSurface"),
+        "terminalCursor.foreground": h("primary"), "terminal.selectionBackground": h("primary", "40"),
+        **{f"terminal.ansi{name}": h(f"term{i}") for i, name in enumerate(
+            ("Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White",
+             "BrightBlack", "BrightRed", "BrightGreen", "BrightYellow", "BrightBlue",
+             "BrightMagenta", "BrightCyan", "BrightWhite"))},
+    }
+
+    def rule(scope, colour, style=None):
+        r = {"scope": scope, "settings": {"foreground": colour}}
+        if style:
+            r["settings"]["fontStyle"] = style
+        return r
+
+    text = n("text", "onSurface")
+    token_colors = [
+        rule(["comment", "punctuation.definition.comment"], n("overlay1", "outline"), "italic"),
+        rule(["string", "punctuation.definition.string"], n("green", "term2")),
+        rule(["string.regexp", "constant.character.escape", "constant.other.placeholder"], n("pink", "tertiary")),
+        rule(["constant.numeric", "constant.language", "constant.other", "variable.other.constant",
+              "variable.other.enummember", "support.constant"], n("peach", "term3")),
+        rule(["keyword", "storage.type", "storage.modifier", "keyword.control"], n("mauve", "primary")),
+        rule(["keyword.operator", "punctuation.accessor", "punctuation.separator.key-value"], n("sky", "term6")),
+        rule(["punctuation", "meta.brace"], n("overlay2", "outline")),
+        rule(["entity.name.function", "support.function", "meta.function-call.generic",
+              "variable.function"], n("blue", "term4")),
+        rule(["entity.name.type", "entity.name.class", "entity.other.inherited-class", "support.type",
+              "support.class", "entity.name.namespace", "storage.type.primitive"], n("yellow", "term3")),
+        rule(["variable", "meta.definition.variable"], text),
+        rule(["variable.parameter", "meta.parameter"], n("maroon", "secondary"), "italic"),
+        rule(["variable.language", "variable.language.this", "variable.language.self"], n("red", "term1"), "italic"),
+        rule(["variable.other.property", "variable.other.object.property", "support.variable.property",
+              "meta.object-literal.key", "entity.name.variable.field"], n("lavender", "primary")),
+        rule(["support.type.property-name"], n("blue", "term4")),
+        rule(["entity.name.tag"], n("mauve", "primary")),
+        rule(["entity.other.attribute-name"], n("yellow", "term3"), "italic"),
+        rule(["meta.decorator", "entity.name.function.decorator", "punctuation.decorator",
+              "storage.type.annotation"], n("peach", "term3")),
+        rule(["entity.name.function.macro", "keyword.other.preprocessor", "meta.preprocessor"], n("pink", "tertiary")),
+        rule(["markup.heading", "entity.name.section"], h("primary"), "bold"),
+        rule(["markup.bold"], text, "bold"),
+        rule(["markup.italic"], text, "italic"),
+        rule(["markup.strikethrough"], h("outline"), "strikethrough"),
+        rule(["markup.underline.link", "string.other.link"], h("tertiary"), "underline"),
+        rule(["markup.inline.raw", "markup.fenced_code", "markup.raw"], n("green", "term2")),
+        rule(["markup.quote"], n("pink", "tertiary"), "italic"),
+        rule(["markup.list punctuation.definition.list"], n("peach", "term3")),
+        rule(["markup.inserted", "meta.diff.header.to-file"], h(ok)),
+        rule(["markup.deleted", "meta.diff.header.from-file"], h("error")),
+        rule(["markup.changed"], n("blue", "term4")),
+        rule(["invalid", "invalid.illegal"], h("error")),
+    ]
+    theme = {
+        "name": "Caelestia", "type": "light" if light else "dark", "semanticHighlighting": True,
+        "colors": colors, "tokenColors": token_colors,
+        "semanticTokenColors": {
+            "parameter": {"foreground": n("maroon", "secondary"), "italic": True},
+            "property": n("lavender", "primary"), "enumMember": n("peach", "term3"),
+            "variable.readonly": n("peach", "term3"), "variable.defaultLibrary": n("red", "term1"),
+            "namespace": n("yellow", "term3"), "typeParameter": n("yellow", "term3"),
+            "macro": n("pink", "tertiary"), "selfParameter": {"foreground": n("red", "term1"), "italic": True},
+        },
+    }
+    for d in dirs:
+        tmp = f"{d}/.caelestia.json.tmp"
+        with open(tmp, "w") as f:
+            json.dump(theme, f, indent=1)
+        os.replace(tmp, f"{d}/caelestia.json")
+
+
 def main():
     args = sys.argv[1:]
     cmd = args[0] if args else "list"
@@ -393,6 +690,8 @@ def main():
         cmd_picker((args[1:] or ["themes"])[0])
     elif cmd == "sync":
         cmd_sync()
+    elif cmd == "vscode":
+        vscode_install()
     else:
         sys.exit(__doc__)
 

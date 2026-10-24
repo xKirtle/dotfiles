@@ -53,8 +53,8 @@ Theme everywhere: **Catppuccin Mocha**.
     Zed, Warp; **running terminals** (it writes OSC colour sequences to every `/dev/pts/*`);
     **new terminals** (our `~/.bashrc` runs `command cat ~/.local/state/caelestia/sequences.txt`; `command`
     because `cat` is aliased to `bat`, which adds a "File:" header; backup
-    `.bashrc.bak-pre-sequences`); **Hyprland borders**, **Chromium** and **Serein** (via `themectl sync`, see below;
-    Serein only after a restart); **Spotifast** (live, see next point).
+    `.bashrc.bak-pre-sequences`); **Hyprland borders**, **Chromium**, **Serein** and **VS Code** (via `themectl sync`, see below;
+    Serein only after a restart, VS Code live); **Spotifast** (live, see next point).
     Custom templates for other apps can go in `~/.config/caelestia/templates/` (`{{ primary.hex }}`-style
     fields, also `.hexalpha`/`.rgb`/`.hsl` and `{{ mode }}`; an unknown name is left unfilled; written to
     `~/.local/state/caelestia/theme/<same name>`). After rendering, Caelestia runs `theme.postHook` from
@@ -119,7 +119,7 @@ A **theme** is a folder in `~/Pictures/Wallpapers/<theme>/` plus a Caelestia col
   - It calls `~/.local/bin/themectl` by **absolute path**: the session PATH (Hyprland/uwsm) lacks
     `~/.local/bin`, so a bare `themectl` fails ("Process failed to start" in `qs -c theme-picker log`).
 - **`~/.local/bin/themectl`** (Python): `list [--json]`, `set <theme> [file]`, `current`,
-  `picker themes|wallpapers`, `sync`. State: `~/.local/state/themectl/current.json`.
+  `picker themes|wallpapers`, `sync`, `vscode`. State: `~/.local/state/themectl/current.json`.
   `THEMECTL_WALLPAPERS=<dir>` points it at another folder (handy for testing).
   `set` runs `caelestia scheme set …`, then `caelestia wallpaper -f <file> -N` (`-N` = don't
   auto-switch light/dark). For dynamic themes it sets the wallpaper first, then the `dynamic` scheme.
@@ -137,7 +137,8 @@ A **theme** is a folder in `~/Pictures/Wallpapers/<theme>/` plus a Caelestia col
   the dir is user-writable (one-time `sudo install -d -o username -g username /etc/chromium/policies/managed`),
   and it only runs `chromium --refresh-platform-policy` if Chromium is already running (otherwise that
   flag starts a hidden instance). Side effect: Chromium shows "Managed by your organization".
-  It also writes a **Serein** theme (`serein_theme`, see "Discord client: Serein" below).
+  It also writes a **Serein** theme (`serein_theme`, see "Discord client: Serein" below) and the
+  **VS Code** theme (`vscode_theme`, see "VS Code" below).
   Caelestia writes `scheme.json` **atomically** (temp file + `os.replace`), which arrives as a
   RENAMED event whose *destination* is the watched file; the watcher matches both ends. To test,
   rewrite it the same way (a plain `cat >` only exercises the in-place path).
@@ -171,6 +172,30 @@ A **theme** is a folder in `~/Pictures/Wallpapers/<theme>/` plus a Caelestia col
   "Caelestia" inside Serein works but is overwritten on the next scheme change.
 - **Checking a package:** Serein's own parser: clone the repo, add an example to `crates/extensions` that
   deserialises the stored record and calls `Package::validate()`, `cargo run -p extensions --example …`.
+
+## VS Code
+
+`visual-studio-code-bin` (Microsoft build; data `~/.config/Code`, extensions `~/.vscode/extensions`).
+- **Ours: theme "Caelestia"**, a local extension `themectl.caelestia-theme`. **`themectl vscode`**
+  builds a minimal VSIX in a temp dir, installs it with `code --install-extension --force`, and writes the
+  current colours (one-time per machine, or to reinstall). VS Code ignores extension folders it didn't install
+  (they must be in `extensions/extensions.json`), hence the VSIX. Then pick it once: Ctrl+K Ctrl+T >
+  **Caelestia** (or **Caelestia Light**: same file, `vs` base, for light schemes).
+- **Live updates:** `themectl sync` (`vscode_theme`) rewrites
+  `~/.vscode/extensions/themectl.caelestia-theme-*/themes/caelestia.json` atomically on every `scheme.json`
+  change. The theme entries set the undocumented `"_watch": true`, so VS Code watches that file and reloads
+  the theme in open windows (checked in 1.143's `workbench.desktop.main.js`: `ThemeFileWatcher` watches when
+  `theme.watch || isExtensionDevelopment`). If a VS Code update drops `_watch`, use "Developer: Reload Window".
+- **Mapping:** UI = the Serein roles (editor = surface; sidebar, panel, tabs strip, terminal =
+  surfaceContainerLow; activity/title/status bar = surfaceContainerLowest; widgets, menus = surfaceContainer;
+  hover/selection = surfaceContainerHigh/Highest; borders = outlineVariant; accents, buttons, badges, cursor =
+  primary; links, find matches = tertiary). Syntax = Caelestia's named colours with Catppuccin's mapping
+  (keywords mauve, strings green, numbers/constants peach, functions blue, types yellow, params maroon,
+  properties lavender, comments overlay1), falling back to term/Material colours if a scheme lacks them.
+  Integrated terminal ANSI = term0–15 (same as kitty). The theme's `type` follows surface brightness.
+- **Checking:** every `colors` key should exist in `/usr/share/code/resources/app/out/vs/workbench/workbench.desktop.main.js`
+  (or `extensions/*/package.json`, e.g. `gitDecoration.*` from the git extension); unknown keys are silently ignored.
+  Isolated test install: `code --extensions-dir <tmp> --user-data-dir <tmp2> --install-extension …`.
 
 ## Claude usage tray (ours)
 
