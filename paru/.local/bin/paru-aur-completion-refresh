@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Refresh paru's AUR package-name list used for shell tab completion.
+set -euo pipefail
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/paru/packages.aur"
+mkdir -p "$(dirname "$cache")"
+tmp=$(mktemp "$cache.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+curl -fsSL --compressed https://aur.archlinux.org/packages.gz | gzip -dc > "$tmp"
+# Sanity check before replacing the old list
+[ "$(wc -l < "$tmp")" -gt 10000 ] || { echo "AUR list looks too short, keeping old one" >&2; exit 1; }
+mv "$tmp" "$cache"

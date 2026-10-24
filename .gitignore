@@ -1,0 +1,22 @@
+# Whole config dirs are symlinked into this repo (see README), so files that apps generate
+# inside them land here too. They're regenerated, not configuration.
+
+# Written by `caelestia scheme set`
+hypr/.config/hypr/scheme/
+gtk/.config/gtk-3.0/gtk.css
+gtk/.config/gtk-3.0/thunar.css
+gtk/.config/gtk-4.0/gtk.css
+gtk/.config/gtk-4.0/thunar.css
+
+# Personal GTK/Thunar sidebar bookmarks
+gtk/.config/gtk-3.0/bookmarks
+
+# Backups made while editing
+*.bak
+*.bak-*
+*.bak.*
+*.orig
+
+# Private values (see .env.example) and the files install.sh renders from *.template with them
+.env
+caelestia/.config/caelestia/shell.json

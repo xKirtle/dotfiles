@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<submenu></submenu>
+	<unique-id>1792778832572115-1</unique-id>
+	<command>sh -c 'd=$1; [ -d "$d" ] || d=${d%/*}; exec kitty --directory "$d"' sh %f</command>
+	<description>Open kitty in this folder (or the selected file's folder)</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+</actions>

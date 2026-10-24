@@ -1,0 +1,42 @@
+{
+    "bar": {
+        "clock": {
+            "showDate": true
+        },
+        "statusIcons": [
+            { "id": "lockStatus", "enabled": true },
+            { "id": "audio",      "enabled": false },
+            { "id": "microphone", "enabled": true },
+            { "id": "kbLayout",   "enabled": true },
+            { "id": "network",    "enabled": true },
+            { "id": "bluetooth",  "enabled": true },
+            { "id": "battery",    "enabled": true }
+        ]
+    },
+    "launcher": {
+        "useFuzzy": {
+            "apps": true
+        }
+    },
+    "lock": {
+        "hideNotifs": true
+    },
+    "notifs": {
+        "actionOnClick": true
+    },
+    "osd": {
+        "enableMicrophone": true
+    },
+    "services": {
+        "weatherLocation": "${WEATHER_LOCATION}",
+        "weatherUnits": "celsius"
+    },
+    "utilities": {
+        "toasts": {
+            "nowPlaying": true
+        }
+    },
+    "background": {
+        "wallpaperEnabled": false
+    }
+}

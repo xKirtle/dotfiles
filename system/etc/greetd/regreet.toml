@@ -1,0 +1,28 @@
+# ReGreet login screen (Catppuccin Mocha, matches the desktop)
+
+# Go straight to the password prompt using the last user + session.
+# "Cancel" on the password screen gets back to the user/session pickers.
+skip_selection = true
+
+[GTK]
+application_prefer_dark_theme = true
+theme_name = "adw-gtk3-dark"
+icon_theme_name = "Papirus-Dark"
+cursor_theme_name = "Bibata-Modern-Ice"
+font_name = "Inter 14"
+cursor_blink = true
+
+[commands]
+reboot = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]
+
+[appearance]
+greeting_msg = "Welcome back!"
+
+[widget.clock]
+format = "%A, %e %B%n%H:%M"
+resolution = "500ms"
+label_width = 300
+justification = "center"
+valign = "top"
+halign = "center"

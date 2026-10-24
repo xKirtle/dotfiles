@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+"""Omarchy-style themes on top of Caelestia: a theme = a wallpaper folder + a colour scheme.
+
+  themectl list [--json]        themes in ~/Pictures/Wallpapers/<theme>/
+  themectl set <theme> [file]
+                                apply a theme's scheme + wallpaper (first one, or `file`)
+  themectl current              print the current theme and wallpaper
+  themectl picker [themes|wallpapers]
+                                toggle a picker (~/.config/quickshell/theme-picker)
+  themectl sync                 daemon: mirror Caelestia's wallpaper onto awww with a
+                                grow-from-cursor transition (themectl-sync.service)
+
+Wallpapers always go through `caelestia wallpaper`, so Caelestia's own picker, the lock screen
+and the dynamic scheme stay in sync; `sync` then draws them with awww (Caelestia's own
+wallpaper layer is disabled with background.wallpaperEnabled = false).
+
+A theme's scheme comes from its folder name, `<scheme>` or `<scheme>-<flavour>` (e.g.
+catppuccin-mocha, gruvbox-hard), or from an optional `scheme` file inside the folder
+containing "<scheme> [flavour] [dark|light]" (e.g. "catppuccin latte light", "dynamic").
+Anything unrecognised uses the dynamic scheme (colours from the wallpaper).
+"""
+import json
+import os
+import subprocess
+import sys
+import time
+
+HOME = os.path.expanduser("~")
+WALLPAPERS = os.environ.get("THEMECTL_WALLPAPERS", f"{HOME}/Pictures/Wallpapers")
+STATE_DIR = f"{os.environ.get('XDG_STATE_HOME', HOME + '/.local/state')}"
+STATE = f"{STATE_DIR}/themectl/current.json"
+CAELESTIA_WALL = f"{STATE_DIR}/caelestia/wallpaper/path.txt"
+CAELESTIA_SCHEME = f"{STATE_DIR}/caelestia/scheme.json"
+CHROMIUM_POLICY_DIR = "/etc/chromium/policies/managed"
+IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff")
+
+TRANSITION_DURATION = "1.4"  # seconds
+
+
+def run(*cmd, check=True):
+    return subprocess.run(cmd, check=check, capture_output=True, text=True).stdout
+
+
+# ---------------------------------------------------------------- themes
+
+_schemes = None
+
+
+def schemes():
+    """{name: {flavour: colours}} from caelestia."""
+    global _schemes
+    if _schemes is None:
+        try:
+            _schemes = json.loads(run("caelestia", "scheme", "list"))
+        except (subprocess.CalledProcessError, ValueError, OSError):
+            _schemes = {}
+    return _schemes
+
+
+def parse_scheme(spec):
+    """'catppuccin mocha dark' / 'gruvbox-hard' / 'dynamic' -> (name, flavour, mode)."""
+    words = spec.replace("-", " ").split()
+    name = words[0] if words else "dynamic"
+    if name not in schemes() or name == "dynamic":
+        return "dynamic", None, None
+    flavours = schemes()[name]
+    flavour = next((w for w in words[1:] if w in flavours), next(iter(flavours)))
+    mode = next((w for w in words[1:] if w in ("dark", "light")), None)
+    return name, flavour, mode
+
+
+def theme_scheme(theme):
+    path = f"{WALLPAPERS}/{theme}/scheme"
+    try:
+        with open(path) as f:
+            return parse_scheme(f.read().strip())
+    except OSError:
+        return parse_scheme(theme)
+
+
+UNSORTED = "unsorted"  # pseudo-theme: images directly in WALLPAPERS, dynamic colours
+
+
+def wallpapers(theme):
+    folder = f"{WALLPAPERS}/{theme}"
+    if theme == UNSORTED and not os.path.isdir(folder):
+        folder = WALLPAPERS
+    try:
+        files = sorted(f for f in os.listdir(folder) if f.lower().endswith(IMAGE_EXTS))
+    except OSError:
+        return []
+    return [f"{folder}/{f}" for f in files]
+
+
+def themes():
+    try:
+        names = sorted(d for d in os.listdir(WALLPAPERS) if os.path.isdir(f"{WALLPAPERS}/{d}"))
+    except OSError:
+        return []
+    if UNSORTED not in names:
+        names.append(UNSORTED)
+    return [t for t in names if wallpapers(t)]
+
+
+def load_state():
+    try:
+        with open(STATE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_state(theme, wallpaper):
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE, "w") as f:
+        json.dump({"theme": theme, "wallpaper": wallpaper}, f)
+
+
+# ---------------------------------------------------------------- commands
+
+def cmd_list(as_json):
+    st = load_state()
+    cur, cur_wall = st.get("theme"), st.get("wallpaper")
+    out = []
+    for t in themes():
+        name, flavour, mode = theme_scheme(t)
+        colours = schemes().get(name, {}).get(flavour, {}) if name != "dynamic" else {}
+        out.append({
+            "name": t,
+            "scheme": name,
+            "flavour": flavour,
+            "mode": mode,
+            "current": t == cur,
+            "current_wallpaper": cur_wall if t == cur else None,
+            "wallpapers": wallpapers(t),
+            "swatches": ["#" + colours[k] for k in ("primary", "secondary", "tertiary", "surface", "onSurface")
+                         if k in colours],
+        })
+    if as_json:
+        print(json.dumps(out))
+    else:
+        for t in out:
+            scheme = " ".join(p for p in (t["scheme"], t["flavour"], t["mode"]) if p)
+            print(f"{'*' if t['current'] else ' '} {t['name']:24} {scheme:28} {len(t['wallpapers'])} wallpaper(s)")
+
+
+def apply_wallpaper(theme, wallpaper):
+    name, flavour, mode = theme_scheme(theme)
+    if name == "dynamic":
+        # Set the wallpaper first so the dynamic scheme is generated from it.
+        run("caelestia", "wallpaper", "-f", wallpaper)
+        try:
+            with open(CAELESTIA_SCHEME) as f:
+                current = json.load(f).get("name")
+        except (OSError, ValueError):
+            current = None
+        if current != "dynamic":
+            run("caelestia", "scheme", "set", "-n", "dynamic")
+    else:
+        run("caelestia", "wallpaper", "-f", wallpaper, "-N")
+    save_state(theme, wallpaper)
+
+
+def cmd_set(theme, wallpaper=None):
+    walls = wallpapers(theme)
+    if not walls:
+        sys.exit(f"themectl: no theme '{theme}' (or it has no wallpapers) in {WALLPAPERS}")
+    if wallpaper and os.path.abspath(wallpaper) not in walls:
+        sys.exit(f"themectl: {wallpaper} is not in theme '{theme}'")
+    name, flavour, mode = theme_scheme(theme)
+    if name != "dynamic":
+        args = ["caelestia", "scheme", "set", "-n", name, "-f", flavour]
+        if mode:
+            args += ["-m", mode]
+        run(*args)
+    apply_wallpaper(theme, os.path.abspath(wallpaper) if wallpaper else walls[0])
+
+
+def cmd_current():
+    st = load_state()
+    print(f"{st.get('theme', '(none)')}\n{st.get('wallpaper', '')}")
+
+
+def cmd_picker(mode):
+    ipc = ["qs", "-c", "theme-picker", "ipc", "call", "picker", "toggle", mode]
+    if subprocess.run(ipc, capture_output=True).returncode != 0:
+        subprocess.Popen(["qs", "-c", "theme-picker", "-d"], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+        for _ in range(30):
+            time.sleep(0.1)
+            if subprocess.run(ipc, capture_output=True).returncode == 0:
+                break
+
+
+# ---------------------------------------------------------------- sync daemon
+
+def hypr_json(*args):
+    return json.loads(run("hyprctl", *args, "-j"))
+
+
+def awww_show(path, grow):
+    """Show `path` on every output; grow from the cursor on its monitor, from the centre elsewhere."""
+    try:
+        cur, mons = hypr_json("cursorpos"), hypr_json("monitors")
+    except (subprocess.CalledProcessError, ValueError, OSError):
+        cur, mons = None, []
+    if not mons:
+        subprocess.run(["awww", "img", path, "--transition-type", "grow" if grow else "simple"])
+        return
+    procs = []
+    for m in mons:
+        w, h = m["width"] / m["scale"], m["height"] / m["scale"]
+        if m["transform"] % 2:
+            w, h = h, w
+        args = ["awww", "img", path, "-o", m["name"],
+                "--transition-fps", str(round(m["refreshRate"])),
+                "--transition-duration", TRANSITION_DURATION]
+        if grow:
+            pos = "center"
+            if cur and m["x"] <= cur["x"] < m["x"] + w and m["y"] <= cur["y"] < m["y"] + h:
+                fx, fy = (cur["x"] - m["x"]) / w, (cur["y"] - m["y"]) / h
+                pos = f"{fx:.3f},{1 - fy:.3f}"  # awww measures y from the bottom
+            args += ["--transition-type", "grow", "--transition-pos", pos]
+        else:
+            args += ["--transition-type", "simple", "--transition-step", "255"]
+        procs.append(subprocess.Popen(args))
+    for p in procs:
+        p.wait()
+
+
+def cmd_sync():
+    from gi.repository import Gio, GLib
+
+    def wait_for_daemon():
+        for _ in range(100):
+            if subprocess.run(["awww", "query"], capture_output=True).returncode == 0:
+                return
+            time.sleep(0.1)
+        sys.exit("themectl sync: awww-daemon isn't running")
+
+    def read_path():
+        try:
+            with open(CAELESTIA_WALL) as f:
+                p = f.read().strip()
+            return p if os.path.isfile(p) else None
+        except OSError:
+            return None
+
+    wait_for_daemon()
+    shown = {"path": read_path()}
+    if shown["path"]:
+        awww_show(shown["path"], grow=False)  # startup: no animation
+
+    def apply_wallpaper():
+        p = read_path()
+        if p and p != shown["path"]:
+            shown["path"] = p
+            awww_show(p, grow=True)
+
+    timers, monitors = {}, []
+
+    def watch(path, callback):
+        """Call `callback` (debounced) whenever the file at `path` is written or replaced."""
+        def fire():
+            timers.pop(path, None)
+            callback()
+            return False
+
+        def changed(_mon, file, other, event):
+            # Caelestia writes atomically (temp file + rename), so for RENAMED the target is `other`.
+            if path in (file.get_path(), other and other.get_path()) and event in (
+                    Gio.FileMonitorEvent.CHANGES_DONE_HINT, Gio.FileMonitorEvent.CREATED,
+                    Gio.FileMonitorEvent.MOVED_IN, Gio.FileMonitorEvent.RENAMED):
+                if path in timers:
+                    GLib.source_remove(timers[path])
+                timers[path] = GLib.timeout_add(120, fire)  # debounce bursts of writes
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        mon = Gio.File.new_for_path(os.path.dirname(path)).monitor_directory(
+            Gio.FileMonitorFlags.WATCH_MOVES, None)
+        mon.connect("changed", changed)
+        monitors.append(mon)  # keep a reference, or the monitor is garbage-collected
+
+    watch(CAELESTIA_WALL, apply_wallpaper)
+    watch(CAELESTIA_SCHEME, on_scheme_change)
+    GLib.MainLoop().run()
+
+
+def on_scheme_change():
+    """Push the new scheme to the places Caelestia doesn't reach on this system."""
+    try:
+        with open(CAELESTIA_SCHEME) as f:
+            c = json.load(f)["colours"]
+    except (OSError, ValueError, KeyError):
+        return
+    for apply in (hypr_borders, chromium_theme):
+        try:
+            apply(c)
+        except (KeyError, OSError, subprocess.SubprocessError) as e:
+            print(f"themectl sync: {apply.__name__}: {e}", file=sys.stderr)
+
+
+def hypr_borders(c):
+    """Border colours, live (same mapping as the block in qol.lua)."""
+    active = [f"rgba({c['primary'].lower()}ee)", f"rgba({c['tertiary'].lower()}ee)"]
+    inactive = f"rgba({c['outlineVariant'].lower()}aa)"
+    lua = ('hl.config({ general = { col = { active_border = { colors = {"%s", "%s"}, angle = 45 }, '
+           'inactive_border = "%s" } } })' % (*active, inactive))
+    subprocess.run(["hyprctl", "eval", lua], capture_output=True)
+
+
+def chromium_theme(c):
+    """Chromium's toolbar colour via a managed policy. Caelestia's own version needs passwordless
+    sudo; this needs the policy dir to be writable instead (one-time: sudo install -d -o $USER ...)."""
+    if not os.access(CHROMIUM_POLICY_DIR, os.W_OK):
+        return
+    tmp = f"{CHROMIUM_POLICY_DIR}/.caelestia.json.tmp"
+    with open(tmp, "w") as f:
+        json.dump({"BrowserThemeColor": "#" + c["surface"].lower(), "BrowserColorScheme": "device"}, f)
+    os.replace(tmp, f"{CHROMIUM_POLICY_DIR}/caelestia.json")
+    # Only nudge a running browser; with no instance this flag would start a hidden one.
+    if subprocess.run(["pgrep", "-x", "chromium"], capture_output=True).returncode == 0:
+        subprocess.Popen(["chromium", "--refresh-platform-policy", "--no-startup-window"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else "list"
+    if cmd == "list":
+        cmd_list("--json" in args)
+    elif cmd == "set" and len(args) in (2, 3):
+        cmd_set(*args[1:])
+    elif cmd == "current":
+        cmd_current()
+    elif cmd == "picker" and len(args) <= 2 and (args[1:] or ["themes"])[0] in ("themes", "wallpapers"):
+        cmd_picker((args[1:] or ["themes"])[0])
+    elif cmd == "sync":
+        cmd_sync()
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main()

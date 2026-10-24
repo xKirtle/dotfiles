@@ -1,0 +1,60 @@
+# System and packages
+
+## paru
+
+- `~/.config/paru/paru.conf` = copy of `/etc/paru.conf` + `CompletionInterval = 36500`.
+  paru reads this file **instead of** `/etc/paru.conf`, so future paru settings go here.
+- **Why:** paru 2.1.0 writes a corrupt AUR package list (`~/.cache/paru/packages.aur`) when it
+  refreshes it, which breaks `paru -S <tab>` completion for AUR packages. Its own refresh is pushed
+  out ~100 years; `-1` ("never") is documented but **rejected** by the parser ("invalid digit").
+- Replacement refresh: `~/.local/bin/paru-aur-completion-refresh` (downloads
+  `aur.archlinux.org/packages.gz`, unpacks, sanity-checks), run weekly by
+  `paru-aur-completion.timer` (user unit).
+- **Undo once paru is fixed:** delete the `CompletionInterval` line, then
+  `systemctl --user disable --now paru-aur-completion.timer`.
+- Tab completion needs `bash-completion` (sourced in `.bashrc`).
+- Build leftovers (`rust`, `cmake`, `meson`, …) are orphans you can remove with
+  `sudo pacman -Rns $(pacman -Qdtq)`; paru reinstalls them when needed.
+
+## pacman
+
+- `[multilib]` enabled (for Steam).
+- `Color` and `ParallelDownloads = 5` were already set.
+- `paccache.timer` enabled: weekly cache cleanup, keeps the last 3 versions.
+
+## bash (`~/.bashrc`, backup `~/.bashrc.bak`)
+
+Appended section `# ---- QoL ----`:
+- bash-completion; history 50k/100k, deduped, shared across terminals; `autocd`, `globstar`, `cdspell`
+- `EDITOR=nano`; `MANPAGER` uses bat
+- aliases: `ls`/`ll`/`la`/`lt` → eza, `cat` → bat, `..`, `...`, `update` = `paru -Syu`
+- fzf keybinds (Ctrl+R history, Ctrl+T files, Alt+C dirs) with Catppuccin colours, using fd
+- `zoxide` (`z <dir>`), `starship` prompt (`~/.config/starship.toml` = `catppuccin-powerline` preset)
+- bat theme: `~/.config/bat/config` → `Catppuccin Mocha`
+
+## Network
+
+- Ports: 2.5 GbE RTL8125 `enp8s0` and 1 GbE RTL8111 `enp5s0`, both `r8169` driver. In use at
+  setup end: `enp5s0` (1 GbE). Gigabit internet, so either port is fine.
+- Wi-Fi (`wlp7s0`, MT7922) is off: `nmcli radio wifi off` (`on` to re-enable).
+- IPv6 is on everywhere (a temporary `disable_ipv6` test was reverted).
+- Firewall: `ufw` (enabled before this session).
+
+## Time and locale
+
+- Timezone `Europe/Lisbon` (`timedatectl`); NTP via `systemd-timesyncd`.
+
+## Removed / disabled
+
+| What | Why |
+|---|---|
+| `dolphin` | replaced by Thunar |
+| `polkit-kde-agent` (+ 7 KDE libs) | duplicate of `hyprpolkitagent` |
+| `sddm` (disabled, still installed) | replaced by greetd |
+| `dunst` (masked, still installed) | Caelestia handles notifications |
+
+## Extra tools installed
+
+`alsa-utils`, `alsa-scarlett-gui` (AUR), `7zip`, `gnome-keyring`, `hyprpicker`, `trash-cli`, `mpv`, `imv`, `file-roller`,
+`playerctl`, `nwg-look`, `qt6ct`, `kvantum`, `python-cairo` (missing dependency of HyprMod's
+monitor view; marked as a dependency).

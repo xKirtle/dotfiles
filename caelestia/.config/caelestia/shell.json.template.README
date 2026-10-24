@@ -1,0 +1,9 @@
+shell.json is GENERATED: edit shell.json.template, not shell.json.
+
+install.sh renders shell.json.template -> shell.json with the private values from the repo's
+.env (e.g. ${WEATHER_LOCATION}); shell.json itself is gitignored. Anything written straight into
+shell.json (by hand or by Caelestia's settings app) is overwritten on the next render, so copy
+such changes into the template. (JSON has no comments, hence this separate note.)
+
+Re-render: cd ~/Dev/Personal/dotfiles && ./install.sh caelestia
+Then restart the shell (Ctrl+Super+Alt+R); it only reads shell.json at startup.
