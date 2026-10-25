@@ -14,7 +14,7 @@ Theme everywhere: **Catppuccin Mocha**.
   `-x qs` wait the full 5 s every time. The `^` stops the pattern from matching the bind's own `sh -c`
   line, and the pattern also skips the `[qs] <defunct>` zombie a killed instance can leave behind.
   Confirm with a new PID: `pgrep -af '^qs -c caelestia'`. If the bar is gone, run `caelestia shell -d`.
-- **Config:** `~/.config/caelestia/shell.json`. **Only read at startup**; restart the shell after editing.
+- **Config:** `~/.config/caelestia/shell.json`. Bar options (e.g. `bar.popouts`) apply live once `shell.json` is re-rendered; restart the shell if a change doesn't show.
   It's **generated**: edit `shell.json.template` (tracked) and re-render with `./install.sh caelestia`
   from the repo; private values (`${WEATHER_LOCATION}`) come from the repo's gitignored `.env`
   (README: "Private values"). `shell.json` itself is gitignored, and anything written straight into it
@@ -24,8 +24,15 @@ Theme everywhere: **Catppuccin Mocha**.
     It's an array, so list all entries, not just the changed ones.
   - `osd.enableMicrophone: true`: popup on mic volume/mute changes.
   - `bar.clock.showDate: true`: date next to the bar clock.
-  - `bar.workspaces.specialWorkspaceIcons`: `games` → `sports_esports` (gamepad). The strip of special
+  - `bar.popouts.activeWindow: false`: no popout when hovering the active-window title in the bar.
+  - `bar.workspaces.specialWorkspaceIcons`: `games` → `sports_esports` (gamepad), `magic` (Super+S scratchpad) → `auto_awesome` (sparkles). The strip of special
     workspaces only shows while one is open, and lists only non-empty ones.
+  - `utilities.quickToggles`: the drawer's default buttons (wifi, bluetooth, mic, settings, gameMode, dnd)
+    plus **vpn**, which is off by default. Setting the list replaces the defaults, so keep all of them listed.
+  - `utilities.vpn`: enabled, one provider `proton` (selected): the toggle runs `/usr/bin/protonvpn
+    connect|disconnect` (fastest server) and reads state from the `proton0` interface. Caelestia has no Proton
+    adapter; this is the generic custom-provider form (`09-vpn.md`). `selectedProvider` comes from the
+    template, so a re-render resets a choice made in the settings app.
   - `launcher.useFuzzy.apps: true`: fuzzy app matching in the launcher.
   - `lock.hideNotifs: true`: no notification contents on the lock screen.
   - `notifs.actionOnClick: true`: clicking a notification runs its default action (not just dismiss).

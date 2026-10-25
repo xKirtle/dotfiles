@@ -21,6 +21,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `paru` | paru config + AUR completion refresh timer |
 | `spotifast` | Copies Caelestia's rendered Spotifast palette into Spotifast's themes (`spotifast-caelestia-theme`, run by Caelestia's postHook) |
 | `calendar` | Proton Calendar: vdirsyncer + khal configs, `calendarctl` (sync, reminders), agenda panel, user units |
+| `vpn` | Proton VPN: `vpnctl` (server data + actions), VPN picker panel (`qs -c vpn`, Super+Shift+P) |
 | `system` | Reference copies of `/etc` files, installed by hand ([system/README.md](system/README.md)) |
 | `docs` | The setup notes |
 

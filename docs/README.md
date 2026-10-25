@@ -14,6 +14,7 @@ lives, why, and how to undo or tweak it.
 | [06-gaming-and-steam.md](06-gaming-and-steam.md) | Steam scaling, Proton builds, primary monitor, download-speed findings |
 | [07-system-and-packages.md](07-system-and-packages.md) | paru, pacman, bash, network, timezone, removed packages |
 | [08-calendar.md](08-calendar.md) | Proton Calendar sync (vdirsyncer + khal), reminders, agenda panel |
+| [09-vpn.md](09-vpn.md) | Proton VPN CLI, VPN panel (`vpnctl`), Caelestia VPN toggle |
 
 These notes are `docs/` in the dotfiles repo `~/Dev/Personal/dotfiles` (git + GNU Stow;
 `~/Documents/system-setup` is a symlink here). Most configs are symlinks into that repo, so the

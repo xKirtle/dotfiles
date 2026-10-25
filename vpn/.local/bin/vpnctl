@@ -1,0 +1,223 @@
+#!/usr/bin/env python3
+"""vpnctl: Proton VPN data and actions for the VPN panel (dotfiles `vpn` package).
+
+  vpnctl status                 JSON: connected?, server, city, country, load (from NetworkManager +
+                                the server cache; no Proton CLI start-up, so it's cheap to poll)
+  vpnctl ip                     JSON: public IP, country, city and ISP as websites see you
+                                (am.i.mullvad.net/json)
+  vpnctl list                   JSON: every server you can use, grouped country -> city, plus favourites
+  vpnctl connect [ARGS...]      protonvpn connect ARGS (e.g. --country PT, --city Lisbon, PT#79, -sc)
+  vpnctl disconnect             protonvpn disconnect
+  vpnctl fav CODE               add/remove a country (two-letter code) from the favourites
+  vpnctl panel                  toggle the VPN panel (qs -c vpn)
+
+Data comes from the Proton CLI's own cache (~/.cache/Proton/VPN/serverlist.json, refreshed by the CLI
+on connect). Country names come from `protonvpn countries list`, cached in ~/.cache/vpnctl/.
+Switching servers moves all traffic to a new tunnel: open connections drop.
+"""
+import json
+import subprocess
+import urllib.request
+import sys
+import time
+from pathlib import Path
+
+HOME = Path.home()
+SERVERLIST = HOME / ".cache/Proton/VPN/serverlist.json"
+CACHE = HOME / ".cache/vpnctl"
+STATE = HOME / ".local/state/vpnctl"
+FAVS = STATE / "favorites.json"
+PROTONVPN = "/usr/bin/protonvpn"
+IP_URL = "https://am.i.mullvad.net/json"
+
+# Logical server feature bits (Proton API)
+SECURE_CORE, TOR, P2P, STREAMING = 1, 2, 4, 8
+
+
+def flag(code):
+    # Two-letter code -> flag emoji (regional indicator symbols). Proton uses UK for GB.
+    code = "GB" if code == "UK" else code
+    if len(code) != 2 or not code.isalpha():
+        return ""
+    return "".join(chr(0x1F1E6 + ord(ch) - ord("A")) for ch in code.upper())
+
+
+def load_servers():
+    try:
+        return json.loads(SERVERLIST.read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def country_names():
+    """{code: name}, from `protonvpn countries list` (cached; refreshed with the server list)."""
+    path = CACHE / "countries.json"
+    try:
+        if path.stat().st_mtime >= SERVERLIST.stat().st_mtime:
+            return json.loads(path.read_text())
+    except (OSError, ValueError):
+        pass
+    names = {}
+    try:
+        out = subprocess.run([PROTONVPN, "countries", "list"], capture_output=True, text=True,
+                             timeout=60).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        out = ""
+    for line in out.splitlines():
+        # "Bosnia and Herzegovina            BA": name, then the code as the last column
+        parts = line.rstrip().rsplit(None, 1)
+        if len(parts) == 2 and len(parts[1]) == 2 and parts[1].isupper() and parts[1] != "--":
+            names[parts[1]] = parts[0].strip()
+    if names:
+        CACHE.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(names))
+    return names
+
+
+def favorites():
+    try:
+        return json.loads(FAVS.read_text())
+    except (OSError, ValueError):
+        return ["PT"]
+
+
+def server_entry(s):
+    f = s.get("Features", 0)
+    return {
+        "name": s["Name"],
+        "load": s.get("Load", 0),
+        "score": s.get("Score", 0),
+        "secureCore": bool(f & SECURE_CORE),
+        "entry": s.get("EntryCountry", "") if f & SECURE_CORE else "",
+        "p2p": bool(f & P2P),
+        "tor": bool(f & TOR),
+        "streaming": bool(f & STREAMING),
+    }
+
+
+def cmd_list():
+    data = load_servers()
+    if not data:
+        print(json.dumps({"error": "No server list yet: run `protonvpn signin`, then `protonvpn countries list`."}))
+        return
+    names = country_names()
+    tier = data.get("MaxTier", 0)
+    countries = {}
+    for s in data.get("LogicalServers", []):
+        if not s.get("Status") or s.get("Tier", 0) > tier:
+            continue  # offline, or not on this plan
+        code = s["ExitCountry"]
+        c = countries.setdefault(code, {"code": code, "name": names.get(code, code), "flag": flag(code),
+                                        "cities": {}})
+        c["cities"].setdefault(s.get("City") or "Other", []).append(server_entry(s))
+    out = []
+    for c in countries.values():
+        cities = []
+        for city, servers in c["cities"].items():
+            # Proton's own order: lowest score = fastest
+            servers.sort(key=lambda x: (x["score"], x["load"]))
+            cities.append({"name": city, "servers": servers})
+        cities.sort(key=lambda x: x["name"])
+        c["cities"] = cities
+        out.append(c)
+    out.sort(key=lambda x: x["name"])
+    print(json.dumps({
+        "countries": out,
+        "favorites": favorites(),
+        "updated": int(SERVERLIST.stat().st_mtime),
+    }))
+
+
+def active_proton():
+    """Name of the active Proton NetworkManager connection ("ProtonVPN PT#79"), or ""."""
+    try:
+        out = subprocess.run(["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"],
+                             capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    for line in out.splitlines():
+        name, _, kind = line.rpartition(":")
+        if name.startswith("ProtonVPN ") and kind in ("wireguard", "vpn"):
+            return name
+    return ""
+
+
+def cmd_status():
+    conn = active_proton()
+    status = {"connected": bool(conn)}
+    if conn:
+        server = conn.removeprefix("ProtonVPN ")
+        status["server"] = server
+        data = load_servers() or {}
+        s = next((x for x in data.get("LogicalServers", []) if x["Name"] == server), None)
+        if s:
+            code = s["ExitCountry"]
+            status.update(server_entry(s))
+            status.update({"code": code, "flag": flag(code), "city": s.get("City", ""),
+                           "country": country_names().get(code, code)})
+    print(json.dumps(status))
+
+
+def cmd_ip():
+    # What websites see, VPN or not. Mullvad's check: no account, says it doesn't log.
+    try:
+        with urllib.request.urlopen(IP_URL, timeout=6) as r:
+            d = json.load(r)
+    except Exception as e:  # offline, mid-switch, ...
+        print(json.dumps({"error": str(e)}))
+        return
+    codes = {name: code for code, name in country_names().items()}
+    code = codes.get(d.get("country", ""), "")
+    print(json.dumps({"ip": d.get("ip", ""), "code": code, "flag": flag(code), "city": d.get("city", ""),
+                      "isp": d.get("organization", "")}))
+
+
+def run_cli(args):
+    p = subprocess.run([PROTONVPN, *args], capture_output=True, text=True)
+    msg = (p.stdout + p.stderr).strip()
+    print(msg.splitlines()[0] if msg else "")
+    sys.exit(p.returncode)
+
+
+def cmd_fav(code):
+    code = code.upper()
+    favs = favorites()
+    favs = [c for c in favs if c != code] if code in favs else favs + [code]
+    STATE.mkdir(parents=True, exist_ok=True)
+    FAVS.write_text(json.dumps(favs))
+
+
+def cmd_panel():
+    ipc = ["qs", "-c", "vpn", "ipc", "call", "vpn", "toggle"]
+    if subprocess.run(ipc, capture_output=True).returncode != 0:
+        subprocess.Popen(["qs", "-c", "vpn", "-d"], stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+        for _ in range(30):
+            time.sleep(0.1)
+            if subprocess.run(ipc, capture_output=True).returncode == 0:
+                break
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else ""
+    if cmd == "status":
+        cmd_status()
+    elif cmd == "list":
+        cmd_list()
+    elif cmd == "ip":
+        cmd_ip()
+    elif cmd == "connect":
+        run_cli(["connect", *args[1:]])
+    elif cmd == "disconnect":
+        run_cli(["disconnect"])
+    elif cmd == "fav" and len(args) == 2:
+        cmd_fav(args[1])
+    elif cmd == "panel":
+        cmd_panel()
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main()

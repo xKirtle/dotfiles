@@ -12,6 +12,7 @@ touching, **before** changing anything:
 - `06-gaming-and-steam.md`: Steam scaling, Proton, primary monitor, download-speed findings
 - `07-system-and-packages.md`: paru workaround, pacman, bash, network
 - `08-calendar.md`: Proton Calendar sync (vdirsyncer/khal), reminders, agenda panel (`calendarctl`)
+- `09-vpn.md`: Proton VPN CLI, VPN panel (`vpnctl`), Caelestia VPN toggle
 
 ## Dotfiles repo
 
@@ -44,6 +45,8 @@ touching, **before** changing anything:
   the live system and fix the notes.
 - **No passwordless sudo.** For anything needing root (`/etc`, pacman, system services), write files
   to a scratch location, verify them, and give the user the exact command to run.
+- **Never connect, disconnect or switch the VPN yourself:** it kills your own API connection mid-reply
+  (the session hangs until the user writes again). Ask the user to do it (`09-vpn.md`).
 - **Say before you disrupt.** Restarting WirePlumber (audio blip), the Caelestia shell, Steam, or
   NetworkManager connections affects what the user is doing. Mention it, and avoid it mid-download.
 - Back up a file before overwriting anything that isn't already documented as ours.
@@ -72,7 +75,7 @@ touching, **before** changing anything:
 - Runtime-only rules for experiments: `hyprctl eval 'hl.window_rule({...})'` (cleared by `hyprctl reload`).
 - Don't `pkill -f <pattern>` with the pattern in your own command line; it matches your own shell.
   Use `pgrep -x <name>` or window addresses.
-- Caelestia only reads `~/.config/caelestia/shell.json` at startup. Restart:
+- Caelestia picks up most `shell.json` changes live (bar options did, 2026-10-25). If one doesn't show, restart:
   `qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d`
   (launch via `hyprctl dispatch 'hl.dsp.exec_cmd("…")'` so it outlives your shell). Don't wait on
   `pgrep -x qs`: other Quickshell configs (claude-usage, theme-picker) run too. Afterwards confirm a new

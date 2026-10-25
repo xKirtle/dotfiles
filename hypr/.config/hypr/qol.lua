@@ -157,6 +157,9 @@ hl.bind("CTRL + " .. mainMod .. " + space",         hl.dsp.exec_cmd(os.getenv("H
 -- Agenda panel: Proton Calendar, today + next days (calendar package, qs -c agenda)
 hl.bind(mainMod .. " + A",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/calendarctl panel"))
 
+-- VPN panel: Proton VPN country/city/server picker (vpn package, qs -c vpn). Shift so it's hard to hit by accident
+hl.bind(mainMod .. " + SHIFT + P",   hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/vpnctl panel"))
+
 -- Thunar picks up Caelestia's GTK theme (replaces dolphin)
 hl.unbind(mainMod .. " + E")
 hl.bind(mainMod .. " + E",           hl.dsp.exec_cmd("thunar"))

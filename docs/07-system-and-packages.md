@@ -39,6 +39,7 @@ Appended section `# ---- QoL ----`:
 - Wi-Fi (`wlp7s0`, MT7922) is off: `nmcli radio wifi off` (`on` to re-enable).
 - IPv6 is on everywhere (a temporary `disable_ipv6` test was reverted).
 - Firewall: `ufw` (enabled before this session).
+- **Proton VPN:** official CLI (`protonvpn`) + VPN panel (Super+Shift+P): `09-vpn.md`.
 
 ## Time and locale
 
