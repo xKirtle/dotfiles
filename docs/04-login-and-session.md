@@ -33,7 +33,8 @@ SDDM is still installed but disabled. Remove it for good with `sudo pacman -Rns 
 greetd → ReGreet → session `Hyprland (uwsm-managed)` → **uwsm** starts Hyprland under systemd.
 Because of uwsm, the standard XDG autostart directory **works**: files in `~/.config/autostart/`
 become `app-<name>@autostart.service` user units.
-- Currently there: `OpenRGB.desktop` (`openrgb --startminimized`, created by OpenRGB's own setting).
+- Currently there: `OpenRGB.desktop` (`openrgb --profile default`: apply the lights-off profile and exit; created by
+  OpenRGB's own setting, see `06-gaming-and-steam.md`).
 - systemd reads that folder at session start; after adding a file mid-session, run
   `systemctl --user daemon-reload` to test it immediately.
 

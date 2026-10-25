@@ -74,4 +74,8 @@ hosts it uses), and measure the NIC live:
   `steam-games-no-idle` set Hyprland idle inhibitors, which Caelestia respects (`respectInhibitors`).
   Verified 2026-10-23 on "Over the Hill" (`steam_app_2929250`, fullscreen): `inhibitingIdle: true`.
   Non-Steam games (Heroic, etc.) are covered only while fullscreen.
-- OpenRGB autostarts minimized via `~/.config/autostart/OpenRGB.desktop`.
+- OpenRGB applies its `default` profile (all lights off) at login and exits: `~/.config/autostart/OpenRGB.desktop`
+  runs `openrgb --profile default` (set with `openrgb --autostart-enable "--profile default"`). No window, no
+  tray icon, nothing left running: the controllers keep the colours on their own (tested 2026-10-25). Opening the
+  app normally works as usual. If the lights ever need OpenRGB to stay running, use `--server --profile default`
+  (headless SDK server, no tray). Before: `--startminimized` (GUI hidden in the tray).
