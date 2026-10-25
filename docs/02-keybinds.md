@@ -76,6 +76,8 @@ landscape action, portrait action).
 | Super + 6–9, 0 | workspaces on the portrait monitor (0 = 10) |
 | Super + Shift + digit | send window to that workspace |
 | Super + S | show / hide the scratchpad (`special:magic`) |
+| Super + G | show / hide the games scratchpad (`special:games`; Steam games open there) |
+| Super + Shift + G | toggle Caelestia game mode (also automatic with the games scratchpad) |
 | Super + Shift + S | **unbound** (was a toggle; use the arrow keys above) |
 
 ## Audio

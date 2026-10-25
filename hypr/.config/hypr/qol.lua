@@ -371,3 +371,47 @@ hl.window_rule({
     match        = { class = "^steam_app_.*$" },
     idle_inhibit = "focus",
 })
+
+-- Steam games open in their own scratchpad (special:games), toggled with Super+G.
+-- Matched by class, not fullscreen state: workspace only applies when the window maps,
+-- and most games map windowed and go fullscreen afterwards
+hl.window_rule({
+    name      = "steam-games-scratchpad",
+    match     = { class = "^steam_app_.*$" },
+    workspace = "special:games",
+})
+hl.bind(mainMod .. " + G", hl.dsp.workspace.toggle_special("games"))
+
+-- Caelestia's game mode (no animations/blur/gaps/shadows, tearing allowed) follows the games
+-- scratchpad: on when a window opens there, off when the last one closes. Keyed on the
+-- workspace, so adding a class to the rule above is enough. Only these two transitions touch
+-- it, so toggling game mode by hand still works while no game is open
+local function in_games(win)
+    return win ~= nil and win.workspace ~= nil and win.workspace.name == "special:games"
+end
+
+local function game_mode(state)
+    hl.dispatch(hl.dsp.exec_cmd("qs -c caelestia ipc call gameMode " .. state))
+end
+
+hl.on("window.open", function(win)
+    if in_games(win) then
+        game_mode("enable")
+    end
+end)
+
+hl.on("window.close", function(win)
+    if not in_games(win) then
+        return
+    end
+    -- The closing window is still listed here
+    for _, other in ipairs(hl.get_windows()) do
+        if other.address ~= win.address and in_games(other) then
+            return
+        end
+    end
+    game_mode("disable")
+end)
+
+-- Manual toggle (e.g. a non-Steam game the rule doesn't catch)
+hl.bind(mainMod .. " + SHIFT + G", function() game_mode("toggle") end)

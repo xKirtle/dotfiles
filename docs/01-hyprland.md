@@ -87,6 +87,7 @@ Other autostart comes from systemd user units and `~/.config/autostart/` (see 04
 | `steam-friends-narrow` | Steam "Friends List" tiles as a narrow column: `scrolling_width = 0.15` |
 | `fullscreen-no-idle` | any window (`class = ".*"`): `idle_inhibit = "fullscreen"` |
 | `steam-games-no-idle` | `^steam_app_.*$`: `idle_inhibit = "focus"`. Must come **after** the catch-all: the last matching rule's `idle_inhibit` wins |
+| `steam-games-scratchpad` | `^steam_app_.*$`: opens in its own scratchpad `special:games` (Super+G). Matched by class, not `fullscreen`: `workspace` only applies when the window maps, and games map windowed before going fullscreen |
 
 Rules apply when a window **opens**; reopen it to see a change.
 Check idle inhibit with `hyprctl clients -j | jq '.[] | {class, inhibitingIdle}'`.
@@ -96,6 +97,11 @@ Check idle inhibit with `hyprctl clients -j | jq '.[] | {class, inhibitingIdle}'
 - `hl.get_active_window()` → window object: `.class`, `.workspace.id`, `.workspace.name`,
   `.workspace.special` (true in scratchpad), `.monitor.name`, `.monitor.description`.
 - `hl.get_monitors()` → list with `.name`, `.description`, `.id`.
+- `hl.get_windows()` → every window (same object as above, plus `.address`).
+- Events: `hl.on("window.open", function(win) … end)`; also `window.close` (window still listed),
+  `window.destroy` (fields already nil), `window.fullscreen`, `window.move_to_workspace`, `workspace.special_active`,
+  `config.reloaded`, … (`strings $(which Hyprland) | grep '^window\.'`). `hyprctl eval` prints only errors,
+  so inspect with `error(...)` or write to a file.
 - A bind can take a Lua function: `hl.bind(key, function() … hl.dispatch(hl.dsp.…) end, flags)`.
 - Flags: `{ repeating = true }`, `{ locked = true }` (works on lock screen), `{ release = true }`, `{ mouse = true }`.
 - Override a default bind: `hl.unbind("SUPER + X")` then `hl.bind(...)`.

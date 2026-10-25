@@ -3,6 +3,14 @@
         "clock": {
             "showDate": true
         },
+        "workspaces": {
+            "specialWorkspaceIcons": [
+                {
+                    "name": "games",
+                    "icon": "sports_esports"
+                }
+            ]
+        },
         "statusIcons": [
             { "id": "lockStatus", "enabled": true },
             { "id": "audio",      "enabled": false },

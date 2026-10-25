@@ -24,6 +24,8 @@ Theme everywhere: **Catppuccin Mocha**.
     It's an array, so list all entries, not just the changed ones.
   - `osd.enableMicrophone: true`: popup on mic volume/mute changes.
   - `bar.clock.showDate: true`: date next to the bar clock.
+  - `bar.workspaces.specialWorkspaceIcons`: `games` → `sports_esports` (gamepad). The strip of special
+    workspaces only shows while one is open, and lists only non-empty ones.
   - `launcher.useFuzzy.apps: true`: fuzzy app matching in the launcher.
   - `lock.hideNotifs: true`: no notification contents on the lock screen.
   - `notifs.actionOnClick: true`: clicking a notification runs its default action (not just dismiss).

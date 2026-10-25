@@ -58,6 +58,17 @@ hosts it uses), and measure the NIC live:
 ## Other
 
 - Steam Friends List tiles as a narrow column (window rule, see 01-hyprland.md).
+- **Games open in a scratchpad:** `steam_app_*` windows go to `special:games` (rule
+  `steam-games-scratchpad`); Super+G shows/hides it. Hiding doesn't pause the game. Launchers with the
+  same class land there too; non-Steam games (Heroic, etc.) don't match and open normally. Caelestia's
+  bar lists `games` (gamepad icon) in its special-workspace strip only while a scratchpad is open and
+  the workspace has windows.
+- **Game mode follows the games scratchpad:** `hl.on("window.open"/"window.close")` hooks in `qol.lua` run
+  `qs -c caelestia ipc call gameMode enable` when a window opens in `special:games` and `disable` when the
+  last one there closes (Caelestia's game mode: no animations, blur, gaps, shadows; tearing allowed; a toast
+  each way; disabling runs `hyprctl reload`). Only those two transitions act, so a manual toggle with no game
+  open sticks. On `window.close` the closing window is still in `hl.get_windows()`, so compare `.address`.
+  Check: `qs -c caelestia ipc call gameMode isEnabled`. Manual toggle: **Super+Shift+G**.
 - **No lock/blank mid-game:** Caelestia's idle timeouts (lock 3 min, DPMS off 5 min, a third action at
   10 min) only see keyboard/mouse, not gamepads. Window rules `fullscreen-no-idle` and
   `steam-games-no-idle` set Hyprland idle inhibitors, which Caelestia respects (`respectInhibitors`).
