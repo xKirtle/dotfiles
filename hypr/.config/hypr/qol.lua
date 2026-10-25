@@ -98,6 +98,8 @@ hl.config({
     misc = {
         force_default_wallpaper = 0,
         disable_hyprland_logo   = true,
+        -- Let a restarted shell take over a crashed lock screen (see the Super+Ctrl+Shift+L bind)
+        allow_session_lock_restore = true,
     },
 })
 
@@ -124,6 +126,10 @@ hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd([[caelestia shell idleInhibit
 -- (wait for the old instance to fully exit, or the new one quits seeing it still running)
 -- (match only Caelestia's qs, other Quickshell configs run too; '^' keeps it off this sh's own command line)
 hl.bind("CTRL + " .. mainMod .. " + ALT + R", hl.dsp.exec_cmd("qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d"), { release = true })
+
+-- Recover a crashed lock screen ("lockscreen crashed" red screen; Caelestia's lock dies when the
+-- monitors drop off while locked): restart the shell, wait until its IPC answers, then lock again
+hl.bind("CTRL + " .. mainMod .. " + SHIFT + L", hl.dsp.exec_cmd("qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d; for i in $(seq 100); do [ \"$(caelestia shell lock isLocked 2>/dev/null)\" = false ] && break; sleep 0.2; done; caelestia shell lock lock"), { locked = true, release = true })
 
 -- Screenshots: Print = region, Shift+Print = full screen, Super+Shift+S-style freeze
 hl.bind("Print",                     hl.dsp.global("caelestia:screenshot"))

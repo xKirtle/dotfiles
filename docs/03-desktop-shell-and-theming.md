@@ -83,7 +83,16 @@ Theme everywhere: **Catppuccin Mocha**.
 - **Toasts:** Caelestia shows its own "audio output changed" toast (bottom right); that's why the
   audio-switch script doesn't notify. Toggle: `utilities.toasts.audioOutputChanged`.
 - No option to move the bar off the left edge; it's built vertical.
-- Logs of the running instance: `/run/user/1000/quickshell/by-id/*/log.qslog` (binary-ish; use `strings`).
+- Logs of the running instance: `/run/user/1000/quickshell/by-id/*/log.qslog` (binary-ish; use `strings`),
+  plain-text copy `log.log` next to it; `by-pid/<pid>` links to the instance's folder.
+- **Lock screen crashes when the monitors drop off while locked** (2026-10-25). After DPMS off the LGs go
+  into deep sleep and drop their DisplayPort link (`Connector DP-5 disconnected` in `hyprland.log`). On wake,
+  Hyprland logs `error in client communication (pid <shell>)`, disconnects the shell, and shows its
+  "lockscreen crashed" screen. Unlocked, the shell survives one or both monitors going off and on (tested).
+  Fix: **deep sleep turned off in both monitors' OSD** (2026-10-25), so they stay connected while off.
+  Recovery: **Super+Ctrl+Shift+L** (restarts the shell and calls `caelestia shell lock lock`; works because
+  `misc.allow_session_lock_restore = true` in `qol.lua`). Last resort from a tty:
+  `hyprctl --instance 0 eval 'hl.clear_crashed_lockscreen()'`. A dead shell shows no bar until restarted.
 - Test-run in the foreground to see errors: `timeout 8 qs -c caelestia -n`.
 - **Keep awake** (idle inhibitor): **Super+Shift+I** toggles it and notifies the new state; CLI
   `caelestia shell idleInhibitor toggle|enable|disable|isEnabled`. Only on-screen indicator: the
