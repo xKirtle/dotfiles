@@ -31,6 +31,9 @@ Appended section `# ---- QoL ----`:
 - fzf keybinds (Ctrl+R history, Ctrl+T files, Alt+C dirs) with Catppuccin colours, using fd
 - `zoxide` (`z <dir>`), `starship` prompt (`~/.config/starship.toml` = `catppuccin-powerline` preset)
 - bat theme: `~/.config/bat/config` → `Catppuccin Mocha`
+- aliases `dotfiles` / `bandmate`: `cd` into that repo and start `claude`
+- `SONARQUBE_TOKEN` is exported from the repo `.env` at shell start (only that key is
+  read; the token never goes in `.bashrc`). Change it in `.env`, then open a new terminal.
 
 ## Network
 

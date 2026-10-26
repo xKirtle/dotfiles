@@ -49,3 +49,15 @@ command -v starship >/dev/null && eval "$(starship init bash)"
 
 # Caelestia colour scheme for new terminals (running ones get it live when the scheme changes)
 [[ -t 1 && -r ~/.local/state/caelestia/sequences.txt ]] && command cat ~/.local/state/caelestia/sequences.txt  # not the bat alias
+
+alias dotfiles='cd ~/Dev/Personal/dotfiles && claude'
+alias bandmate='cd ~/Dev/Personal/bandmate && claude'
+
+# SonarQube token, read from the dotfiles .env (gitignored)
+_dotenv=~/Dev/Personal/dotfiles/.env
+if [[ -r $_dotenv ]]; then
+    SONARQUBE_TOKEN=$(sed -n 's/^SONARQUBE_TOKEN=//p' "$_dotenv")
+    SONARQUBE_TOKEN=${SONARQUBE_TOKEN//[\"\']/}
+    export SONARQUBE_TOKEN
+fi
+unset _dotenv

@@ -37,6 +37,7 @@ paths below still work as written. The repo's `README.md` covers the layout and 
 | Hyprland env vars / `hyprland.start` autostart | log out and back in |
 | `~/.config/caelestia/shell.json.template` or `.env` | `./install.sh caelestia` (renders `shell.json`), then restart the shell: **Ctrl+Super+Alt+R** (only read at startup) |
 | `PROTON_CALENDAR_URL` in `.env` | `systemctl --user start calendar-sync.service` (read at run time; no render) |
+| `SONARQUBE_TOKEN` in `.env` | open a new terminal (read by `.bashrc` at shell start) |
 | `~/.config/wireplumber/…` | `systemctl --user restart wireplumber` (≈1 s audio blip) |
 | `/etc/greetd/*` | takes effect at next login screen (log out / reboot) |
 | Steam `config.vdf` / `steam_dev.cfg` | quit Steam fully first (it overwrites `config.vdf` on exit) |
