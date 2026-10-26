@@ -23,3 +23,6 @@ gtk/.config/gtk-3.0/bookmarks
 # Private values (see .env.example) and the files install.sh renders from *.template with them
 .env
 caelestia/.config/caelestia/shell.json
+
+# Python bytecode
+__pycache__/
