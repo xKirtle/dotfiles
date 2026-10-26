@@ -15,6 +15,7 @@ lives, why, and how to undo or tweak it.
 | [07-system-and-packages.md](07-system-and-packages.md) | paru, pacman, bash, network, timezone, removed packages |
 | [08-calendar.md](08-calendar.md) | Proton Calendar sync (vdirsyncer + khal), reminders, agenda panel |
 | [09-vpn.md](09-vpn.md) | Proton VPN CLI, VPN panel (`vpnctl`), Caelestia VPN toggle |
+| [10-system-monitor.md](10-system-monitor.md) | System monitor panel: graphs + task manager (`sysmonctl`, Ctrl+Shift+Esc) |
 
 These notes are `docs/` in the dotfiles repo `~/Dev/Personal/dotfiles` (git + GNU Stow;
 `~/Documents/system-setup` is a symlink here). Most configs are symlinks into that repo, so the

@@ -13,6 +13,7 @@ touching, **before** changing anything:
 - `07-system-and-packages.md`: paru workaround, pacman, bash, network
 - `08-calendar.md`: Proton Calendar sync (vdirsyncer/khal), reminders, agenda panel (`calendarctl`)
 - `09-vpn.md`: Proton VPN CLI, VPN panel (`vpnctl`), Caelestia VPN toggle
+- `10-system-monitor.md`: system monitor / task manager panel (`sysmonctl`, Ctrl+Shift+Esc)
 
 ## Dotfiles repo
 
@@ -85,7 +86,7 @@ touching, **before** changing anything:
   but don't restart Serein to check (the user chats in it); validate packages with Serein's own crate
   (`03-desktop-shell-and-theming.md`, Serein).
 - Panels are toggled/started by `~/.local/bin/qs-panel` (shared scale, `03`).
-- The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`, `qs -c agenda`, `qs -c keybinds`) don't live-reload: `qs -c <name> kill`,
+- The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`, `qs -c agenda`, `qs -c keybinds`, `qs -c sysmon`) don't live-reload: `qs -c <name> kill`,
   then they restart on next use. Processes they start get the session PATH, which lacks `~/.local/bin`,
   so use absolute paths.
 

@@ -236,7 +236,7 @@ of five root images.)
 
 `~/.local/bin/qs-panel <config> <ipc target> [toggle args…]` (`qs-panel` package) toggles one of the Quickshell
 panels, or starts it (`qs -c <config> -d`) and toggles it open once its IPC answers (~0.3 s). Used by Super+K
-(keybinds), `calendarctl panel` (agenda) and `vpnctl panel` (VPN).
+(keybinds), `calendarctl panel` (agenda), `vpnctl panel` (VPN) and `sysmonctl panel` (system monitor, 10).
 
 - **Panel scale: `SCALE=1.25` at the top of `qs-panel`.** Also set for the claude-usage panel (its own repo, so
   it takes a flag): `~/.config/systemd/user/claude-usage-tray.service.d/panel-scale.conf` (`qs-panel` package)

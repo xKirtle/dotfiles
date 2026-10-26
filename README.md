@@ -24,6 +24,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `vpn` | Proton VPN: `vpnctl` (server data + actions), VPN picker panel (`qs -c vpn`, Super+Shift+P) |
 | `qs-panel` | `qs-panel`: toggles / starts the Quickshell panels, with their shared scale (`SCALE=`); claude-usage-tray's `--panel-scale` drop-in |
 | `keybinds` | Keybind cheat sheet panel (`qs -c keybinds`, Super+K): live `hyprctl binds` with their descriptions |
+| `sysmon` | System monitor panel (`qs -c sysmon`, Ctrl+Shift+Esc): CPU/memory/GPU/disk/network graphs + task manager; `sysmonctl` (sampler, kill) |
 | `system` | Reference copies of `/etc` files, installed by hand ([system/README.md](system/README.md)) |
 | `docs` | The setup notes |
 

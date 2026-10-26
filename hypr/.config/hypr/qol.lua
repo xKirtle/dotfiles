@@ -171,6 +171,9 @@ hl.bind(mainMod .. " + SHIFT + P",   hl.dsp.exec_cmd(os.getenv("HOME") .. "/.loc
 -- Keybind cheat sheet: searchable list of the live binds and their descriptions (keybinds package, qs -c keybinds)
 hl.bind(mainMod .. " + K",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/qs-panel keybinds keybinds"), { description = "Panels: keybinds (this cheat sheet)" })
 
+-- System monitor: graphs + task manager (sysmon package, qs -c sysmon). Windows' Task Manager shortcut
+hl.bind("CTRL + SHIFT + Escape",     hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/sysmonctl panel"), { description = "Panels: system monitor (graphs, task manager: filter, end / force kill)" })
+
 -- Thunar picks up Caelestia's GTK theme (replaces dolphin)
 hl.unbind(mainMod .. " + E")
 hl.bind(mainMod .. " + E",           hl.dsp.exec_cmd("thunar"), { description = "Apps: Thunar" })

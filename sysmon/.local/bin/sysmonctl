@@ -1,0 +1,309 @@
+#!/usr/bin/env python3
+"""sysmonctl: data and actions for the system monitor panel (dotfiles `sysmon` package).
+
+  sysmonctl watch [SECONDS]     one JSON line per sample (default every 1 s) until killed: CPU, memory,
+                                GPU, disks, network totals and every process. Run by the panel while open
+  sysmonctl kill term|kill PID…  SIGTERM (end) / SIGKILL (force) the PIDs. Processes of other users
+                                (root, …) are retried through pkexec (polkit password prompt). Prints JSON
+  sysmonctl panel               toggle the panel (Ctrl+Shift+Esc), starting it if needed
+"""
+import ctypes
+import json
+import os
+import pwd
+import signal
+import subprocess
+import sys
+import threading
+import time
+from pathlib import Path
+
+HOME = Path.home()
+CLK = os.sysconf("SC_CLK_TCK")
+PAGE = os.sysconf("SC_PAGE_SIZE")
+NCPU = os.cpu_count() or 1
+MY_PID = os.getpid()
+
+# Filesystems listed in the storage card (mount point → shown name)
+MOUNTS = {"/": "/", "/home": "/home", "/boot": "/boot"}
+# Never signalled: init and the kernel threads' parent
+PROTECTED = {0, 1, 2}
+
+
+def read(path, default=""):
+    try:
+        with open(path) as f:
+            return f.read()
+    except OSError:
+        return default
+
+
+# --- System totals -----------------------------------------------------------------------------
+
+def cpu_times():
+    """[total, idle] jiffies for the whole CPU, then each core."""
+    out = []
+    for line in read("/proc/stat").splitlines():
+        if not line.startswith("cpu"):
+            break
+        v = [int(x) for x in line.split()[1:]]
+        idle = v[3] + v[4]  # idle + iowait
+        out.append((sum(v[:8]), idle))  # guest time is already in user/nice
+    return out
+
+
+def cpu_temp():
+    for hw in Path("/sys/class/hwmon").iterdir():
+        if read(hw / "name").strip() == "k10temp":
+            for label in hw.glob("temp*_label"):
+                if read(label).strip() == "Tctl":
+                    return int(read(str(label).replace("_label", "_input"), "0")) / 1000
+    return None
+
+
+def cpu_freq():
+    freqs = []
+    for f in Path("/sys/devices/system/cpu").glob("cpu[0-9]*/cpufreq/scaling_cur_freq"):
+        try:
+            freqs.append(int(read(f)))
+        except ValueError:
+            pass
+    return round(max(freqs) / 1e6, 2) if freqs else None  # GHz, fastest core
+
+
+def meminfo():
+    m = {}
+    for line in read("/proc/meminfo").splitlines():
+        k, _, v = line.partition(":")
+        m[k] = int(v.split()[0]) * 1024
+    used = m["MemTotal"] - m["MemAvailable"]
+    return {"total": m["MemTotal"], "used": used, "cached": m.get("Cached", 0) + m.get("Buffers", 0),
+            "swapTotal": m["SwapTotal"], "swapUsed": m["SwapTotal"] - m["SwapFree"]}
+
+
+def disk_bytes():
+    """Bytes read/written on whole disks (no partitions, no zram: swap there isn't disk I/O)."""
+    r = w = 0
+    for line in read("/proc/diskstats").splitlines():
+        f = line.split()
+        name = f[2]
+        if not Path(f"/sys/block/{name}/device").exists():
+            continue
+        r += int(f[5]) * 512
+        w += int(f[9]) * 512
+    return r, w
+
+
+def net_bytes():
+    """Bytes received/sent on physical interfaces (a VPN tunnel would count everything twice)."""
+    rx = tx = 0
+    for line in read("/proc/net/dev").splitlines()[2:]:
+        name, _, rest = line.partition(":")
+        name = name.strip()
+        if not Path(f"/sys/class/net/{name}/device").exists():
+            continue
+        f = rest.split()
+        rx += int(f[0])
+        tx += int(f[8])
+    return rx, tx
+
+
+def filesystems():
+    out = []
+    for mount, label in MOUNTS.items():
+        try:
+            st = os.statvfs(mount)
+        except OSError:
+            continue
+        total = st.f_blocks * st.f_frsize
+        out.append({"name": label, "total": total, "used": total - st.f_bfree * st.f_frsize})
+    return out
+
+
+class Gpu:
+    """Keeps one `nvidia-smi -lms` running (cheaper than starting it every second); last line wins."""
+    FIELDS = "utilization.gpu,memory.used,memory.total,temperature.gpu,power.draw,power.limit,name"
+
+    def __init__(self, interval_ms):
+        self.last = None
+        try:
+            self.proc = subprocess.Popen(
+                ["nvidia-smi", f"--query-gpu={self.FIELDS}", "--format=csv,noheader,nounits",
+                 f"-lms={interval_ms}"],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, preexec_fn=die_with_parent)
+        except OSError:
+            self.proc = None
+            return
+        threading.Thread(target=self.reader, daemon=True).start()
+
+    def reader(self):
+        for line in self.proc.stdout:
+            f = [x.strip() for x in line.split(",")]
+            if len(f) < 7:
+                continue
+            num = lambda x: float(x) if x.replace(".", "", 1).isdigit() else None
+            self.last = {"util": num(f[0]), "memUsed": (num(f[1]) or 0) * 2**20,
+                         "memTotal": (num(f[2]) or 0) * 2**20, "temp": num(f[3]),
+                         "power": num(f[4]), "powerLimit": num(f[5]), "name": f[6]}
+
+    def stop(self):
+        if self.proc:
+            self.proc.terminate()
+
+
+def die_with_parent():
+    # PR_SET_PDEATHSIG: nvidia-smi exits with us, even if we're SIGKILLed
+    ctypes.CDLL("libc.so.6").prctl(1, signal.SIGTERM)
+
+
+# --- Processes ---------------------------------------------------------------------------------
+
+users = {}
+
+
+def user_name(uid):
+    if uid not in users:
+        try:
+            users[uid] = pwd.getpwuid(uid).pw_name
+        except KeyError:
+            users[uid] = str(uid)
+    return users[uid]
+
+
+def processes():
+    """{pid: {...}} with cumulative CPU jiffies and I/O bytes (rates are computed between samples)."""
+    out = {}
+    for d in os.listdir("/proc"):
+        if not d.isdigit():
+            continue
+        pid = int(d)
+        try:
+            stat = read(f"/proc/{d}/stat")
+            if not stat:
+                continue
+            # comm is in parentheses and may contain spaces / parentheses itself
+            comm = stat[stat.index("(") + 1:stat.rindex(")")]
+            f = stat[stat.rindex(")") + 2:].split()
+            ppid, utime, stime, threads = int(f[1]), int(f[11]), int(f[12]), int(f[17])
+            if ppid == 2 or pid == 2:
+                continue  # kernel threads
+            uid = os.stat(f"/proc/{d}").st_uid
+            statm = read(f"/proc/{d}/statm").split()
+            rss = int(statm[1]) * PAGE if len(statm) > 1 else 0
+            shared = int(statm[2]) * PAGE if len(statm) > 2 else 0
+            cmd = read(f"/proc/{d}/cmdline").replace("\0", " ").strip()
+            io = read(f"/proc/{d}/io")  # only readable for our own processes
+            rb = wb = 0
+            for line in io.splitlines():
+                if line.startswith("read_bytes:"):
+                    rb = int(line.split()[1])
+                elif line.startswith("write_bytes:"):
+                    wb = int(line.split()[1])
+        except (OSError, ValueError, IndexError):
+            continue  # exited while we were reading it
+        # comm is cut at 15 characters: use the executable's name when comm is a prefix of it
+        name = comm
+        if cmd:
+            exe = os.path.basename(cmd.split(" ")[0])
+            if exe.startswith(comm) and len(exe) > len(comm):
+                name = exe
+        out[pid] = {"pid": pid, "ppid": ppid, "name": name, "user": user_name(uid), "uid": uid,
+                    "threads": threads, "mem": rss - shared, "rss": rss, "cmd": cmd[:300],
+                    "jiffies": utime + stime, "io": rb + wb}
+    return out
+
+
+# --- watch -------------------------------------------------------------------------------------
+
+def cmd_watch(interval):
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+    gpu = Gpu(int(interval * 1000))
+    try:
+        prev_cpu, prev_disk, prev_net = cpu_times(), disk_bytes(), net_bytes()
+        prev_procs, prev_t = processes(), time.monotonic()
+        fs, fs_t = filesystems(), time.monotonic()
+        time.sleep(min(interval, 0.5))  # first sample quickly, then every `interval`
+        while True:
+            t = time.monotonic()
+            dt = t - prev_t
+            cpu, disk, net, procs = cpu_times(), disk_bytes(), net_bytes(), processes()
+            usage = []
+            for (tot, idle), (ptot, pidle) in zip(cpu, prev_cpu):
+                dtot = tot - ptot
+                usage.append(round(100 * (1 - (idle - pidle) / dtot), 1) if dtot > 0 else 0)
+            if t - fs_t > 10:
+                fs, fs_t = filesystems(), t
+            plist = []
+            for pid, p in procs.items():
+                old = prev_procs.get(pid)
+                # % of the whole machine (like Windows' Task Manager), not of one core
+                p["cpu"] = round(100 * (p["jiffies"] - old["jiffies"]) / CLK / dt / NCPU, 2) if old else 0
+                p["disk"] = max(0, (p["io"] - old["io"]) / dt) if old else 0
+                plist.append({k: p[k] for k in ("pid", "ppid", "name", "user", "threads", "mem",
+                                                "cmd", "cpu", "disk")})
+            sample = {
+                "time": time.time(),
+                "cpu": {"total": usage[0], "cores": usage[1:], "temp": cpu_temp(), "freq": cpu_freq(),
+                        "count": NCPU},
+                "mem": meminfo(),
+                "gpu": gpu.last,
+                "disk": {"read": (disk[0] - prev_disk[0]) / dt, "write": (disk[1] - prev_disk[1]) / dt,
+                         "fs": fs},
+                "net": {"rx": (net[0] - prev_net[0]) / dt, "tx": (net[1] - prev_net[1]) / dt},
+                "procs": plist,
+            }
+            print(json.dumps(sample, separators=(",", ":")), flush=True)
+            prev_cpu, prev_disk, prev_net, prev_procs, prev_t = cpu, disk, net, procs, t
+            time.sleep(max(0.05, interval - (time.monotonic() - t)))
+    finally:
+        gpu.stop()
+
+
+# --- kill --------------------------------------------------------------------------------------
+
+def cmd_kill(how, pids):
+    sig = {"term": signal.SIGTERM, "kill": signal.SIGKILL}[how]
+    done, gone, denied = [], [], []
+    for pid in pids:
+        if pid in PROTECTED or pid == MY_PID:
+            denied.append(pid)
+            continue
+        try:
+            os.kill(pid, sig)
+            done.append(pid)
+        except ProcessLookupError:
+            gone.append(pid)
+        except PermissionError:
+            denied.append(pid)
+    escalated = [p for p in denied if p not in PROTECTED and p != MY_PID]
+    if escalated:
+        r = subprocess.run(["pkexec", "/usr/bin/kill", f"-{sig.name[3:]}", *map(str, escalated)],
+                           capture_output=True, text=True)
+        if r.returncode == 0:
+            done += escalated
+            denied = [p for p in denied if p not in escalated]
+    print(json.dumps({"signal": sig.name, "done": done, "gone": gone, "denied": denied}))
+    sys.exit(0 if not denied else 1)
+
+
+def cmd_panel():
+    # Toggles the panel, starting it (at the shared panel scale) if needed: qs-panel package
+    subprocess.run([str(HOME / ".local/bin/qs-panel"), "sysmon", "sysmon"])
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else ""
+    if cmd == "watch" and len(args) <= 2:
+        cmd_watch(float(args[1]) if len(args) == 2 else 1.0)
+    elif cmd == "kill" and len(args) >= 3 and args[1] in ("term", "kill"):
+        cmd_kill(args[1], [int(p) for p in args[2:]])
+    elif cmd == "panel":
+        cmd_panel()
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == "__main__":
+    main()

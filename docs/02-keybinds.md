@@ -29,6 +29,7 @@ without one shows under "Undocumented". Don't add binds in HyprMod: its editor h
 | Super + Ctrl + Space | wallpaper picker: each wallpaper with its own dynamic colours, folders as groups (Enter = open folder / apply, R = random, Esc = back/close) | qol |
 | Super + Shift + P | VPN panel: Proton VPN country/city/server picker (type to search, ↑/↓ select, Enter/click = connect to the fastest there, →/← = cities/servers, Tab = Standard/Secure Core/P2P, Ctrl+F = favourite, Ctrl+D = disconnect, Esc = clear/close; see 09). Shift so it's hard to hit by accident | qol |
 | Super + K | keybinds panel: search the live binds by description or key (`super+shift+v`), ↑/↓ scroll, Esc = clear/close | qol |
+| Ctrl + Shift + Esc | system monitor: graphs + task manager (type to filter, ↑/↓ select, Enter = expand group, Del = end task, Shift+Del = force kill, Tab = sort, Ctrl+G = group, Ctrl+P = pause, Esc = clear/close; see 10) | qol |
 | Super + A | agenda panel: Proton Calendar, today + next 4 days (←/→ = previous/next 5 days, T = today, ↑/↓ = select event, Enter/click = details (click links, drag to select, Ctrl+C copies), O = open its first link, R = sync now, Esc = close; see 08) | qol |
 
 ## Screenshots, clipboard, pickers

@@ -2,7 +2,7 @@
 # qs-panel: toggle one of the Quickshell panels, starting it first if it isn't running.
 #   qs-panel <config> <ipc target> [toggle args...]
 #   e.g. qs-panel agenda agenda; qs-panel keybinds keybinds
-# Used by Super+K, `calendarctl panel` and `vpnctl panel`.
+# Used by Super+K, `calendarctl panel`, `vpnctl panel` and `sysmonctl panel`.
 #
 # Panels started here are drawn SCALE x on top of the monitor scale (QT_SCALE_FACTOR: text, padding
 # and size). It only reaches the panels started here, not the Caelestia bar or other Qt apps.
