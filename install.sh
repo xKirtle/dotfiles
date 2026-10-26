@@ -22,6 +22,8 @@ fi
 # Make sure shared parents exist as real dirs, so stow links the per-app dirs inside them
 # instead of folding e.g. all of ~/.config/systemd/user into one package.
 mkdir -p ~/.config/systemd/user ~/.local/bin ~/.config/quickshell ~/.local/share/applications
+# systemd ignores a drop-in dir that is itself a symlink: keep it real, link the .conf inside.
+mkdir -p ~/.config/systemd/user/claude-usage-tray.service.d
 
 # --- Render *.template files with the values from .env ---------------------------------
 # Only ${VAR} / $VAR names defined in .env are replaced, so any other `$` text is left alone.

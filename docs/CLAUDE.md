@@ -66,6 +66,7 @@ touching, **before** changing anything:
 - Workspaces 1–5 = main monitor, 6–10 = portrait (scrolls vertically, arrow binds rotated 90°).
 - `hl.on("hyprland.start", …)` runs only at login, not on reload.
 - Overriding a default bind: `hl.unbind(key)` first, else both fire. Check with `hyprctl binds -j`.
+- Give every bind `{ description = "Group: what it does" }`: the Super+K keybinds panel shows it (03).
 
 ## Testing tricks that worked
 
@@ -83,7 +84,8 @@ touching, **before** changing anything:
 - Serein (Discord) reads its theme store only at startup: `themectl sync` regenerates its "Caelestia" theme,
   but don't restart Serein to check (the user chats in it); validate packages with Serein's own crate
   (`03-desktop-shell-and-theming.md`, Serein).
-- The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`, `qs -c agenda`) don't live-reload: `qs -c <name> kill`,
+- Panels are toggled/started by `~/.local/bin/qs-panel` (shared scale, `03`).
+- The Quickshell panels (`qs -c claude-usage`, `qs -c theme-picker`, `qs -c agenda`, `qs -c keybinds`) don't live-reload: `qs -c <name> kill`,
   then they restart on next use. Processes they start get the session PATH, which lacks `~/.local/bin`,
   so use absolute paths.
 

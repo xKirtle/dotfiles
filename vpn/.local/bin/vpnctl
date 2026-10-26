@@ -19,7 +19,6 @@ import json
 import subprocess
 import urllib.request
 import sys
-import time
 from pathlib import Path
 
 HOME = Path.home()
@@ -188,14 +187,8 @@ def cmd_fav(code):
 
 
 def cmd_panel():
-    ipc = ["qs", "-c", "vpn", "ipc", "call", "vpn", "toggle"]
-    if subprocess.run(ipc, capture_output=True).returncode != 0:
-        subprocess.Popen(["qs", "-c", "vpn", "-d"], stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, start_new_session=True)
-        for _ in range(30):
-            time.sleep(0.1)
-            if subprocess.run(ipc, capture_output=True).returncode == 0:
-                break
+    # Toggles the panel, starting it (at the shared panel scale) if needed: qs-panel package
+    subprocess.run([str(HOME / ".local/bin/qs-panel"), "vpn", "vpn"])
 
 
 def main():

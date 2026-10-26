@@ -1,18 +1,23 @@
 # Keybinds
 
-Custom binds live in `~/.config/hypr/qol.lua`; defaults in `hyprland.lua`; a few in HyprMod's
-`hyprland-gui.lua`. "Super" = Windows key.
+Custom binds live in `~/.config/hypr/qol.lua`; defaults in `hyprland.lua`. HyprMod's
+`hyprland-gui.lua` has none (its binds moved to `qol.lua`, 2026-10-26). "Super" = Windows key.
+
+**Super+K** opens a searchable cheat sheet of the *live* binds (`hyprctl binds -j`; see
+03, Keybinds panel). Its text is each bind's `description`, set where it's bound:
+`hl.bind(key, action, { description = "Group: what it does" })`. Give every new bind one; a bind
+without one shows under "Undocumented". Don't add binds in HyprMod: its editor has no description field.
 
 ## Apps and shell
 
 | Key | Action | Defined in |
 |---|---|---|
-| Super + Return | kitty | HyprMod |
+| Super + Return | kitty | qol |
 | Super + Space | Caelestia launcher (type `>` for commands, e.g. `>scheme`, `>wallpaper`) | qol |
 | Super + E | Thunar | qol |
-| Super + B | Chromium | HyprMod |
-| Super + Q | close window | HyprMod |
-| Super + Shift + Q | kill window | HyprMod |
+| Super + B | Chromium | qol |
+| Super + Q | close window | qol |
+| Super + Shift + Q | kill window | qol |
 | Super + L | lock screen | qol |
 | Super + Esc | power / session menu (log out lives here) | qol |
 | Super + N | notifications sidebar | qol |
@@ -23,6 +28,7 @@ Custom binds live in `~/.config/hypr/qol.lua`; defaults in `hyprland.lua`; a few
 | Super + Shift + I | keep awake on/off (Caelestia idle inhibitor: no auto-lock or screen off; notifies the new state) | qol |
 | Super + Ctrl + Space | wallpaper picker: each wallpaper with its own dynamic colours, folders as groups (Enter = open folder / apply, R = random, Esc = back/close) | qol |
 | Super + Shift + P | VPN panel: Proton VPN country/city/server picker (type to search, ↑/↓ select, Enter/click = connect to the fastest there, →/← = cities/servers, Tab = Standard/Secure Core/P2P, Ctrl+F = favourite, Ctrl+D = disconnect, Esc = clear/close; see 09). Shift so it's hard to hit by accident | qol |
+| Super + K | keybinds panel: search the live binds by description or key (`super+shift+v`), ↑/↓ scroll, Esc = clear/close | qol |
 | Super + A | agenda panel: Proton Calendar, today + next 4 days (←/→ = previous/next 5 days, T = today, ↑/↓ = select event, Enter/click = details (click links, drag to select, Ctrl+C copies), O = open its first link, R = sync now, Esc = close; see 08) | qol |
 
 ## Screenshots, clipboard, pickers

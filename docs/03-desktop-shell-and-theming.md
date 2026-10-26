@@ -232,6 +232,26 @@ of five root images.)
   (or `extensions/*/package.json`, e.g. `gitDecoration.*` from the git extension); unknown keys are silently ignored.
   Isolated test install: `code --extensions-dir <tmp> --user-data-dir <tmp2> --install-extension …`.
 
+## Panel launcher and scale: `qs-panel` (ours)
+
+`~/.local/bin/qs-panel <config> <ipc target> [toggle args…]` (`qs-panel` package) toggles one of the Quickshell
+panels, or starts it (`qs -c <config> -d`) and toggles it open once its IPC answers (~0.3 s). Used by Super+K
+(keybinds), `calendarctl panel` (agenda) and `vpnctl panel` (VPN).
+
+- **Panel scale: `SCALE=1.25` at the top of `qs-panel`.** Also set for the claude-usage panel (its own repo, so
+  it takes a flag): `~/.config/systemd/user/claude-usage-tray.service.d/panel-scale.conf` (`qs-panel` package)
+  runs the tray with `--panel-scale 1.25`; change both together, then `systemctl --user daemon-reload` and
+  `systemctl --user restart claude-usage-tray`. systemd ignores a drop-in dir that's a symlink, so `install.sh`
+  creates it as a real dir and stow links only the `.conf`. Panels `qs-panel` starts get
+  `QT_SCALE_FACTOR=$SCALE` (text, padding and size, on top of the monitors' 1.25; their QML sizes are logical px
+  and 8-10 pt text, which looked small). After changing it: `qs -c <config> kill` for each, the next toggle restarts it.
+- Not global on purpose: `QT_SCALE_FACTOR` in Hyprland's env would also grow the Caelestia bar/launcher/lock
+  screen, the other Quickshell configs, OpenRGB, qt6ct, Kvantum Manager, the polkit prompt and the screen-share
+  picker. (Chromium, Steam, Heroic, Thunar, kitty, VS Code are GTK/Electron and ignore it.)
+- Not used by the wallpaper picker: it's fullscreen and sizes its grid from the screen height.
+- A panel using compositor coordinates divides them by its scale: the claude-usage panel's `cursorY / qtScale`
+  (`qtScale` = `QT_SCALE_FACTOR` from its env).
+
 ## Claude usage tray (ours)
 
 Replaces Omarchy's Claude usage indicator. **Source of truth: `~/Dev/Personal/claude-usage-tray`**
@@ -256,7 +276,8 @@ Replaces Omarchy's Claude usage indicator. **Source of truth: `~/Dev/Personal/cl
   not calendar days. This counts **Claude Code on this PC only**: claude.ai usage counts toward
   the limits but isn't in the history.
 - `~/.config/quickshell/claude-usage/shell.qml`: details panel (separate Quickshell config, so
-  Caelestia updates don't touch it). Started on first click (`qs -c claude-usage -d`), toggled via
+  Caelestia updates don't touch it). Started on first click (`qs -c claude-usage -d`, with
+  `QT_SCALE_FACTOR` from the tray's `--panel-scale`, see Panel launcher above), toggled via
   `qs -c claude-usage ipc call panel toggle <monitor> <y>`. It opens next to the bar at cursor
   height; click outside or press Esc to close. It shows limit bars, a weekly per-day chart (hover a day),
   and an input / output / cache write / cache read breakdown (cache reads are ~98% of the total).
@@ -265,6 +286,22 @@ Replaces Omarchy's Claude usage indicator. **Source of truth: `~/Dev/Personal/cl
   **It doesn't live-reload:** after editing, `qs -c claude-usage kill` and click the icon again.
 - Shared state: `~/.cache/claude-usage/state.json`, which also keeps the last good API response across restarts.
 - Logs: `journalctl --user -u claude-usage-tray`, `qs -c claude-usage log`.
+
+## Keybinds panel (ours)
+
+**Super+K** toggles `~/.config/quickshell/keybinds/shell.qml` (`keybinds` package, its own Quickshell config)
+through `qs-panel keybinds keybinds` (see Panel launcher above).
+
+- Lists the live binds from `hyprctl binds -j` (re-read on every open), so defaults and ours all
+  show. The text is each bind's `description` (`"Group: text"`; the group is the section). Same description +
+  modifiers share a row (Super + 1 / 2 / … / 0). Binds without a description go under "Undocumented";
+  undescribed pass-through binds are hidden (Caelestia adds Caps_Lock/Num_Lock ones at runtime for its
+  lock-key indicator).
+- Search: words match key names, descriptions and sections (`screenshot`, `super f`); with a `+` it's a
+  combo (`super+shift+v`, `win+k`). Exact key matches rank first. ↑/↓/PgUp/PgDn scroll, Esc = clear, then close.
+- Colours follow `scheme.json` live. Saving `shell.qml` made the running instance reload it (2026-10-26). A
+  `qs -c keybinds kill` right after an edit crashed it mid-reload (harmless Quickshell crash dialog): let it reload.
+- Not listed: in-app shortcuts (Thunar's F4, Caelestia's launcher keys); those stay in 02.
 
 ## Fonts
 

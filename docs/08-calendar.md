@@ -76,8 +76,8 @@ expanded by khal (instances are keyed by event + start time).
 
 ## Agenda panel
 
-**Super+A** (`calendarctl panel` → `qs -c agenda ipc call agenda toggle`, starting `qs -c agenda -d` if
-needed). Today + the next 4 days on the focused monitor, top-left beside the bar, styled like the
+**Super+A** (`calendarctl panel` → `qs-panel agenda agenda`: toggles it, or starts it at the shared panel scale;
+03, Panel launcher). Today + the next 4 days on the focused monitor, top-left beside the bar, styled like the
 Claude usage panel (Caelestia scheme colours from `scheme.json`, Google Sans Flex). Per event: title,
 time span or "all day" ("day 2/3" for multi-day), location, ⟳ for recurring. The running event is
 highlighted, finished ones are dimmed; accent bar = primary (timed) / tertiary (all-day). Header

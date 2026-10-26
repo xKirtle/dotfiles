@@ -30,14 +30,3 @@ hl.monitor({
     cm = "srgb",
 })
 
--- Keybinds
-hl.unbind("SUPER + Return")
-hl.bind("SUPER + Return", hl.dsp.exec_cmd("kitty"))
-hl.unbind("SUPER + Q")
-hl.bind("SUPER + Q", hl.dsp.window.close())
-hl.unbind("SUPER + C")
-hl.bind("SUPER + SHIFT + Q", hl.dsp.window.kill())
-hl.unbind("SUPER + R")
-hl.bind("SUPER + space", hl.dsp.exec_cmd("hyprlauncher"))
-hl.unbind("SUPER + B")
-hl.bind("SUPER + B", hl.dsp.exec_cmd("chromium"))

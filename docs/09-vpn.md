@@ -34,7 +34,7 @@ Caelestia drawer VPN toggle ─▶ protonvpn connect|disconnect ◀┘  (state: 
 
 ## Panel
 
-**Super+Shift+P** (`vpnctl panel` → `qs -c vpn ipc call vpn toggle`, starting `qs -c vpn -d` if needed).
+**Super+Shift+P** (`vpnctl panel` → `qs-panel vpn vpn`: toggles it, or starts it at the shared panel scale; 03, Panel launcher).
 Same look as the agenda panel (Caelestia scheme colours, Google Sans Flex, top left beside the bar).
 
 - Top card: current server, city, country, load; your **public IP** (`IP: …`) with its **ISP** on the line below (MEO = not protected, Proton AG = on the VPN; looked up

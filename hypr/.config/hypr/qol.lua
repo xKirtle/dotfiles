@@ -108,60 +108,72 @@ hl.config({
 ---- KEYBINDINGS ----
 ---------------------
 
+-- Apps and window basics (were HyprMod's; defaults Super+Q = terminal, C = close, R = launcher replaced)
+hl.unbind(mainMod .. " + Q")
+hl.unbind(mainMod .. " + C")
+hl.unbind(mainMod .. " + R")
+hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("kitty"),     { description = "Apps: kitty" })
+hl.bind(mainMod .. " + B",           hl.dsp.exec_cmd("chromium"),  { description = "Apps: Chromium" })
+hl.bind(mainMod .. " + Q",           hl.dsp.window.close(),        { description = "Windows: close" })
+hl.bind(mainMod .. " + SHIFT + Q",   hl.dsp.window.kill(),         { description = "Windows: kill" })
+
 -- Caelestia launcher replaces hyprlauncher
 hl.unbind(mainMod .. " + space")
-hl.bind(mainMod .. " + space", hl.dsp.global("caelestia:launcher"))
+hl.bind(mainMod .. " + space", hl.dsp.global("caelestia:launcher"), { description = "Shell: Caelestia launcher (type > for commands, e.g. >scheme)" })
 
-hl.bind(mainMod .. " + L",           hl.dsp.global("caelestia:lock"))
-hl.bind(mainMod .. " + Escape",      hl.dsp.global("caelestia:session"))
-hl.bind(mainMod .. " + N",           hl.dsp.global("caelestia:sidebar"))
-hl.bind(mainMod .. " + SHIFT + N",   hl.dsp.global("caelestia:clearNotifs"))
-hl.bind(mainMod .. " + D",           hl.dsp.global("caelestia:showall"))
+hl.bind(mainMod .. " + L",           hl.dsp.global("caelestia:lock"), { description = "Shell: lock screen" })
+hl.bind(mainMod .. " + Escape",      hl.dsp.global("caelestia:session"), { description = "Shell: power / session menu (log out lives here)" })
+hl.bind(mainMod .. " + N",           hl.dsp.global("caelestia:sidebar"), { description = "Shell: notifications sidebar" })
+hl.bind(mainMod .. " + SHIFT + N",   hl.dsp.global("caelestia:clearNotifs"), { description = "Shell: clear notifications" })
+hl.bind(mainMod .. " + D",           hl.dsp.global("caelestia:showall"), { description = "Shell: show all panels" })
 
 -- Keep awake: toggle Caelestia's idle inhibitor (no auto-lock / screen off), with a notification
 -- saying the new state (the only other indicator is the "Keep awake" card in the utilities drawer)
-hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd([[caelestia shell idleInhibitor toggle; if [ "$(caelestia shell idleInhibitor isEnabled)" = true ]; then notify-send -a caelestia-shell -i caffeine-cup-full "Keep awake: on" "The screen won't lock or turn off"; else notify-send -a caelestia-shell -i caffeine-cup-empty "Keep awake: off" "Auto-lock is back on"; fi]]))
+hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd([[caelestia shell idleInhibitor toggle; if [ "$(caelestia shell idleInhibitor isEnabled)" = true ]; then notify-send -a caelestia-shell -i caffeine-cup-full "Keep awake: on" "The screen won't lock or turn off"; else notify-send -a caelestia-shell -i caffeine-cup-empty "Keep awake: off" "Auto-lock is back on"; fi]]), { description = "Shell: keep awake on / off (no auto-lock or screen off)" })
 
 -- Restart the shell if it ever dies
 -- (wait for the old instance to fully exit, or the new one quits seeing it still running)
 -- (match only Caelestia's qs, other Quickshell configs run too; '^' keeps it off this sh's own command line)
-hl.bind("CTRL + " .. mainMod .. " + ALT + R", hl.dsp.exec_cmd("qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d"), { release = true })
+hl.bind("CTRL + " .. mainMod .. " + ALT + R", hl.dsp.exec_cmd("qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d"), { release = true, description = "Shell: restart the Caelestia shell" })
 
 -- Recover a crashed lock screen ("lockscreen crashed" red screen; Caelestia's lock dies when the
 -- monitors drop off while locked): restart the shell, wait until its IPC answers, then lock again
-hl.bind("CTRL + " .. mainMod .. " + SHIFT + L", hl.dsp.exec_cmd("qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d; for i in $(seq 100); do [ \"$(caelestia shell lock isLocked 2>/dev/null)\" = false ] && break; sleep 0.2; done; caelestia shell lock lock"), { locked = true, release = true })
+hl.bind("CTRL + " .. mainMod .. " + SHIFT + L", hl.dsp.exec_cmd("qs -c caelestia kill; for i in $(seq 50); do pgrep -f '^qs -c caelestia' >/dev/null || break; sleep 0.1; done; caelestia shell -d; for i in $(seq 100); do [ \"$(caelestia shell lock isLocked 2>/dev/null)\" = false ] && break; sleep 0.2; done; caelestia shell lock lock"), { locked = true, release = true, description = "Shell: recover a crashed lock screen (restart the shell, lock again)" })
 
 -- Screenshots: Print = region, Shift+Print = full screen, Super+Shift+S-style freeze
-hl.bind("Print",                     hl.dsp.global("caelestia:screenshot"))
-hl.bind("SHIFT + Print",             hl.dsp.exec_cmd("caelestia screenshot"))
-hl.bind(mainMod .. " + Print",       hl.dsp.global("caelestia:screenshotFreeze"))
+hl.bind("Print",                     hl.dsp.global("caelestia:screenshot"), { description = "Screenshots: select a region, then edit in swappy (Ctrl+C copy, Ctrl+S save)" })
+hl.bind("SHIFT + Print",             hl.dsp.exec_cmd("caelestia screenshot"), { description = "Screenshots: full screen" })
+hl.bind(mainMod .. " + Print",       hl.dsp.global("caelestia:screenshotFreeze"), { description = "Screenshots: freeze the screen, then select a region" })
 -- Ctrl+Print = record a region (gpu-screen-recorder via Caelestia); press again to stop
-hl.bind("CTRL + Print",              hl.dsp.exec_cmd("caelestia record -r"))
+hl.bind("CTRL + Print",              hl.dsp.exec_cmd("caelestia record -r"), { description = "Screenshots: record a region (press again to stop)" })
 
 -- Clipboard history / emoji picker / color picker
-hl.bind(mainMod .. " + SHIFT + V",   hl.dsp.exec_cmd("pkill fuzzel || caelestia clipboard"))
-hl.bind(mainMod .. " + period",      hl.dsp.exec_cmd("pkill fuzzel || caelestia emoji -p"))
-hl.bind(mainMod .. " + SHIFT + C",   hl.dsp.exec_cmd("hyprpicker -a"))
+hl.bind(mainMod .. " + SHIFT + V",   hl.dsp.exec_cmd("pkill fuzzel || caelestia clipboard"), { description = "Clipboard: clipboard history" })
+hl.bind(mainMod .. " + period",      hl.dsp.exec_cmd("pkill fuzzel || caelestia emoji -p"), { description = "Clipboard: emoji picker" })
+hl.bind(mainMod .. " + SHIFT + C",   hl.dsp.exec_cmd("hyprpicker -a"), { description = "Clipboard: colour picker (copies the hex)" })
 
 -- Toggle audio output: Scarlett headphones <-> S/PDIF speakers
-hl.bind(mainMod .. " + grave",       hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/cycle-audio-output.sh"))
+hl.bind(mainMod .. " + grave",       hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/cycle-audio-output.sh"), { description = "Audio: toggle output, Scarlett headphones / S/PDIF speakers" })
 
 -- Dictation: F9 starts / stops recording, then whisper.cpp types the text (dictate package)
-hl.bind("F9",                        hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate"))
-hl.bind("SHIFT + F9",                hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate cancel"))
+hl.bind("F9",                        hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate"), { description = "Audio: dictation start / stop (types the text into the focused window)" })
+hl.bind("SHIFT + F9",                hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate cancel"), { description = "Audio: cancel dictation" })
 
 -- Wallpaper picker: every wallpaper gets its own dynamic colours; folders are only groups
-hl.bind("CTRL + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker"))
+hl.bind("CTRL + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker"), { description = "Panels: wallpaper picker (each wallpaper sets its own colours)" })
 
 -- Agenda panel: Proton Calendar, today + next days (calendar package, qs -c agenda)
-hl.bind(mainMod .. " + A",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/calendarctl panel"))
+hl.bind(mainMod .. " + A",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/calendarctl panel"), { description = "Panels: agenda (Proton Calendar)" })
 
 -- VPN panel: Proton VPN country/city/server picker (vpn package, qs -c vpn). Shift so it's hard to hit by accident
-hl.bind(mainMod .. " + SHIFT + P",   hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/vpnctl panel"))
+hl.bind(mainMod .. " + SHIFT + P",   hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/vpnctl panel"), { description = "Panels: VPN (Proton VPN country / city / server picker)" })
+
+-- Keybind cheat sheet: searchable list of the live binds and their descriptions (keybinds package, qs -c keybinds)
+hl.bind(mainMod .. " + K",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/qs-panel keybinds keybinds"), { description = "Panels: keybinds (this cheat sheet)" })
 
 -- Thunar picks up Caelestia's GTK theme (replaces dolphin)
 hl.unbind(mainMod .. " + E")
-hl.bind(mainMod .. " + E",           hl.dsp.exec_cmd("thunar"))
+hl.bind(mainMod .. " + E",           hl.dsp.exec_cmd("thunar"), { description = "Apps: Thunar" })
 
 -- Workspaces on the portrait monitor scroll top-to-bottom (see WORKSPACES below)
 local function is_vertical_ws(id)
@@ -216,27 +228,27 @@ end
 -- Super+Shift+scroll keeps the old workspace switching
 hl.unbind(mainMod .. " + mouse_down")
 hl.unbind(mainMod .. " + mouse_up")
-hl.bind(mainMod .. " + mouse_down",         focus_along(true))
-hl.bind(mainMod .. " + mouse_up",           focus_along(false))
-hl.bind(mainMod .. " + Tab",                focus_along(true),  { repeating = true })
-hl.bind(mainMod .. " + SHIFT + Tab",        focus_along(false), { repeating = true })
+hl.bind(mainMod .. " + mouse_down",         focus_along(true),  { description = "Windows: focus the next column (along the tape)" })
+hl.bind(mainMod .. " + mouse_up",           focus_along(false), { description = "Windows: focus the previous column (along the tape)" })
+hl.bind(mainMod .. " + Tab",                focus_along(true),  { repeating = true, description = "Windows: focus the next column (along the tape)" })
+hl.bind(mainMod .. " + SHIFT + Tab",        focus_along(false), { repeating = true, description = "Windows: focus the previous column (along the tape)" })
 
 -- Super+Shift+S (default "move to scratchpad", a toggle) is replaced by the arrow keys:
 -- Super+Shift+Down/Up, or Left/Right on the portrait monitor
 hl.unbind(mainMod .. " + SHIFT + S")
 
 -- Stack the window into the neighbouring column, or pop it back out if already stacked
-hl.bind(mainMod .. " + bracketleft",  hl.dsp.layout("consume_or_expel prev"))
-hl.bind(mainMod .. " + bracketright", hl.dsp.layout("consume_or_expel next"))
-hl.bind(mainMod .. " + SHIFT + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + SHIFT + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + bracketleft",  hl.dsp.layout("consume_or_expel prev"), { description = "Windows: stack into the previous column, or pop back out" })
+hl.bind(mainMod .. " + bracketright", hl.dsp.layout("consume_or_expel next"), { description = "Windows: stack into the next column, or pop back out" })
+hl.bind(mainMod .. " + SHIFT + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Workspaces: next workspace" })
+hl.bind(mainMod .. " + SHIFT + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { description = "Workspaces: previous workspace" })
 
 -- Windows
-hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen" }))
-hl.bind(mainMod .. " + SHIFT + F",   hl.dsp.window.fullscreen({ mode = "maximized" }))
+hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen" }), { description = "Windows: fullscreen" })
+hl.bind(mainMod .. " + SHIFT + F",   hl.dsp.window.fullscreen({ mode = "maximized" }), { description = "Windows: maximize" })
 -- Super+M was "exit Hyprland" by default; log out via the power menu (Super+Esc) instead
 hl.unbind(mainMod .. " + M")
-hl.bind(mainMod .. " + M",           hl.dsp.window.fullscreen({ mode = "maximized" }))
+hl.bind(mainMod .. " + M",           hl.dsp.window.fullscreen({ mode = "maximized" }), { description = "Windows: maximize" })
 
 -- Super(+Shift)+arrows drive the scrolling tape. On the portrait monitor the arrows are
 -- turned 90° so they follow the tape: left->up, right->down, up->right, down->left.
@@ -265,6 +277,18 @@ local tape_actions = {
     end,
 }
 
+-- What each action is called in the keybinds panel (Super+K)
+local tape_labels = {
+    back     = "move column back",
+    forward  = "move column forward",
+    maximize = "maximize",
+    shrink   = "shrink column",
+    grow     = "grow column",
+    unstash  = "take window out of the scratchpad",
+    stash    = "send window to the scratchpad",
+    none     = "unused",
+}
+
 -- { key, landscape action, portrait action, repeating }
 local tape_binds = {
     { "left",          "back",     "none" },
@@ -287,7 +311,10 @@ for _, b in ipairs(tape_binds) do
         if dispatcher then
             hl.dispatch(dispatcher)
         end
-    end, repeating and { repeating = true } or nil) -- held resize repeats; a repeated stash/unstash is a no-op
+    end, {
+        repeating = repeating or nil, -- held resize repeats; a repeated stash/unstash is a no-op
+        description = "Windows: " .. tape_labels[landscape] .. " on landscape · " .. tape_labels[portrait] .. " on portrait",
+    })
 end
 
 -- Don't wrap the first column to the end (and vice versa) when reordering
@@ -317,11 +344,16 @@ end
 
 -- Super + volume keys control the default microphone (Scarlett Input 2 Mic).
 -- This is PipeWire's software level, on top of the interface's gain knob; capped at 100%.
-hl.bind(mainMod .. " + XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),        { locked = true })
-hl.bind(mainMod .. " + XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SOURCE@ 5%+"), { locked = true, repeating = true })
-hl.bind(mainMod .. " + XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"),      { locked = true, repeating = true })
+hl.bind(mainMod .. " + XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, description = "Audio: mute / unmute the microphone" })
+hl.bind(mainMod .. " + XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SOURCE@ 5%+"), { locked = true, repeating = true, description = "Audio: microphone level +5%" })
+hl.bind(mainMod .. " + XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SOURCE@ 5%-"), { locked = true, repeating = true, description = "Audio: microphone level -5%" })
 
 -- Media keys go through the shell (shows OSD, picks active player)
+local media_descriptions = {
+    mediaToggle = "Media: play / pause",
+    mediaNext   = "Media: next track",
+    mediaPrev   = "Media: previous track",
+}
 for key, action in pairs({
     XF86AudioPlay  = "mediaToggle",
     XF86AudioPause = "mediaToggle",
@@ -329,7 +361,7 @@ for key, action in pairs({
     XF86AudioPrev  = "mediaPrev",
 }) do
     hl.unbind(key)
-    hl.bind(key, hl.dsp.global("caelestia:" .. action), { locked = true })
+    hl.bind(key, hl.dsp.global("caelestia:" .. action), { locked = true, description = media_descriptions[action] })
 end
 
 
@@ -382,7 +414,7 @@ hl.window_rule({
     match     = { class = "^steam_app_.*$" },
     workspace = "special:games",
 })
-hl.bind(mainMod .. " + G", hl.dsp.workspace.toggle_special("games"))
+hl.bind(mainMod .. " + G", hl.dsp.workspace.toggle_special("games"), { description = "Workspaces: games scratchpad (Steam games open there)" })
 
 -- Caelestia's game mode (no animations/blur/gaps/shadows, tearing allowed) follows the games
 -- scratchpad: on when a window opens there, off when the last one closes. Keyed on the
@@ -416,4 +448,4 @@ hl.on("window.close", function(win)
 end)
 
 -- Manual toggle (e.g. a non-Steam game the rule doesn't catch)
-hl.bind(mainMod .. " + SHIFT + G", function() game_mode("toggle") end)
+hl.bind(mainMod .. " + SHIFT + G", function() game_mode("toggle") end, { description = "Workspaces: Caelestia game mode on / off (also automatic with the games scratchpad)" })

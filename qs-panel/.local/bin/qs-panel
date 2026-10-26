@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# qs-panel: toggle one of the Quickshell panels, starting it first if it isn't running.
+#   qs-panel <config> <ipc target> [toggle args...]
+#   e.g. qs-panel agenda agenda; qs-panel keybinds keybinds
+# Used by Super+K, `calendarctl panel` and `vpnctl panel`.
+#
+# Panels started here are drawn SCALE x on top of the monitor scale (QT_SCALE_FACTOR: text, padding
+# and size). It only reaches the panels started here, not the Caelestia bar or other Qt apps.
+# After changing it: qs -c <config> kill, and the next toggle starts the panel at the new scale.
+set -u
+
+# Also set for claude-usage-tray (its own repo, so it takes --panel-scale): keep
+# ~/.config/systemd/user/claude-usage-tray.service.d/panel-scale.conf (this package) in step.
+SCALE=1.25
+
+config=$1 target=$2
+shift 2
+
+toggle() {
+    qs -c "$config" ipc call "$target" toggle "$@" >/dev/null 2>&1
+}
+
+toggle "$@" && exit 0
+
+# Not running: start it (qs -d detaches), then toggle it open once its IPC answers
+QT_SCALE_FACTOR=$SCALE qs -c "$config" -d >/dev/null 2>&1
+for _ in $(seq 30); do
+    sleep 0.1
+    toggle "$@" && exit 0
+done
+echo "qs-panel: $config didn't answer on IPC; see qs -c $config log" >&2
+exit 1

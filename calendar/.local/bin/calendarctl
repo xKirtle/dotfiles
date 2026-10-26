@@ -318,14 +318,8 @@ def cmd_agenda(days=5, offset=0):
 # ---------------------------------------------------------------- panel
 
 def cmd_panel():
-    ipc = ["qs", "-c", "agenda", "ipc", "call", "agenda", "toggle"]
-    if subprocess.run(ipc, capture_output=True).returncode != 0:
-        subprocess.Popen(["qs", "-c", "agenda", "-d"], stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, start_new_session=True)
-        for _ in range(30):
-            time.sleep(0.1)
-            if subprocess.run(ipc, capture_output=True).returncode == 0:
-                break
+    # Toggles the panel, starting it (at the shared panel scale) if needed: qs-panel package
+    subprocess.run([str(HOME / ".local/bin/qs-panel"), "agenda", "agenda"])
 
 
 def main():

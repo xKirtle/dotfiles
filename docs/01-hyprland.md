@@ -5,7 +5,7 @@
 | File | Owner | Purpose |
 |---|---|---|
 | `hyprland.lua` | you (auto-generated base) | Default config. Edited lines: `fileManager = "thunar"`, keyboard layouts, mouse sensitivity/accel. Ends with `require("hyprland-gui")` then `require("qol")`. |
-| `hyprland-gui.lua` | **HyprMod** | Monitor modes/positions/rotation, layout = scrolling, a few binds. Rewritten whenever you save in HyprMod. Don't hand-edit. |
+| `hyprland-gui.lua` | **HyprMod** | Monitor modes/positions/rotation, layout = scrolling (no binds: they're in `qol.lua`). Rewritten whenever you save in HyprMod. Don't hand-edit. |
 | `qol.lua` | setup session | Everything else: env vars, autostart, theme, binds, workspaces, window rules. Loaded last, so it wins. |
 | `hyprland.lua.bak` | backup | Original before any edits |
 
@@ -104,5 +104,7 @@ Check idle inhibit with `hyprctl clients -j | jq '.[] | {class, inhibitingIdle}'
   so inspect with `error(...)` or write to a file.
 - A bind can take a Lua function: `hl.bind(key, function() … hl.dispatch(hl.dsp.…) end, flags)`.
 - Flags: `{ repeating = true }`, `{ locked = true }` (works on lock screen), `{ release = true }`, `{ mouse = true }`.
+- `{ description = "Group: what it does" }`: shown by the keybinds panel (Super+K) and in `hyprctl binds -j`.
+  Every bind here has one; the `Group:` prefix is the panel's section (Apps, Shell, Panels, Windows, …).
 - Override a default bind: `hl.unbind("SUPER + X")` then `hl.bind(...)`.
 - List live binds: `hyprctl binds -j`. Modmask 64 = Super, 65 = Super+Shift.
