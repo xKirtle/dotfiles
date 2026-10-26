@@ -150,9 +150,8 @@ hl.bind(mainMod .. " + grave",       hl.dsp.exec_cmd(os.getenv("HOME") .. "/.loc
 hl.bind("F9",                        hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate"))
 hl.bind("SHIFT + F9",                hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/dictate cancel"))
 
--- Omarchy-style pickers: theme (scheme + its wallpaper) / wallpaper within the current theme
-hl.bind("CTRL + SHIFT + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker themes"))
-hl.bind("CTRL + " .. mainMod .. " + space",         hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker wallpapers"))
+-- Wallpaper picker: every wallpaper gets its own dynamic colours; folders are only groups
+hl.bind("CTRL + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/themectl picker"))
 
 -- Agenda panel: Proton Calendar, today + next days (calendar package, qs -c agenda)
 hl.bind(mainMod .. " + A",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/calendarctl panel"))

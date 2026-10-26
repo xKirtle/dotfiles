@@ -51,7 +51,7 @@ Theme everywhere: **Catppuccin Mocha**.
   throwaway Quickshell script that imports `Caelestia.Config`, walks the `GlobalConfig` singleton
   and `console.log`s each value, e.g. `timeout 8 qs -p dump/shell.qml > out.txt 2>&1` (it never quits
   on its own). Option names are in `/usr/lib/qt6/qml/Caelestia/Config/caelestia-config.qmltypes`.
-- **Colour scheme:** normally via the themectl theme picker (below); by hand:
+- **Colour scheme:** normally dynamic, set by the themectl wallpaper picker (below); by hand:
   `caelestia scheme set -n catppuccin -f mocha -m dark`, or `-n dynamic` for wallpaper-based colours.
   - **How it works:** `caelestia-cli` (Python). Named schemes are fixed palettes shipped with it.
     `dynamic` takes a seed colour from the wallpaper thumbnail with `python-materialyoucolor` (Google's
@@ -112,35 +112,49 @@ Theme everywhere: **Catppuccin Mocha**.
   opens its D-Bus menu as a popout; there are no tooltips). A copy in `~/.config/quickshell/caelestia`
   would override the packaged shell, but that's a fork that stops getting pacman updates.
 
-## Themes and wallpapers (ours, Omarchy-style)
+## Wallpapers and colours (ours)
 
-A **theme** is a folder in `~/Pictures/Wallpapers/<theme>/` plus a Caelestia colour scheme.
-- **Scheme from the folder name:** `<scheme>` or `<scheme>-<flavour>` (`catppuccin-mocha`,
-  `gruvbox-hard`, `rosepine-moon`…; flavour defaults to the scheme's first, e.g. everforest → soft).
-  An optional `scheme` file in the folder overrides it: `"<scheme> [flavour] [dark|light]"`, e.g.
-  `catppuccin latte light` or `dynamic`. Any other folder name (e.g. `scenic`) = **dynamic** (colours from
-  the wallpaper). Loose images in the root form a pseudo-theme `unsorted` (dynamic).
-- **Current folders:** catppuccin-mocha (3), dracula (2), nord (2), scenic (3), tokyonight, gruvbox-hard,
-  everforest, darkgreen (1 each). `catppuccin-mocha/3840x2160.png` is really **1000×563**, so it's
-  blurry at 4K, and it sorts first, so it's what picking that theme shows.
-- **Pickers** (`~/.config/quickshell/theme-picker/shell.qml`, its own Quickshell config, a full-screen
-  overlay on the focused monitor):
-  - **Super+Ctrl+Shift+Space: themes.** Shows a preview with a wallpaper-count badge, the scheme
-    name and colour swatches.
-    **Enter (or click) = choose the wallpaper**: shows that theme's wallpapers, where Enter applies
-    theme + wallpaper and Esc/Backspace goes back. One-wallpaper themes apply directly.
-    **Shift+Enter (or Shift+click / right-click) = apply with its first wallpaper.**
-    (A random-wallpaper option and a Tab binding were tried and dropped.)
-  - **Super+Ctrl+Space: wallpapers** of the current theme.
-  - Arrows/hjkl move, Esc or a click outside closes. Colours follow `scheme.json`.
-  - It doesn't live-reload: `qs -c theme-picker kill` after editing (the next bind press restarts it).
+Every wallpaper gets its **own dynamic colour scheme** (Caelestia's `dynamic`, from the image). Wallpapers
+live in `~/Pictures/Wallpapers/`, loose or in subfolders; **folders are only for grouping**. (Until
+2026-10-26 a folder was an Omarchy-style *theme* with a fixed named scheme; the theme and per-theme wallpaper
+pickers were replaced by the one below. The folders were flattened at the same time; `test/` holds copies
+of five root images.)
+- **Picker: Super+Ctrl+Space** (`~/.config/quickshell/theme-picker/shell.qml`, its own Quickshell config, a
+  full-screen overlay on the focused monitor; `themectl picker` toggles it). Browses the folder like a file
+  manager: the top level shows the **folders first** (a collage of their first 1–4 wallpapers, a folder icon
+  and a count badge), **then the loose images**.
+  - **Enter (or click)** on a folder opens it (always, even with one wallpaper); on a wallpaper applies it
+    (`themectl wall <file>`). **Esc/Backspace** goes back, or closes at the top level (so does a click outside).
+    **R** applies a random wallpaper from the view (the open folder, or all of them at the top level), never
+    the current one. Arrows/hjkl move.
+  - **Swatches** on each wallpaper tile = the scheme it would make: `themectl list --json --dynamic`
+    (`wallpaper_swatches`) computes them with Caelestia's own `get_colours_for_wall` (what
+    `caelestia wallpaper -p <file>` prints, smart light/dark and variant included; cached by Caelestia in
+    `~/.cache/caelestia/`). Folders show none. The loose images come as the `unsorted` entry with `"root": true`.
+  - **Size:** up to 4 columns; rows visible = screen height (logical) / 432, so **4×4** on the main monitor
+    (1728 px tall at scale 1.25) and 7 rows on the portrait one. More **scrolls** (wheel, or it follows the
+    keyboard selection), with a thin position bar on the right.
+  - **Thumbnails:** tiles load small JPEGs (≥560×320) that `themectl list` makes once per wallpaper in
+    `~/.cache/themectl/thumbs/` (keyed on path + size + mtime; ~30 KB each). Decoding the full 4K–6K
+    originals (14 files, 109 MB) took ~1 s per open. A new image adds ~0.15 s (thumbnail) + ~0.2 s (colours)
+    to its first listing (all 15 cold: ~2.4 s); if a listing takes over 250 ms the picker shows a spinner
+    ("Preparing new wallpapers…"). To see it: `rm -r ~/.cache/themectl/thumbs`, then open the picker.
+  - Colours follow `scheme.json`. It doesn't live-reload: `qs -c theme-picker kill` after editing (the next
+    bind press restarts it). Qt's JS engine lacks some modern methods (`Array.flatMap` broke the grid once):
+    check `qs -c theme-picker log` after opening it.
   - It calls `~/.local/bin/themectl` by **absolute path**: the session PATH (Hyprland/uwsm) lacks
     `~/.local/bin`, so a bare `themectl` fails ("Process failed to start" in `qs -c theme-picker log`).
-- **`~/.local/bin/themectl`** (Python): `list [--json]`, `set <theme> [file]`, `current`,
-  `picker themes|wallpapers`, `sync`, `vscode`. State: `~/.local/state/themectl/current.json`.
-  `THEMECTL_WALLPAPERS=<dir>` points it at another folder (handy for testing).
-  `set` runs `caelestia scheme set …`, then `caelestia wallpaper -f <file> -N` (`-N` = don't
-  auto-switch light/dark). For dynamic themes it sets the wallpaper first, then the `dynamic` scheme.
+- **`~/.local/bin/themectl`** (Python): `list [--json] [--dynamic]`, `wall <file>`, `set <theme> [file]`,
+  `current`, `picker`, `sync`, `vscode`. State: `~/.local/state/themectl/current.json` (`dynamic: true` after
+  `wall`). `THEMECTL_WALLPAPERS=<dir>` points it at another folder (handy for testing).
+  `wall` runs `caelestia wallpaper -f <file>`, then `caelestia scheme set -n dynamic` if the scheme isn't
+  dynamic yet.
+  - **Named schemes (CLI only now):** `list`/`set` still treat folders as themes: scheme from the folder name
+    (`<scheme>` or `<scheme>-<flavour>`, e.g. `catppuccin-mocha`; or a `scheme` file in the folder,
+    `"<scheme> [flavour] [dark|light]"`), anything else dynamic. `set` runs `caelestia scheme set …`, then
+    `caelestia wallpaper -f <file> -N` (`-N` = don't auto-switch light/dark). For a one-off named palette
+    without folders: `caelestia scheme set -n catppuccin -f mocha`. Caelestia's "catppuccin mocha" isn't the
+    real palette (primary `c2c1ff`, not mauve `cba6f7`); gruvbox-hard is similarly Material-ised.
 - **Transitions:** Caelestia's wallpaper layer is off (`background.wallpaperEnabled: false`).
   **awww** draws the wallpaper (`awww.service`). `themectl sync` (`themectl-sync.service`, bound
   to awww) watches `~/.local/state/caelestia/wallpaper/path.txt`, so **every** wallpaper change gets the

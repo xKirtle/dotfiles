@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Omarchy-style themes on top of Caelestia: a theme = a wallpaper folder + a colour scheme.
+"""Wallpapers + colours on top of Caelestia: every wallpaper gets its own dynamic scheme.
 
-  themectl list [--json]        themes in ~/Pictures/Wallpapers/<theme>/
+  themectl wall <file>          apply a wallpaper with its dynamic scheme, whatever its folder
+  themectl list [--json] [--dynamic]
+                                folders in ~/Pictures/Wallpapers/ as themes; --dynamic lists them
+                                as plain groups with every wallpaper's dynamic colours (the picker)
   themectl set <theme> [file]
                                 apply a theme's scheme + wallpaper (first one, or `file`)
   themectl current              print the current theme and wallpaper
-  themectl picker [themes|wallpapers]
-                                toggle a picker (~/.config/quickshell/theme-picker)
+  themectl picker               toggle the wallpaper picker (~/.config/quickshell/theme-picker)
   themectl sync                 daemon: mirror Caelestia's wallpaper onto awww with a
                                 grow-from-cursor transition (themectl-sync.service)
   themectl vscode               install the "Caelestia" VS Code theme (once; sync keeps it current)
@@ -15,11 +17,13 @@ Wallpapers always go through `caelestia wallpaper`, so Caelestia's own picker, t
 and the dynamic scheme stay in sync; `sync` then draws them with awww (Caelestia's own
 wallpaper layer is disabled with background.wallpaperEnabled = false).
 
-A theme's scheme comes from its folder name, `<scheme>` or `<scheme>-<flavour>` (e.g.
+`list`/`set` (CLI only; the picker uses `wall`) still treat a folder as a theme, whose scheme
+comes from its folder name, `<scheme>` or `<scheme>-<flavour>` (e.g.
 catppuccin-mocha, gruvbox-hard), or from an optional `scheme` file inside the folder
 containing "<scheme> [flavour] [dark|light]" (e.g. "catppuccin latte light", "dynamic").
 Anything unrecognised uses the dynamic scheme (colours from the wallpaper).
 """
+import hashlib
 import json
 import os
 import subprocess
@@ -30,6 +34,8 @@ HOME = os.path.expanduser("~")
 WALLPAPERS = os.environ.get("THEMECTL_WALLPAPERS", f"{HOME}/Pictures/Wallpapers")
 STATE_DIR = f"{os.environ.get('XDG_STATE_HOME', HOME + '/.local/state')}"
 STATE = f"{STATE_DIR}/themectl/current.json"
+THUMBS = f"{os.environ.get('XDG_CACHE_HOME', HOME + '/.cache')}/themectl/thumbs"
+THUMB_MIN = (560, 320)  # px; picker tiles are 268x148 logical at scale 1.25, with headroom
 CAELESTIA_WALL = f"{STATE_DIR}/caelestia/wallpaper/path.txt"
 CAELESTIA_SCHEME = f"{STATE_DIR}/caelestia/scheme.json"
 CHROMIUM_POLICY_DIR = "/etc/chromium/policies/managed"
@@ -111,21 +117,73 @@ def load_state():
         return {}
 
 
-def save_state(theme, wallpaper):
+def save_state(theme, wallpaper, dynamic=False):
+    """dynamic: applied with `wall` (dynamic colours), so `theme` is just its folder."""
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
     with open(STATE, "w") as f:
-        json.dump({"theme": theme, "wallpaper": wallpaper}, f)
+        json.dump({"theme": theme, "wallpaper": wallpaper, "dynamic": dynamic}, f)
+
+
+def swatches(colours):
+    return ["#" + colours[k] for k in ("primary", "secondary", "tertiary", "surface", "onSurface")
+            if k in colours]
+
+
+def dynamic_colours(wallpaper):
+    """The dynamic scheme `caelestia wallpaper -f` would make from this image (cached by caelestia)."""
+    try:
+        from caelestia.utils.wallpaper import get_colours_for_wall
+        return get_colours_for_wall(wallpaper, False)["colours"]
+    except Exception:
+        return {}
+
+
+def thumbnail(wallpaper):
+    """A small JPEG of the wallpaper for the pickers (decoding 4K-6K PNGs made them slow to open).
+    Keyed on path, size and mtime, so an edited file gets a new one. Falls back to the original."""
+    try:
+        st = os.stat(wallpaper)
+        key = hashlib.sha1(f"{wallpaper}\0{st.st_size}\0{st.st_mtime_ns}".encode()).hexdigest()
+        thumb = f"{THUMBS}/{key}.jpg"
+        if not os.path.exists(thumb):
+            from PIL import Image
+            with Image.open(wallpaper) as img:
+                img.seek(0)  # first frame of a GIF
+                img = img.convert("RGB")
+                scale = max(THUMB_MIN[0] / img.width, THUMB_MIN[1] / img.height)
+                if scale < 1:
+                    img = img.resize((round(img.width * scale), round(img.height * scale)), Image.Resampling.LANCZOS)
+                os.makedirs(THUMBS, exist_ok=True)
+                img.save(thumb + ".tmp", "JPEG", quality=88)
+            os.replace(thumb + ".tmp", thumb)
+        return thumb
+    except Exception:
+        return wallpaper
 
 
 # ---------------------------------------------------------------- commands
 
-def cmd_list(as_json):
+def cmd_list(as_json, dynamic=False):
     st = load_state()
     cur, cur_wall = st.get("theme"), st.get("wallpaper")
+    if not dynamic and st.get("dynamic"):
+        cur = None  # a `wall` pick isn't any theme
     out = []
     for t in themes():
         name, flavour, mode = theme_scheme(t)
-        colours = schemes().get(name, {}).get(flavour, {}) if name != "dynamic" else {}
+        walls = wallpapers(t)
+        if dynamic:
+            name, flavour, mode = "dynamic", None, None
+            if cur_wall in walls:
+                cur = t  # the folder holding the current wallpaper, however it was applied
+        shown = cur_wall if t == cur and cur_wall in walls else walls[0]
+        if name == "dynamic":
+            # Each wallpaper makes its own scheme; the card shows the one for its image.
+            wall_swatches = [swatches(dynamic_colours(w)) for w in walls]
+            card_swatches = wall_swatches[walls.index(shown)]
+        else:
+            wall_swatches = None
+            card_swatches = swatches(schemes().get(name, {}).get(flavour, {}))
         out.append({
             "name": t,
             "scheme": name,
@@ -133,9 +191,12 @@ def cmd_list(as_json):
             "mode": mode,
             "current": t == cur,
             "current_wallpaper": cur_wall if t == cur else None,
-            "wallpapers": wallpapers(t),
-            "swatches": ["#" + colours[k] for k in ("primary", "secondary", "tertiary", "surface", "onSurface")
-                         if k in colours],
+            "wallpapers": walls,
+            "thumbs": [thumbnail(w) for w in walls],
+            # The loose images in WALLPAPERS itself (the picker shows them at its top level).
+            "root": t == UNSORTED and not os.path.isdir(f"{WALLPAPERS}/{UNSORTED}"),
+            "swatches": card_swatches,
+            "wallpaper_swatches": wall_swatches,
         })
     if as_json:
         print(json.dumps(out))
@@ -145,8 +206,8 @@ def cmd_list(as_json):
             print(f"{'*' if t['current'] else ' '} {t['name']:24} {scheme:28} {len(t['wallpapers'])} wallpaper(s)")
 
 
-def apply_wallpaper(theme, wallpaper):
-    name, flavour, mode = theme_scheme(theme)
+def apply_wallpaper(theme, wallpaper, dynamic=False):
+    name, flavour, mode = ("dynamic", None, None) if dynamic else theme_scheme(theme)
     if name == "dynamic":
         # Set the wallpaper first so the dynamic scheme is generated from it.
         run("caelestia", "wallpaper", "-f", wallpaper)
@@ -159,7 +220,15 @@ def apply_wallpaper(theme, wallpaper):
             run("caelestia", "scheme", "set", "-n", "dynamic")
     else:
         run("caelestia", "wallpaper", "-f", wallpaper, "-N")
-    save_state(theme, wallpaper)
+    save_state(theme, wallpaper, dynamic)
+
+
+def cmd_wall(wallpaper):
+    wallpaper = os.path.abspath(wallpaper)
+    folder = next((t for t in themes() if wallpaper in wallpapers(t)), None)
+    if folder is None:
+        sys.exit(f"themectl: {wallpaper} is not a wallpaper in {WALLPAPERS}")
+    apply_wallpaper(folder, wallpaper, dynamic=True)
 
 
 def cmd_set(theme, wallpaper=None):
@@ -182,8 +251,8 @@ def cmd_current():
     print(f"{st.get('theme', '(none)')}\n{st.get('wallpaper', '')}")
 
 
-def cmd_picker(mode):
-    ipc = ["qs", "-c", "theme-picker", "ipc", "call", "picker", "toggle", mode]
+def cmd_picker():
+    ipc = ["qs", "-c", "theme-picker", "ipc", "call", "picker", "toggle"]
     if subprocess.run(ipc, capture_output=True).returncode != 0:
         subprocess.Popen(["qs", "-c", "theme-picker", "-d"], stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
@@ -681,13 +750,15 @@ def main():
     args = sys.argv[1:]
     cmd = args[0] if args else "list"
     if cmd == "list":
-        cmd_list("--json" in args)
+        cmd_list("--json" in args, "--dynamic" in args)
     elif cmd == "set" and len(args) in (2, 3):
         cmd_set(*args[1:])
+    elif cmd == "wall" and len(args) == 2:
+        cmd_wall(args[1])
     elif cmd == "current":
         cmd_current()
-    elif cmd == "picker" and len(args) <= 2 and (args[1:] or ["themes"])[0] in ("themes", "wallpapers"):
-        cmd_picker((args[1:] or ["themes"])[0])
+    elif cmd == "picker" and len(args) == 1:
+        cmd_picker()
     elif cmd == "sync":
         cmd_sync()
     elif cmd == "vscode":

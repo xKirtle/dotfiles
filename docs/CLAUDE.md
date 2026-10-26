@@ -92,4 +92,4 @@ touching, **before** changing anything:
 - NVIDIA RTX 4090 (`nvidia-open-dkms`) drives both 4K monitors at scale 1.25; uwsm-managed Hyprland session.
 - Shell: bash (not zsh/fish) with starship, fzf, zoxide, eza, bat.
 - AUR helper: paru (see `07-system-and-packages.md` for its completion workaround).
-- Theme: Catppuccin Mocha by default, switchable with themectl (`03-desktop-shell-and-theming.md`).
+- Colours: dynamic from the wallpaper, picked with themectl (Super+Ctrl+Space; `03-desktop-shell-and-theming.md`).

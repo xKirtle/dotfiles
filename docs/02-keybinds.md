@@ -21,8 +21,7 @@ Custom binds live in `~/.config/hypr/qol.lua`; defaults in `hyprland.lua`; a few
 | Ctrl + Super + Alt + R | restart Caelestia shell | qol |
 | Super + Ctrl + Shift + L | recover a crashed lock screen: restart the shell and lock again (works while locked) | qol |
 | Super + Shift + I | keep awake on/off (Caelestia idle inhibitor: no auto-lock or screen off; notifies the new state) | qol |
-| Super + Ctrl + Shift + Space | theme picker (Enter = choose wallpaper, Shift+Enter = apply with first wallpaper) | qol |
-| Super + Ctrl + Space | wallpaper picker (current theme) | qol |
+| Super + Ctrl + Space | wallpaper picker: each wallpaper with its own dynamic colours, folders as groups (Enter = open folder / apply, R = random, Esc = back/close) | qol |
 | Super + Shift + P | VPN panel: Proton VPN country/city/server picker (type to search, ↑/↓ select, Enter/click = connect to the fastest there, →/← = cities/servers, Tab = Standard/Secure Core/P2P, Ctrl+F = favourite, Ctrl+D = disconnect, Esc = clear/close; see 09). Shift so it's hard to hit by accident | qol |
 | Super + A | agenda panel: Proton Calendar, today + next 4 days (←/→ = previous/next 5 days, T = today, ↑/↓ = select event, Enter/click = details (click links, drag to select, Ctrl+C copies), O = open its first link, R = sync now, Esc = close; see 08) | qol |
 

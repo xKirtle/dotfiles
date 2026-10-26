@@ -1,7 +1,7 @@
 # dotfiles
 
 Arch + Hyprland (Lua config, uwsm) + [Caelestia](https://github.com/caelestia-dots/shell) shell,
-themed Catppuccin Mocha by default, with Omarchy-style theme switching. The detailed notes on how
+with colours generated from the wallpaper (themectl's wallpaper picker). The detailed notes on how
 everything is set up, and why, are in [`docs/`](docs/README.md); start there.
 
 ## Layout
@@ -12,7 +12,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 |---|---|
 | `hypr` | Hyprland: `hyprland.lua` (input), `hyprland-gui.lua` (**HyprMod-managed; don't hand-edit**), `qol.lua` (everything else) |
 | `caelestia` | Caelestia shell config (`shell.json.template`, rendered to `shell.json`) |
-| `themectl` | Theme + wallpaper pickers, awww transitions, scheme sync to Hyprland/Chromium/Serein/VS Code (`themectl`, Quickshell picker, user units) |
+| `themectl` | Wallpaper picker (dynamic colours), awww transitions, scheme sync to Hyprland/Chromium/Serein/VS Code (`themectl`, Quickshell picker, user units) |
 | `kitty`, `shell`, `bash` | Terminal, starship prompt, bash |
 | `gtk`, `qt`, `fonts` | GTK 3/4 settings, qt6ct + Kvantum, fontconfig |
 | `thunar`, `swappy`, `chromium` | Thunar actions + shortcuts, screenshot editor, Chromium flags |
