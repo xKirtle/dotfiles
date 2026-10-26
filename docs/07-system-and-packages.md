@@ -45,6 +45,14 @@ Appended section `# ---- QoL ----`:
 
 - Timezone `Europe/Lisbon` (`timedatectl`); NTP via `systemd-timesyncd`.
 
+## Docker
+
+- Packages: `docker`, `docker-compose`, `docker-buildx`. `docker.service` and `docker.socket` are
+  enabled (daemon starts at boot).
+- User is in the `docker` group (`sudo usermod -aG docker $USER`, 2026-10-26), so `docker` works
+  without sudo. Takes effect after re-login; this group is root-equivalent (rootless Docker was
+  the alternative, not used).
+
 ## Removed / disabled
 
 | What | Why |
