@@ -42,6 +42,12 @@ Appended section `# ---- QoL ----`:
 - Wi-Fi (`wlp7s0`, MT7922) is off: `nmcli radio wifi off` (`on` to re-enable).
 - IPv6 is on everywhere (a temporary `disable_ipv6` test was reverted).
 - Firewall: `ufw` (enabled before this session).
+- **LocalSend** (`localsend-bin`, AUR): direct LAN file transfers to other machines/phones, so
+  the NAS HDDs aren't involved. Port 53317 (TCP transfers, UDP multicast discovery) is open
+  to the LAN only: `ufw allow from 192.168.1.0/24 to any port 53317 proto tcp` (and `proto udp`).
+  Launched on demand, no autostart. If peers don't appear: Proton VPN may block LAN traffic,
+  or the router isolates clients; fall back to manual send by IP (this PC is `192.168.1.117`).
+  Linux↔Linux with SSH: `rsync -aP` is just as fast and scriptable.
 - **Proton VPN:** official CLI (`protonvpn`) + VPN panel (Super+Shift+P): `09-vpn.md`.
 
 ## Time and locale
