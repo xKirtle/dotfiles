@@ -162,6 +162,9 @@ A **theme** is a folder in `~/Pictures/Wallpapers/<theme>/` plus a Caelestia col
   rewrite it the same way (a plain `cat >` only exercises the in-place path).
   The service's memory peak is ~470 MB, from `awww img` decoding the 5K/6K PNGs; it's short-lived.
   Check: `awww query`; logs: `journalctl --user -u themectl-sync`.
+  The unit needs `After=graphical-session.target` as well as `After=awww.service`: without it the target's
+  implicit ordering after its wanted units forms a cycle with awww (`After=graphical-session.target`), and
+  systemd silently drops themectl-sync at login ("Found ordering cycle" in the journal). Fixed 2026-10-26.
 
 ## Discord client: Serein
 

@@ -2,7 +2,7 @@
 Description=Mirror Caelestia's wallpaper onto awww (grow-from-cursor transitions)
 PartOf=graphical-session.target
 BindsTo=awww.service
-After=awww.service
+After=graphical-session.target awww.service
 
 [Service]
 ExecStart=%h/.local/bin/themectl sync
