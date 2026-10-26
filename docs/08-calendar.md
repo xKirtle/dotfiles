@@ -89,9 +89,12 @@ still scrolls). Events with details show ▾. **O** opens the selected event's f
 location, then description); with no link it says so in the footer. Links open with `/usr/bin/xdg-open`
 (default browser: `xdg-settings get default-web-browser`) and close the panel. The description is escaped
 before links are added, so it can't inject markup.
-Also: **←/→** (or h/l) page back/forward 5 days (the header then shows the date range), **T** (or Home)
+Also: **←/→** (or h/l) page back/forward 5 days (the header always shows the days' date range), **T** (or Home)
 jumps back to today, **R** syncs now, **Esc** or clicking elsewhere closes. Opening always starts at today. Refreshes on open, every minute while
-open, and after each sync. After editing `shell.qml`: `qs -c agenda kill` (no live reload).
+open, and after each sync. Paging is instant: each `calendarctl agenda` takes ~0.2 s (almost all khal's
+Python startup), so the panel caches loaded pages, fetches the pages either side while idle, and shows a
+cached page at once while it refreshes it (cache cleared on open, after a sync and every minute).
+After editing `shell.qml` the running panel reloads it on its own (seen 2026-10-26).
 
 ## Logs and checks
 

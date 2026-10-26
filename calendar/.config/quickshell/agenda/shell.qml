@@ -21,6 +21,10 @@ ShellRoot {
     property bool syncing: false
     property int offset: 0          // first day shown, in days from today (paged by `days`)
     property bool reloadPending: false
+    // Loaded pages by offset: khal takes ~0.2 s to start, so paging shows a cached page at once (then
+    // refreshes it), and the pages either side are fetched while idle. Cleared on open, sync and every minute.
+    property var pages: ({})
+    property int fetchOffset: 0     // offset the loader is fetching
     property int eventCount: 0      // events on screen; each gets an index `_i` and a stable `_key`
     property int selected: -1       // keyboard selection (index), -1 = none
     property string expandedKey: "" // event whose details are shown (survives the 1-minute refresh)
@@ -41,13 +45,41 @@ ShellRoot {
     // A running Process ignores command changes, so a request mid-run re-runs it afterwards.
     function refresh() {
         if (loader.running) reloadPending = true;
-        else loader.running = true;
+        else fetch(offset);
+    }
+
+    function fetch(o) {
+        fetchOffset = o;
+        loader.running = true;
+    }
+
+    // Loader idle: fetch the next / previous page if they aren't cached yet
+    function prefetch() {
+        for (const o of [offset + days, offset - days])
+            if (!(o in pages)) return fetch(o);
+    }
+
+    function clearPages() {
+        pages = {};
+    }
+
+    function display(data) {
+        let n = 0;
+        for (const d of data.days ?? [])
+            for (const e of d.events) {
+                e._i = n++;
+                e._key = `${e.start}|${e.title}`;
+            }
+        eventCount = n;
+        if (selected >= n) selected = n - 1;
+        ag = data;
     }
 
     function page(step) {
         offset = step === 0 ? 0 : offset + step * days;
         selected = -1;
         expandedKey = "";
+        if (offset in pages) display(pages[offset]);
         refresh();
     }
 
@@ -98,7 +130,8 @@ ShellRoot {
                   .replace(/\n/g, "<br>");
     }
 
-    // "Mon 19 Oct – Fri 23 Oct", shown in the header when not starting at today.
+    // "Mon 19 Oct – Fri 23 Oct", the loaded days, shown in the header (from the data, not offset,
+    // so it changes together with the list when paging).
     function range() {
         const d = ag.days ?? [];
         return d.length ? `${d[0].subtitle} – ${d[d.length - 1].subtitle}` : "";
@@ -132,31 +165,26 @@ ShellRoot {
     FileView {
         path: root.home + "/.local/state/calendar/sync.json"
         watchChanges: true
-        onFileChanged: { reload(); if (root.open) root.refresh(); }
+        onFileChanged: { reload(); root.clearPages(); if (root.open) root.refresh(); }
     }
 
     Process {
         id: loader
-        command: [root.calendarctl, "agenda", "--days", String(root.days), "--offset", String(root.offset)]
+        command: [root.calendarctl, "agenda", "--days", String(root.days), "--offset", String(root.fetchOffset)]
         stdout: StdioCollector {
             onStreamFinished: {
                 let ag;
                 try { ag = JSON.parse(text); } catch (e) { ag = { error: "calendarctl agenda: bad output" }; }
-                let n = 0;
-                for (const d of ag.days ?? [])
-                    for (const e of d.events) {
-                        e._i = n++;
-                        e._key = `${e.start}|${e.title}`;
-                    }
-                root.eventCount = n;
-                if (root.selected >= n) root.selected = n - 1;
-                root.ag = ag;
+                root.pages[root.fetchOffset] = ag;
+                if (root.fetchOffset === root.offset) root.display(ag);
             }
         }
         onExited: {
             if (root.reloadPending) {
                 root.reloadPending = false;
-                running = true;
+                root.fetch(root.offset);
+            } else if (root.open) {
+                root.prefetch();
             }
         }
     }
@@ -177,7 +205,7 @@ ShellRoot {
         interval: 60000
         running: root.open
         repeat: true
-        onTriggered: root.refresh()
+        onTriggered: { root.clearPages(); root.refresh(); }
     }
 
     IpcHandler {
@@ -192,8 +220,9 @@ ShellRoot {
             root.offset = 0;
             root.selected = -1;
             root.expandedKey = "";
-            root.refresh();
+            root.clearPages();
             root.open = true;
+            root.refresh();
         }
 
         function close(): void {
@@ -296,7 +325,7 @@ ShellRoot {
                             color: root.c("onSurface", "#cdd6f4")
                         }
                         Text {
-                            visible: root.offset !== 0
+                            visible: text !== ""
                             text: root.range()
                             font.family: root.font
                             font.pointSize: 9
