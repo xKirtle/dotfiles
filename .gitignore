@@ -8,6 +8,9 @@ gtk/.config/gtk-3.0/thunar.css
 gtk/.config/gtk-4.0/gtk.css
 gtk/.config/gtk-4.0/thunar.css
 
+# Per-monitor overrides the Caelestia shell creates (empty `{}` so far)
+caelestia/.config/caelestia/monitors/
+
 # Personal GTK/Thunar sidebar bookmarks
 gtk/.config/gtk-3.0/bookmarks
 
