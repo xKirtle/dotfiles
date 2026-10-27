@@ -14,10 +14,11 @@ Caelestia drawer VPN toggle ─▶ protonvpn connect|disconnect ◀┘  (state: 
 
 | Path | What |
 |---|---|
-| `~/.local/bin/vpnctl` | `status` (JSON, from NetworkManager + server cache, ~30 ms), `ip` (JSON: public IP, country, city, ISP as websites see you, from Mullvad's `am.i.mullvad.net/json`; works on or off the VPN. Proton's own `api.protonvpn.ch/vpn/location` refuses while connected, and the cache's `ExitIP` is the *entry* address), no request. The cache's `ExitIP` and the WireGuard endpoint are the *entry* address, not what websites see. Not connected: Proton's `api.protonvpn.ch/vpn/location`, which returns error 86081 while connected), `list` (JSON: usable servers by country → city, favourites), `connect [ARGS]`, `disconnect`, `fav CODE`, `panel` |
+| `~/.local/bin/vpnctl` | `status` (JSON, from NetworkManager + server cache, ~30 ms; `urllib.request` is imported only by `ip`, it cost `status` ~15 ms), `ip` (JSON: public IP, country, city, ISP as websites see you, from Mullvad's `am.i.mullvad.net/json`; works on or off the VPN. Proton's own `api.protonvpn.ch/vpn/location` refuses while connected, and the cache's `ExitIP` is the *entry* address), no request. The cache's `ExitIP` and the WireGuard endpoint are the *entry* address, not what websites see. Not connected: Proton's `api.protonvpn.ch/vpn/location`, which returns error 86081 while connected), `list` (JSON: usable servers by country → city, favourites), `connect [ARGS]`, `disconnect`, `fav CODE`, `panel` |
 | `~/.config/quickshell/vpn/shell.qml` | the panel |
 | `~/.cache/Proton/VPN/serverlist.json` | the CLI's server cache (all ~18k servers: name, city, load, score, features, tier); written by the CLI, read by vpnctl |
 | `~/.cache/vpnctl/countries.json` | code → country name, from `protonvpn countries list` (re-read when the server cache changes) |
+| `~/.cache/vpnctl/list.json` | `vpnctl list`'s countries JSON, first line = the server cache's mtime (ns); rebuilt when it changes (~200 ms → ~25 ms per panel open). Not written if country names failed |
 | `~/.local/state/vpnctl/favorites.json` | favourite countries (default: PT) |
 
 ## How a connection looks

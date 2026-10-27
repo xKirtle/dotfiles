@@ -129,9 +129,50 @@ def swatches(colours):
             if k in colours]
 
 
+HASHES = f"{os.path.dirname(THUMBS)}/hashes.json"
+_hashes = None
+
+
+def memo_compute_hash():
+    """Caelestia keys its colour caches on a SHA-256 of the whole image, re-read on every call (~50 ms
+    for the picker's list). Remember each file's hash by path, size and mtime instead."""
+    global _hashes
+    if _hashes is not None:
+        return
+    import caelestia.utils.material as material
+    import caelestia.utils.wallpaper as wallpaper
+    try:
+        with open(HASHES) as f:
+            _hashes = json.load(f)
+    except (OSError, ValueError):
+        _hashes = {}
+    real = wallpaper.compute_hash
+
+    def compute_hash(path):
+        path = str(path)
+        st = os.stat(path)
+        key = [st.st_size, st.st_mtime_ns]
+        hit = _hashes.get(path)
+        if hit and hit[:2] == key:
+            return hit[2]
+        h = real(path)
+        _hashes[path] = key + [h]
+        try:
+            os.makedirs(os.path.dirname(HASHES), exist_ok=True)
+            with open(HASHES + ".tmp", "w") as f:
+                json.dump(_hashes, f)
+            os.replace(HASHES + ".tmp", HASHES)
+        except OSError:
+            pass
+        return h
+
+    wallpaper.compute_hash = material.compute_hash = compute_hash
+
+
 def dynamic_colours(wallpaper):
     """The dynamic scheme `caelestia wallpaper -f` would make from this image (cached by caelestia)."""
     try:
+        memo_compute_hash()
         from caelestia.utils.wallpaper import get_colours_for_wall
         return get_colours_for_wall(wallpaper, False)["colours"]
     except Exception:
@@ -170,12 +211,11 @@ def cmd_list(as_json, dynamic=False):
         cur = None  # a `wall` pick isn't any theme
     out = []
     for t in themes():
-        name, flavour, mode = theme_scheme(t)
+        # --dynamic skips theme_scheme: it would start `caelestia scheme list` (~75 ms) for nothing
+        name, flavour, mode = ("dynamic", None, None) if dynamic else theme_scheme(t)
         walls = wallpapers(t)
-        if dynamic:
-            name, flavour, mode = "dynamic", None, None
-            if cur_wall in walls:
-                cur = t  # the folder holding the current wallpaper, however it was applied
+        if dynamic and cur_wall in walls:
+            cur = t  # the folder holding the current wallpaper, however it was applied
         shown = cur_wall if t == cur and cur_wall in walls else walls[0]
         if name == "dynamic":
             # Each wallpaper makes its own scheme; the card shows the one for its image.
@@ -256,8 +296,8 @@ def cmd_picker():
     if subprocess.run(ipc, capture_output=True).returncode != 0:
         subprocess.Popen(["qs", "-c", "theme-picker", "-d"], stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
-        for _ in range(30):
-            time.sleep(0.1)
+        for _ in range(60):  # each try is ~30 ms itself: ~3 s in all (as qs-panel)
+            time.sleep(0.02)
             if subprocess.run(ipc, capture_output=True).returncode == 0:
                 break
 

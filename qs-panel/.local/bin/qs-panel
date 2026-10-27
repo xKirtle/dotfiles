@@ -22,10 +22,12 @@ toggle() {
 
 toggle "$@" && exit 0
 
-# Not running: start it (qs -d detaches), then toggle it open once its IPC answers
+# Not running: start it (qs -d detaches), then toggle it open once its IPC answers.
+# Each try is itself ~30 ms (qs start-up), so ~50 ms per round and ~3 s in all; 0.1 s sleeps added ~50 ms
+# to a cold open on average.
 QT_SCALE_FACTOR=$SCALE qs -c "$config" -d >/dev/null 2>&1
-for _ in $(seq 30); do
-    sleep 0.1
+for _ in $(seq 60); do
+    sleep 0.02
     toggle "$@" && exit 0
 done
 echo "qs-panel: $config didn't answer on IPC; see qs -c $config log" >&2

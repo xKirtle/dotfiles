@@ -17,7 +17,6 @@ Switching servers moves all traffic to a new tunnel: open connections drop.
 """
 import json
 import subprocess
-import urllib.request
 import sys
 from pathlib import Path
 
@@ -95,10 +94,33 @@ def server_entry(s):
 
 
 def cmd_list():
+    # The grouped countries only change with the 26 MB server list: cache their JSON, keyed on its mtime
+    # (~200 ms -> ~15 ms per panel open). Favourites are added fresh each time.
+    try:
+        mtime = SERVERLIST.stat().st_mtime_ns
+    except OSError:
+        mtime = None
+    path = CACHE / "list.json"
+    try:
+        stamp, countries = path.read_text().split("\n", 1)
+        if mtime is None or stamp != str(mtime):
+            countries = None
+    except (OSError, ValueError):
+        countries = None
+    if countries is None:
+        countries = list_countries()
+        if countries is None:
+            print(json.dumps({"error": "No server list yet: run `protonvpn signin`, then `protonvpn countries list`."}))
+            return
+    print(f'{{"countries": {countries}, "favorites": {json.dumps(favorites())}, '
+          f'"updated": {int(SERVERLIST.stat().st_mtime)}}}')
+
+
+def list_countries():
+    """Every usable server grouped country -> city, as JSON (cached by cmd_list); None without a list."""
     data = load_servers()
     if not data:
-        print(json.dumps({"error": "No server list yet: run `protonvpn signin`, then `protonvpn countries list`."}))
-        return
+        return None
     names = country_names()
     tier = data.get("MaxTier", 0)
     countries = {}
@@ -120,11 +142,13 @@ def cmd_list():
         c["cities"] = cities
         out.append(c)
     out.sort(key=lambda x: x["name"])
-    print(json.dumps({
-        "countries": out,
-        "favorites": favorites(),
-        "updated": int(SERVERLIST.stat().st_mtime),
-    }))
+    countries = json.dumps(out)
+    if names:  # names fall back to codes when `protonvpn countries list` failed: don't keep that
+        CACHE.mkdir(parents=True, exist_ok=True)
+        tmp = CACHE / "list.json.tmp"
+        tmp.write_text(f"{SERVERLIST.stat().st_mtime_ns}\n{countries}")
+        tmp.replace(CACHE / "list.json")
+    return countries
 
 
 def active_proton():
@@ -159,6 +183,7 @@ def cmd_status():
 
 def cmd_ip():
     # What websites see, VPN or not. Mullvad's check: no account, says it doesn't log.
+    import urllib.request  # here, not at the top: it's ~15 ms of imports that `status` polls don't need
     try:
         with urllib.request.urlopen(IP_URL, timeout=6) as r:
             d = json.load(r)

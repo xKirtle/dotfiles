@@ -131,6 +131,12 @@ of five root images.)
     (`wallpaper_swatches`) computes them with Caelestia's own `get_colours_for_wall` (what
     `caelestia wallpaper -p <file>` prints, smart light/dark and variant included; cached by Caelestia in
     `~/.cache/caelestia/`). Folders show none. The loose images come as the `unsorted` entry with `"root": true`.
+  - **Listing speed** (`themectl list --json --dynamic`, warm caches: ~75 ms, was ~210 ms): `--dynamic` skips
+    `theme_scheme` (it ran `caelestia scheme list`, ~75 ms, for nothing), and Caelestia's SHA-256 of each
+    whole image (its cache key, ~50 ms per listing) is memoised in `~/.cache/themectl/hashes.json` by
+    path + size + mtime (`memo_compute_hash` patches `compute_hash` in Caelestia's modules). The rest is
+    importing the `caelestia` package (~45 ms; its `__init__` loads the whole CLI). A Go rewrite was
+    benchmarked (2026-10-27) and wasn't worth it: the time is in Caelestia/khal/the kernel, not Python.
   - **Size:** up to 4 columns; rows visible = screen height (logical) / 432, so **4×4** on the main monitor
     (1728 px tall at scale 1.25) and 7 rows on the portrait one. More **scrolls** (wheel, or it follows the
     keyboard selection), with a thin position bar on the right.
@@ -237,6 +243,12 @@ of five root images.)
 `~/.local/bin/qs-panel <config> <ipc target> [toggle args…]` (`qs-panel` package) toggles one of the Quickshell
 panels, or starts it (`qs -c <config> -d`) and toggles it open once its IPC answers (~0.3 s). Used by Super+K
 (keybinds), `calendarctl panel` (agenda), `vpnctl panel` (VPN) and `sysmonctl panel` (system monitor, 10).
+
+- **Panels stay resident** (hidden, not quit) on purpose. Measured 2026-10-27: an open takes ~55-65 ms when
+  the panel is running vs ~170-235 ms from cold (agenda/sysmon/picker); quitting on close would free ~365 MB
+  PSS for the three (each fresh qs is ~110-140 MB; the picker grows as thumbnails load). Not worth it on 31 GB.
+  The start-up loop retries the IPC every 20 ms (each `qs ipc call` is itself ~30 ms); `themectl picker` matches.
+  That cut cold opens from ~305/313/194 ms (agenda/sysmon/picker, 0.1 s retries) to ~224/233/170 ms.
 
 - **Panel scale: `SCALE=1.25` at the top of `qs-panel`.** Also set for the claude-usage panel (its own repo, so
   it takes a flag): `~/.config/systemd/user/claude-usage-tray.service.d/panel-scale.conf` (`qs-panel` package)
