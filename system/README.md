@@ -9,6 +9,8 @@ Reference copies of root-owned files changed on this machine. They're **not** li
 | `etc/greetd/hyprland.lua` | Hyprland config for the login screen | `docs/04-login-and-session.md` |
 | `etc/greetd/regreet.toml`, `regreet.css` | ReGreet settings and Catppuccin styling | `docs/04-login-and-session.md` |
 | `etc/pam.d/greetd` | PAM for greetd (keyring unlock at login) | `docs/04-login-and-session.md` |
+| `etc/systemd/resolved.conf.d/10-local.conf` | systemd-resolved: local DNS cache, no LLMNR/mDNS | `docs/07-system-and-packages.md` |
+| `etc/NetworkManager/conf.d/dns.conf` | NetworkManager hands DNS to systemd-resolved | `docs/07-system-and-packages.md` |
 | `etc/pacman.conf` | `[multilib]` enabled (Steam) | `docs/06-gaming-and-steam.md` |
 
 Install one (keeps a backup of what's there):

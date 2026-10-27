@@ -37,16 +37,25 @@ Appended section `# ---- QoL ----`:
 
 ## Network
 
-- Ports: 2.5 GbE RTL8125 `enp8s0` and 1 GbE RTL8111 `enp5s0`, both `r8169` driver. In use at
-  setup end: `enp5s0` (1 GbE). Gigabit internet, so either port is fine.
+- Ports: 2.5 GbE RTL8125 `enp8s0` and 1 GbE RTL8111 `enp5s0`, both `r8169` driver. In use since
+  2026-10-27: `enp8s0` (2.5 GbE, as Omarchy used; the LAN IP changed with it). Gigabit internet, so either port is fine.
 - Wi-Fi (`wlp7s0`, MT7922) is off: `nmcli radio wifi off` (`on` to re-enable).
 - IPv6 is on everywhere (a temporary `disable_ipv6` test was reverted).
+- **DNS: systemd-resolved as a local cache** (since 2026-10-27; plain Arch has none, unlike Windows and most
+  distros). NetworkManager hands it the DHCP servers (`/etc/NetworkManager/conf.d/dns.conf`,
+  `dns=systemd-resolved`): AdGuard on the Pi, plus the router's IPv6 DNS from RA as a second
+  server (it doesn't filter ads, and resolved may switch to it if AdGuard stops answering).
+  `/etc/resolv.conf` → `../run/systemd/resolve/stub-resolv.conf` (old NM-written file: `/etc/resolv.conf.bak`).
+  LLMNR/mDNS off (`/etc/systemd/resolved.conf.d/10-local.conf`). Reference copies in `system/`.
+  Check: `resolvectl status`, `resolvectl statistics` (cache hits). Docker containers get the upstream
+  servers directly (Docker detects resolved). Without a cache, Steam's burst of lookups hit AdGuard's
+  rate limit (`06-gaming-and-steam.md`).
 - Firewall: `ufw` (enabled before this session).
 - **LocalSend** (`localsend-bin`, AUR): direct LAN file transfers to other machines/phones, so
   the NAS HDDs aren't involved. Port 53317 (TCP transfers, UDP multicast discovery) is open
   to the LAN only: `ufw allow from 192.168.1.0/24 to any port 53317 proto tcp` (and `proto udp`).
   Launched on demand, no autostart. If peers don't appear: Proton VPN may block LAN traffic,
-  or the router isolates clients; fall back to manual send by IP (this PC is `192.168.1.117`).
+  or the router isolates clients; fall back to manual send by IP (`ip -br addr show enp8s0`).
   Linux↔Linux with SSH: `rsync -aP` is just as fast and scriptable.
 - **Proton VPN:** official CLI (`protonvpn`) + VPN panel (Super+Shift+P): `09-vpn.md`.
 

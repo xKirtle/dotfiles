@@ -46,9 +46,37 @@ Findings:
 - Not IPv6 MTU (full 1500-byte packets pass), not the NIC link (1000 Mbps full duplex, no errors).
 - One real hardware fault found: a **USB plug jammed into the 1 GbE RJ45 port**. Removing it raised
   speeds to ~500 Mbps.
-- What remained looked server/route-side: speed varied by Steam server (Madrid cache vs
-  Google/Fastly/Akamai CDNs) and by download region; Paris did better.
+- What remained looked server/route-side: speed varied by Steam server (regional Steam cache vs
+  Google/Fastly/Akamai CDNs) and by download region; a neighbouring country's region did better
+  (wrong conclusion: see the 2026-10-27 root cause below).
 - The `steam_dev.cfg` HTTP/2 tweak was tried and then **removed** (not needed before).
+
+**Root cause, solved 2026-10-27: AdGuard's DNS rate limit.** AdGuard (on the Pi) had the default
+`ratelimit: 20` with `ratelimit_subnet_len_ipv4: 24`: 20 queries/s shared by the whole LAN /24,
+excess silently dropped. During a download Steam keeps re-resolving its ~15 CDN/cache hosts (A + AAAA,
+~200 lookups/min in bursts); each dropped query stalls that request for glibc's 5 s retry, so every
+connection crawled (1–9 Mbps each) while `curl` (one lookup) was fast. Measured 6% of queries to AdGuard
+unanswered at ~24 q/s. Omarchy ran systemd-resolved (local cache), so it rarely hit the limit; this install
+sends every lookup straight to AdGuard (`/etc/resolv.conf` from NetworkManager).
+- **Fix:** AdGuard → Settings → DNS settings → Rate limit = **0** (set in AdGuard's UI; not tracked in the
+  homelab repo). Also added systemd-resolved as a local DNS cache (`07-system-and-packages.md`). Steam immediately went 120–290 →
+  **935–983 Mbps**; AdGuard dropped 0 of 240 test queries.
+- If it recurs: time/count lookups against AdGuard vs the router's DNS and check the rate limit
+  in AdGuard's `AdGuardHome.yaml` (`ssh pi 'docker exec adguard cat /opt/adguardhome/conf/AdGuardHome.yaml'`).
+
+Red herrings from that session (kept for reference):
+- Ruled out by measurement: CPU, disk, sockets (Recv-Q 0), TCP (multi-MB windows, no retransmits), NIC link,
+  IPv4 vs IPv6, the line (Speedtest Tracker on the MiniPC: steady ~940 Mbps), other LAN traffic, the Pi (not in
+  the data path). `curl` pulling real chunks straight from the regional Steam caches
+  (`http://<cache host>/depot/<depot>/chunk/<sha>`, no auth; SHAs from
+  `~/.local/share/Steam/depotcache/*.manifest`), 32 in parallel, got 670–740 Mbps while Steam was slow.
+- Changes that didn't help on their own (kept, harmless): download region back to the home region (as on
+  Omarchy; the 2026-10-23 tests had left it on another country); cable moved to the 2.5 GbE `enp8s0` (as on Omarchy).
+- Tried and dropped: `performance` power profile (back to `balanced`); Omarchy's `vm.dirty_bytes` /
+  `vm.dirty_background_bytes` (runtime only, gone after reboot); `~/.local/share/Steam/steam_dev.cfg` with the
+  HTTP/2-off and more-connections lines (Arch wiki, Steam/Troubleshooting).
+- AdGuard's upstream resolver doesn't send ECS, so CDNs pick edges by the resolver's location, not the ISP's.
+  Not the cause, but the router's DNS gets slightly closer edges.
 
 If it recurs: try another download region (Settings → Downloads), clear the download cache,
 check `~/.local/share/Steam/logs/content_log.txt` ("Current download rate" lines and which CDN
