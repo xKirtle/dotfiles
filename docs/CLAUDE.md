@@ -12,7 +12,7 @@ touching, **before** changing anything:
 - `06-gaming-and-steam.md`: Steam scaling, Proton, primary monitor, download-speed findings
 - `07-system-and-packages.md`: paru workaround, pacman, bash, network
 - `08-calendar.md`: Proton Calendar sync (vdirsyncer/khal), reminders, agenda panel (`calendarctl`)
-- `09-vpn.md`: Proton VPN CLI, VPN panel (`vpnctl`), Caelestia VPN toggle
+- `09-vpn.md`: Proton VPN CLI, VPN panel (`vpnctl`), Caelestia VPN toggle, torrenting (qBittorrent)
 - `10-system-monitor.md`: system monitor / task manager panel (`sysmonctl`, Ctrl+Shift+Esc)
 
 ## Dotfiles repo

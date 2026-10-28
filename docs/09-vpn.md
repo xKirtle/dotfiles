@@ -57,6 +57,23 @@ After editing `shell.qml`: `qs -c vpn kill` (no live reload); `qs -c vpn log` sh
 `utilities.vpn` in `shell.json.template`: one provider `proton`, interface `proton0`, connect/disconnect
 `/usr/bin/protonvpn connect|disconnect` (fastest server). See `03-desktop-shell-and-theming.md`.
 
+## Torrenting (qBittorrent)
+
+Occasional torrents only (the home server does the heavy lifting). qBittorrent (`qbittorrent` package,
+Qt, themed by the qt6ct palette, `03`); its config `~/.config/qBittorrent/` is not in the dotfiles.
+
+- **Bound to the VPN:** Options → Advanced → Network interface **`proton0`** (`Session\Interface` in
+  `qBittorrent.conf`), IP "All addresses". Off the VPN `proton0` doesn't exist, so torrents stall instead
+  of leaking the real IP; this is why the CLI kill switch can stay off. If a torrent stays stuck after a
+  reconnect, restart qBittorrent.
+- **P2P servers only:** Proton allows torrents on P2P servers (feature bit 4 in the cache). Use the panel's
+  **P2P** mode or `protonvpn connect --p2p`; plain "fastest" may pick a non-P2P server.
+- **No port forwarding, on purpose:** Proton assigns a new random port on every connection (even to the
+  same server), which qBittorrent would need each time. Without it, downloads work; you lose incoming peers
+  (rare torrents can be slow) and seed poorly, which doesn't matter here. If that changes: `protonvpn config
+  set port-forwarding on`, reconnect, and automate pushing the port into qBittorrent (Web API on localhost,
+  a small user service) rather than typing it.
+
 ## Old WireGuard config
 
 Before the CLI, a downloaded config was imported into NetworkManager as `wg-PT-66` (autoconnect off,
