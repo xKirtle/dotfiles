@@ -71,6 +71,10 @@ touching, **before** changing anything:
 
 ## Testing tricks that worked
 
+- **User away?** If `~/.local/bin/awayctl status` says `away`, the real monitors are off. Your windows open
+  on the virtual monitor (workspace 11). Screenshot it with `~/.local/bin/awayctl shot <file>`, never
+  `grim` on a monitor that's off: it hangs. Don't turn the monitors back on yourself (`01-hyprland.md`).
+
 - Test window rules/layouts with throwaway windows: `setsid -f kitty --class qoltest1 -e sleep 30`,
   move them with `hl.dsp.window.move({ workspace = "6", window = "address:…", silent = true })`,
   inspect with `hyprctl clients -j`, then close them and restore focus to the user's previous window.

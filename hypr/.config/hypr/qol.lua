@@ -131,6 +131,12 @@ hl.bind(mainMod .. " + D",           hl.dsp.global("caelestia:showall"), { descr
 -- saying the new state (the only other indicator is the "Keep awake" card in the utilities drawer)
 hl.bind(mainMod .. " + SHIFT + I", hl.dsp.exec_cmd([[caelestia shell idleInhibitor toggle; if [ "$(caelestia shell idleInhibitor isEnabled)" = true ]; then notify-send -a caelestia-shell -i caffeine-cup-full "Keep awake: on" "The screen won't lock or turn off"; else notify-send -a caelestia-shell -i caffeine-cup-empty "Keep awake: off" "Auto-lock is back on"; fi]]), { description = "Shell: keep awake on / off (no auto-lock or screen off)" })
 
+-- Away mode: monitors off without locking; agents keep working on a virtual monitor
+-- (`awayctl`, docs 01). Same size/scale as the main monitor, far off to the side so the
+-- cursor can't wander onto it. Kept here so a `hyprctl reload` doesn't reset it.
+hl.monitor({ output = "agent", mode = "3840x2160@60", position = "20000x0", scale = 1.25 })
+hl.bind(mainMod .. " + SHIFT + O", hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/awayctl toggle"), { description = "Shell: away mode on / off (monitors off, no lock; agents use a virtual monitor)" })
+
 -- Restart the shell if it ever dies
 -- (wait for the old instance to fully exit, or the new one quits seeing it still running)
 -- (match only Caelestia's qs, other Quickshell configs run too; '^' keeps it off this sh's own command line)

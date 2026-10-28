@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Away mode: monitors off (DPMS) without locking, while agents keep working on a virtual
+# (headless) monitor that Hyprland still renders. See docs/01-hyprland.md, "Away mode".
+#
+#   awayctl on | off | toggle | status
+#   awayctl shot [file]   screenshot the virtual monitor while away, else the focused monitor
+#
+# The virtual monitor's mode/scale/position come from its rule in qol.lua (output "agent").
+set -euo pipefail
+
+OUT=agent
+STATE=${XDG_RUNTIME_DIR:-/tmp}/awayctl.state
+
+is_away() { hyprctl monitors -j | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null; }
+
+on() {
+    is_away && { echo "already away"; return; }
+    # Remember what to restore: focused window, cursor, whether keep-awake was already on
+    local win cur inhib
+    win=$(hyprctl activewindow -j | jq -r '.address // empty')
+    cur=$(hyprctl cursorpos | tr -d ' ')
+    inhib=$(caelestia shell idleInhibitor isEnabled 2>/dev/null || echo false)
+    printf 'win=%s\ncur=%s\ninhib=%s\n' "$win" "$cur" "$inhib" >"$STATE"
+
+    # Keep Caelestia from locking (a lock screen would cover the virtual monitor too)
+    [[ $inhib == true ]] || caelestia shell idleInhibitor enable >/dev/null
+    hyprctl output create headless "$OUT" >/dev/null
+    for m in $(hyprctl monitors -j | jq -r --arg o "$OUT" '.[] | select(.name != $o) | .name'); do
+        hyprctl dispatch "hl.dsp.dpms({ action = \"disable\", monitor = \"$m\" })" >/dev/null
+    done
+    # New windows open on the focused monitor, so everything launched while away lands there
+    hyprctl dispatch "hl.dsp.focus({ monitor = \"$OUT\" })" >/dev/null
+}
+
+off() {
+    is_away || { echo "not away"; return; }
+    local win="" cur="" inhib=true id ws n
+    [[ -f $STATE ]] && source "$STATE"
+    # Windows left on the virtual monitor, to say where they went
+    read -r id ws < <(hyprctl monitors -j | jq -r --arg o "$OUT" '.[] | select(.name == $o) | "\(.id) \(.activeWorkspace.name)"')
+    n=$(hyprctl clients -j | jq --argjson id "$id" '[.[] | select(.monitor == $id)] | length')
+
+    for m in $(hyprctl monitors -j | jq -r '.[] | select(.dpmsStatus | not) | .name'); do
+        hyprctl dispatch "hl.dsp.dpms({ action = \"enable\", monitor = \"$m\" })" >/dev/null
+    done
+    # Its workspace (and any windows on it) moves to a real monitor
+    hyprctl output remove "$OUT" >/dev/null
+
+    if [[ -n $win ]] && hyprctl clients -j | jq -e --arg a "$win" 'any(.[]; .address == $a)' >/dev/null; then
+        hyprctl dispatch "hl.dsp.focus({ window = \"address:$win\" })" >/dev/null
+    fi
+    [[ -n $cur ]] && hyprctl dispatch "hl.dsp.cursor.move({ x = ${cur%,*}, y = ${cur#*,} })" >/dev/null
+    [[ $inhib == true ]] || caelestia shell idleInhibitor disable >/dev/null
+    rm -f "$STATE"
+
+    if (( n > 0 )); then
+        notify-send -a awayctl -i video-display "Welcome back" "$n window(s) opened while you were away are on workspace $ws"
+    fi
+}
+
+shot() {
+    local file=${1:-${XDG_RUNTIME_DIR:-/tmp}/awayctl-shot.png} mon
+    if is_away; then mon=$OUT; else mon=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name'); fi
+    timeout 10 grim -o "$mon" "$file"
+    echo "$file"
+}
+
+case ${1:-toggle} in
+    on) on ;;
+    off) off ;;
+    toggle) if is_away; then off; else on; fi ;;
+    status) if is_away; then echo away; else echo present; fi ;;
+    shot) shift; shot "$@" ;;
+    *) echo "usage: awayctl on|off|toggle|status|shot [file]" >&2; exit 2 ;;
+esac

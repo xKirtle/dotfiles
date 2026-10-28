@@ -26,6 +26,7 @@ without one shows under "Undocumented". Don't add binds in HyprMod: its editor h
 | Ctrl + Super + Alt + R | restart Caelestia shell | qol |
 | Super + Ctrl + Shift + L | recover a crashed lock screen: restart the shell and lock again (works while locked) | qol |
 | Super + Shift + I | keep awake on/off (Caelestia idle inhibitor: no auto-lock or screen off; notifies the new state) | qol |
+| Super + Shift + O | away mode on/off: monitors off without locking, agents work on a virtual monitor (`awayctl`, 01) | qol |
 | Super + Ctrl + Space | wallpaper picker: each wallpaper with its own dynamic colours, folders as groups (Enter = open folder / apply, R = random, Esc = back/close) | qol |
 | Super + Shift + P | VPN panel: Proton VPN country/city/server picker (type to search, ↑/↓ select, Enter/click = connect to the fastest there, →/← = cities/servers, Tab = Standard/Secure Core/P2P, Ctrl+F = favourite, Ctrl+D = disconnect, Esc = clear/close; see 09). Shift so it's hard to hit by accident | qol |
 | Super + K | keybinds panel: search the live binds by description or key (`super+shift+v`), ↑/↓ scroll, Esc = clear/close | qol |

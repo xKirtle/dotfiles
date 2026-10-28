@@ -28,6 +28,27 @@
 - See descriptions: `hyprctl monitors` (the `description:` line, without the trailing `(DP-x)`).
 - **If a connector name ever changes** (driver update, cable moved), only HyprMod's layout breaks. Fix it in HyprMod.
 
+### Away mode (`awayctl`, Super+Shift+O)
+
+Monitors off without locking, so agents can keep testing visually while the user is away (OLED-friendly).
+`awayctl on`:
+1. Turns on keep-awake, so Caelestia doesn't lock.
+2. Creates a virtual (headless) output named `agent`. Its rule is in `qol.lua`: 3840x2160@60, scale 1.25,
+   position `20000x0`, far from the desk layout so the cursor can't reach it.
+3. Turns the real monitors off with DPMS.
+4. Focuses `agent`, so new windows open on its workspace (11).
+
+Workspaces 1–10 stay where they were. `awayctl off` reverses all of it: DPMS back on, output removed
+(its workspace and any windows on it move to a real monitor, with a "Welcome back" notification saying
+where), and the previous focus, cursor position and keep-awake state are restored.
+`awayctl status` prints `away` / `present`.
+
+- **Screenshots:** `awayctl shot [file]` grabs `agent` while away (else the focused monitor) and prints
+  the path. `grim` on a monitor that's off **hangs**: Hyprland doesn't draw frames to it (tested).
+- Caelestia draws its bar on `agent`. A `hyprctl reload` while away keeps DPMS off and the
+  output's mode (tested 2026-10-28).
+- Mouse and keys don't wake the monitors (`misc.*_enables_dpms` are off); press the bind again.
+
 ## Workspaces
 
 - **1–5 on the main monitor, 6–10 on the portrait monitor**, always present (`persistent`).
