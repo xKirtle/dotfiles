@@ -14,7 +14,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `caelestia` | Caelestia shell config (`shell.json.template`, rendered to `shell.json`) |
 | `themectl` | Wallpaper picker (dynamic colours), awww transitions, scheme sync to Hyprland/Chromium/Serein/VS Code (`themectl`, Quickshell picker, user units) |
 | `kitty`, `shell`, `bash` | Terminal, starship prompt, bash |
-| `gtk`, `qt`, `fonts` | GTK 3/4 settings, qt6ct + Kvantum, fontconfig |
+| `gtk`, `qt`, `fonts` | GTK 3/4 settings, qt6ct (Fusion, Caelestia palette) + Kvantum fallback, fontconfig |
 | `thunar`, `swappy`, `chromium` | Thunar actions + shortcuts, screenshot editor, Chromium flags |
 | `audio` | WirePlumber rules (Scarlett Solo) + output switch script |
 | `dictate` | F9 speech to text: `dictate` (pw-record + whisper.cpp on the GPU, types with wtype) |

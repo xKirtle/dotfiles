@@ -59,7 +59,8 @@ Theme everywhere: **Catppuccin Mocha**.
     terminal colours (`variant` = tonalspot/vibrant/…). Result: `~/.local/state/caelestia/scheme.json`.
   - **What follows it:** Caelestia's shell and our Quickshell panels (live, from `scheme.json`); template
     files for GTK 3/4 (`gtk.css`), `thunar.css`, btop, htop, nvtop, fuzzel, cava, Discord, Spicetify,
-    Zed, Warp; **running terminals** (it writes OSC colour sequences to every `/dev/pts/*`);
+    Zed, Warp; **Qt apps** (our `templates/qt6ct.conf`, see GTK / Qt theming; on app restart);
+    **running terminals** (it writes OSC colour sequences to every `/dev/pts/*`);
     **new terminals** (our `~/.bashrc` runs `command cat ~/.local/state/caelestia/sequences.txt`; `command`
     because `cat` is aliased to `bat`, which adds a "File:" header; backup
     `.bashrc.bak-pre-sequences`); **Hyprland borders**, **Chromium**, **Serein** and **VS Code** (via `themectl sync`, see below;
@@ -78,8 +79,7 @@ Theme everywhere: **Catppuccin Mocha**.
     also reloads it live without interrupting playback. Select it once in Settings > Appearance > Theme >
     **Caelestia** (stored as `custom_theme` in `settings.json`; don't edit that while it runs). With
     "accent from album art" on, album art may still override the accent.
-  - **What doesn't:** Qt apps stay on Kvantum Catppuccin (Caelestia targets `qtengine`, unused here;
-    OpenRGB is the only Qt app, so it's not worth switching to Fusion). kitty's own
+  - **What doesn't:** running Qt apps (they read the palette at startup). kitty's own
     `catppuccin-mocha.conf` is just the base the sequences override.
   - Caelestia's own Hyprland output (`~/.config/hypr/scheme/current.lua`) is read by `qol.lua` at load
     (border block, with a Catppuccin fallback). Its own Chromium output needs passwordless sudo and
@@ -336,10 +336,19 @@ through `qs-panel keybinds keybinds` (see Panel launcher above).
   `papirus-folders -C cat-mocha-mauve`), cursor `Bibata-Modern-Ice` 24, font Inter 11.
   Set in `~/.config/gtk-3.0/settings.ini`, `gtk-4.0/settings.ini` **and** gsettings
   (`org.gnome.desktop.interface …`, color-scheme `prefer-dark`). GUI tweaker: `nwg-look`.
-- Qt: `qt6ct` (`~/.config/qt6ct/qt6ct.conf`, style `kvantum-dark`) + Kvantum theme
-  `catppuccin-mocha-mauve` (`~/.config/Kvantum/kvantum.kvconfig`).
+- Qt: `qt6ct` (`QT_QPA_PLATFORMTHEME` in `qol.lua`; `~/.config/qt6ct/qt6ct.conf`), style **Fusion**
+  with `custom_palette=true` and `color_scheme_path=~/.local/state/caelestia/theme/qt6ct.conf` (qt6ct
+  expands `~`). That file is rendered from our Caelestia template `templates/qt6ct.conf` (Material 3
+  roles → the 21 QPalette roles in qt6ct order) on every scheme change, so Qt apps follow the wallpaper
+  colours after a restart. Saving from the qt6ct GUI would write an absolute path; keep the `~`.
+  Added 2026-10-28 (before: Kvantum `catppuccin-mocha-mauve`, a fixed palette).
+- **Revert to Kvantum:** in `qt6ct.conf` set `style=kvantum-dark`, `custom_palette=false` (the Kvantum
+  config `~/.config/Kvantum/kvantum.kvconfig` is still in place).
+- Check the palette Qt apps get, headless (needs the Qt 6 `qml`; `qml` on PATH is Qt 5): a QML `Window` with
+  `SystemPalette` logging `window`/`highlight`, run with `QT_FORCE_STDERR_LOGGING=1 QT_QPA_PLATFORM=offscreen
+  QT_QPA_PLATFORMTHEME=qt6ct /usr/lib/qt6/bin/qml -a widget <file>`.
 - Caelestia's scheme command also writes `~/.config/qtengine/` (for its own `qtengine` Qt theme),
-  but this system uses `qt6ct` (`QT_QPA_PLATFORMTHEME` in `qol.lua`), so those files are unused.
+  but this system uses `qt6ct`, so those files are unused.
 
 ## Screenshots
 
