@@ -394,6 +394,14 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    -- F2 rename dialog (single file: 'Rename "x"'; several files: "Bulk Rename")
+    name   = "thunar-rename-float",
+    match  = { class = "^thunar$", title = "^(Rename .*|Bulk Rename.*)$" },
+    float  = true,
+    center = true,
+})
+
+hl.window_rule({
     -- Tiled like everything else, just a narrow column
     name            = "steam-friends-narrow",
     match           = { class = "^steam$", title = "^Friends List$" },

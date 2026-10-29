@@ -105,6 +105,7 @@ Other autostart comes from systemd user units and `~/.config/autostart/` (see 04
 |---|---|
 | `float-dialogs` | pavucontrol, nm-connection-editor, nwg-look, qt6ct, kvantummanager: floating, centred, 60%×70% |
 | `imv-float` | image viewer floats, centred |
+| `thunar-rename-float` | Thunar's rename dialogs (`Rename "x"`, `Bulk Rename`) float, centred |
 | `steam-friends-narrow` | Steam "Friends List" tiles as a narrow column: `scrolling_width = 0.15` |
 | `fullscreen-no-idle` | any window (`class = ".*"`): `idle_inhibit = "fullscreen"` |
 | `steam-games-no-idle` | `^steam_app_.*$`: `idle_inhibit = "focus"`. Must come **after** the catch-all: the last matching rule's `idle_inhibit` wins |
