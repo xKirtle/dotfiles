@@ -58,13 +58,14 @@ Theme everywhere: **Catppuccin Mocha**.
     Material Color Utilities, the same algorithm as matugen) and builds a Material 3 palette plus 16
     terminal colours (`variant` = tonalspot/vibrant/…). Result: `~/.local/state/caelestia/scheme.json`.
   - **What follows it:** Caelestia's shell and our Quickshell panels (live, from `scheme.json`); template
-    files for GTK 3/4 (`gtk.css`), `thunar.css`, btop, htop, nvtop, fuzzel, cava, Discord, Spicetify,
+    files for btop, htop, nvtop, fuzzel, cava, Discord, Spicetify,
     Zed, Warp; **Qt apps** (our `templates/qt6ct.conf`, see GTK / Qt theming; on app restart);
     **running terminals** (it writes OSC colour sequences to every `/dev/pts/*`);
     **new terminals** (our `~/.bashrc` runs `command cat ~/.local/state/caelestia/sequences.txt`; `command`
     because `cat` is aliased to `bat`, which adds a "File:" header; backup
-    `.bashrc.bak-pre-sequences`); **Hyprland borders**, **Chromium**, **Serein** and **VS Code** (via `themectl sync`, see below;
-    Serein only after a restart, VS Code live); **Spotifast** (live, see next point).
+    `.bashrc.bak-pre-sequences`); **Hyprland borders**, **Chromium**, **Serein**, **VS Code**, **GTK** (Thunar etc.) and the
+    **folder icons** (via `themectl sync`, see below and "GTK / Qt theming"; Serein and GTK 4 apps only
+    after a restart, the rest live); **Spotifast** (live, see next point).
     Custom templates for other apps can go in `~/.config/caelestia/templates/` (`{{ primary.hex }}`-style
     fields, also `.hexalpha`/`.rgb`/`.hsl` and `{{ mode }}`; an unknown name is left unfilled; written to
     `~/.local/state/caelestia/theme/<same name>`). After rendering, Caelestia runs `theme.postHook` from
@@ -176,7 +177,8 @@ of five root images.)
   and it only runs `chromium --refresh-platform-policy` if Chromium is already running (otherwise that
   flag starts a hidden instance). Side effect: Chromium shows "Managed by your organization".
   It also writes a **Serein** theme (`serein_theme`, see "Discord client: Serein" below) and the
-  **VS Code** theme (`vscode_theme`, see "VS Code" below).
+  **VS Code** theme (`vscode_theme`, see "VS Code" below), and rebuilds the **folder icons**
+  (`papirus_folders`, see "GTK / Qt theming").
   Caelestia writes `scheme.json` **atomically** (temp file + `os.replace`), which arrives as a
   RENAMED event whose *destination* is the watched file; the watcher matches both ends. To test,
   rewrite it the same way (a plain `cat >` only exercises the in-place path).
@@ -332,10 +334,41 @@ through `qs-panel keybinds keybinds` (see Panel launcher above).
 
 ## GTK / Qt theming
 
-- GTK: `adw-gtk3-dark`, icons `Papirus-Dark` (folders recoloured with
-  `papirus-folders -C cat-mocha-mauve`), cursor `Bibata-Modern-Ice` 24, font Inter 11.
-  Set in `~/.config/gtk-3.0/settings.ini`, `gtk-4.0/settings.ini` **and** gsettings
-  (`org.gnome.desktop.interface …`, color-scheme `prefer-dark`). GUI tweaker: `nwg-look`.
+- GTK: theme `adw-gtk3-caelestia-a`/`-b` (below), icons `Papirus-Dark-Caelestia` / `Papirus-Light-Caelestia`
+  (below), cursor `Bibata-Modern-Ice` 24, font Inter 11. Set in `~/.config/gtk-3.0/settings.ini`,
+  `gtk-4.0/settings.ini` **and** gsettings (`org.gnome.desktop.interface …`); GTK apps on Wayland go by
+  gsettings (via the settings portal). GUI tweaker: `nwg-look` (don't pick a theme there: the next scheme
+  change sets it back).
+- **GTK colours follow the wallpaper live** (2026-10-29, `themectl sync` → `gtk_theme`). Caelestia's GTK step
+  is **off** (`theme.enableGtk: false` in `~/.config/caelestia/cli.json`): it wrote the colours to
+  `~/.config/gtk-3.0/gtk.css`, which GTK 3 reads only at app start, so a running Thunar kept the old
+  background (dark/light) until restarted; it also always set `adw-gtk3-dark`, even for light schemes.
+  `gtk_theme` does its job instead: renders Caelestia's own `gtk.css` + `thunar.css` templates (from the
+  installed `caelestia` package, `data/templates/`) into a **GTK theme** in `~/.local/share/themes/` that
+  first `@import`s `adw-gtk3-dark` or `adw-gtk3` by the scheme's mode. GTK 3 rereads a theme whenever
+  gsettings `gtk-theme` changes name, so there are two slots, `adw-gtk3-caelestia-a`/`-b`: it writes the
+  inactive one and switches to it (live restyle, no restart). `adw-gtk3-caelestia` is a symlink to the
+  current slot, for `settings.ini`. It also sets `color-scheme` (`prefer-dark`/`-light`) and `icon-theme`
+  (`Papirus-<Mode>-Caelestia`), and removes any `~/.config/gtk-3.0/gtk.css`/`thunar.css` (user CSS would
+  override the theme with stale colours). GTK 4 / libadwaita apps still get `~/.config/gtk-4.0/gtk.css` +
+  `thunar.css`, read at start only. `themectl gtk` applies all of it (and the folder icons) by hand.
+- **Folder icons follow the wallpaper** (2026-10-29): `themectl sync` (`papirus_folders`) generates the
+  icon themes **`Papirus-Dark-Caelestia`** and **`Papirus-Light-Caelestia`** in `~/.local/share/icons/`
+  (not in the repo, generated). They contain only the folder icons (`places/folder-*`, `user-*`, sizes
+  22–64): Papirus's **blue** folders with its 3 colours swapped: front `#5294e2` → primary, back `#4877b1`
+  → primary at ~0.78 brightness, emblem `#1d344f` → ~0.35. Everything else is inherited from
+  Papirus-Dark/-Light; `gtk_theme` sets the one for the mode. It skips the rebuild if the primary didn't
+  change (`.primary` stamp); `themectl gtk` forces one. Qt apps pick it up on restart (`qt6ct.conf`
+  `icon_theme=Papirus-Dark-Caelestia`).
+  **Live in GTK apps:** GTK only rechecks a theme's files (at most every 5 s) when the app looks up an icon,
+  so an idle Thunar kept the old folders until restarted. After a rebuild, `gtk_icons_reload` sets gsettings
+  `icon-theme` to `Papirus-<Mode>-Caelestia-Reload` (a symlink to the same theme, so no flicker), then 0.5 s
+  later back to `Papirus-<Mode>-Caelestia` (mode from `scheme.json`). The name change makes GTK reload
+  (checked headless: the IconTheme `changed` signal fires). Only if the current icon theme is one of ours.
+  The `-Reload` aliases show up in theme pickers like nwg-look; ignore them.
+  Why not papirus-folders: Caelestia's own recolour runs `sudo -n papirus-folders -C <nearest colour>`,
+  which silently fails without passwordless sudo. The system Papirus folders are still set to
+  `cat-mocha-mauve` from setup (the source of the old always-purple folders); nothing uses them now.
 - Qt: `qt6ct` (`QT_QPA_PLATFORMTHEME` in `qol.lua`; `~/.config/qt6ct/qt6ct.conf`), style **Fusion**
   with `custom_palette=true` and `color_scheme_path=~/.local/state/caelestia/theme/qt6ct.conf` (qt6ct
   expands `~`). That file is rendered from our Caelestia template `templates/qt6ct.conf` (Material 3
@@ -375,7 +408,7 @@ through `qs-panel keybinds keybinds` (see Panel launcher above).
 
 - `thunar`, `thunar-volman`, `gvfs`, `tumbler`, `ffmpegthumbnailer`.
 - Default for folders: `xdg-mime default thunar.desktop inode/directory`.
-- Themed by Caelestia's `gtk-3.0/thunar.css`. Dolphin was removed because it looked bad with the theme.
+- Themed by Caelestia's `thunar.css` template, via our generated GTK theme (live; see GTK / Qt theming). Dolphin was removed because it looked bad with the theme.
 - **Archives: no archive manager app.** Right-click **Extract here** / **Extract to folder** / **Compress to .zip**
   are our Thunar actions running `~/.local/bin/archive-tool` (`thunar` package) with `bsdtar` (libarchive)
   and `7zip` as the fallback. Extract here: a single top-level item lands next to the archive; anything else
