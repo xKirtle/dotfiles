@@ -402,6 +402,14 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    -- Bitwarden extension popout from Chromium (class is chrome-<extension id>-<profile>)
+    name   = "bitwarden-popup-float",
+    match  = { class = "^chrome-nngceckbapebfimnlniiiahkandclblb-.*$" },
+    float  = true,
+    center = true,
+})
+
+hl.window_rule({
     -- Tiled like everything else, just a narrow column
     name            = "steam-friends-narrow",
     match           = { class = "^steam$", title = "^Friends List$" },
