@@ -24,5 +24,9 @@ gtk/.config/gtk-3.0/bookmarks
 .env
 caelestia/.config/caelestia/shell.json
 
+# Only the ssh config is tracked, never keys or known_hosts (in case ~/.ssh ever gets folded in)
+ssh/.ssh/*
+!ssh/.ssh/config
+
 # Python bytecode
 __pycache__/

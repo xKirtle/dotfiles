@@ -58,6 +58,11 @@ Appended section `# ---- QoL ----`:
   or the router isolates clients; fall back to manual send by IP (`ip -br addr show enp8s0`).
   Linux↔Linux with SSH: `rsync -aP` is just as fast and scriptable.
 - **Proton VPN:** official CLI (`protonvpn`) + VPN panel (Super+Shift+P): `09-vpn.md`.
+- **SSH:** `~/.ssh/config` is a stow link to the `ssh` package (host aliases `pi`/`nas`/`minipc`,
+  GitHub personal/work aliases). The keys (`id_ed25519_{homelab,personal,work}`, no passphrase) are
+  plain files in `~/.ssh`, with no agent; copies are in Bitwarden as SSH key items. `~/.ssh` must stay
+  a real dir (`install.sh` creates it), and `.gitignore` only allows `ssh/.ssh/config`, so a folded
+  `~/.ssh` can't leak keys into this public repo.
 
 ## Time and locale
 

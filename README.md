@@ -19,6 +19,7 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `audio` | WirePlumber rules (Scarlett Solo) + output switch script |
 | `dictate` | F9 speech to text: `dictate` (pw-record + whisper.cpp on the GPU, types with wtype) |
 | `paru` | paru config + AUR completion refresh timer |
+| `ssh` | `~/.ssh/config` only (host aliases, which key per host). Keys stay out of the repo: backed up in Bitwarden |
 | `spotifast` | Copies Caelestia's rendered Spotifast palette into Spotifast's themes (`spotifast-caelestia-theme`, run by Caelestia's postHook) |
 | `calendar` | Proton Calendar: vdirsyncer + khal configs, `calendarctl` (sync, reminders), agenda panel, user units |
 | `vpn` | Proton VPN: `vpnctl` (server data + actions), VPN picker panel (`qs -c vpn`, Super+Shift+P) |
