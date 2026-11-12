@@ -56,6 +56,12 @@ where), and the previous focus, cursor position and keep-awake state are restore
 - Workspaces **6–10 scroll top-to-bottom** (`layout_opts = { direction = "down" }`). The arrow
   keybinds rotate to match (see 02-keybinds.md).
 - Defined in the `WORKSPACES` section of `qol.lua` (loop over 1–10).
+- **Local workspaces:** Super+1–5 address the five workspaces of the monitor with keyboard focus
+  (`hl.get_active_monitor()`); Super+Alt+1–5 the other monitor's. The binds compute the real ID
+  (offset 5 on portrait), so IDs stay 1–10 and rules, the bar and `e+1` scrolling are unaffected.
+  Any non-portrait monitor (e.g. the away virtual one) counts as main. The default Super+digit
+  loop in `hyprland.lua` is unbound in `qol.lua`. Revives the idea of the old
+  `hypr-local-workspaces` tool without its zero-width workspace names.
 
 ## Layout: scrolling
 

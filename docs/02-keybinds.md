@@ -80,9 +80,11 @@ landscape action, portrait action).
 
 | Key | Action |
 |---|---|
-| Super + 1–5 | workspaces on the main monitor |
-| Super + 6–9, 0 | workspaces on the portrait monitor (0 = 10) |
-| Super + Shift + digit | send window to that workspace |
+| Super + 1–5 | workspace 1–5 **of the focused monitor** (main: 1–5, portrait: 6–10) |
+| Super + Shift + 1–5 | send the window to workspace 1–5 of the focused monitor |
+| Super + Alt + 1–5 | workspace 1–5 of the **other** monitor |
+| Super + Alt + Shift + 1–5 | send the window to workspace 1–5 of the other monitor |
+| Super + (Shift +) 6–9, 0 | **unbound** (free for new binds) |
 | Super + S | show / hide the scratchpad (`special:magic`) |
 | Super + G | show / hide the games scratchpad (`special:games`; Steam games open there) |
 | Super + Shift + G | toggle Caelestia game mode (also automatic with the games scratchpad) |

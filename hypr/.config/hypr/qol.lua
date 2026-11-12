@@ -339,7 +339,7 @@ hl.config({
 ---------------------
 
 -- Fixed workspaces: 1-5 on the main monitor, 6-10 on the portrait one.
--- Super+[digit] / Super+Shift+[digit] come from hyprland.lua and jump to the right monitor.
+-- Super+1-5 pick from the focused monitor's five (see the binds below the loop).
 for i = 1, 10 do
     hl.workspace_rule({
         workspace  = tostring(i),
@@ -349,6 +349,40 @@ for i = 1, 10 do
         -- Portrait monitor: windows stack top-to-bottom instead of left-to-right
         layout_opts = is_vertical_ws(i) and { direction = "down" } or nil,
     })
+end
+
+-- Local workspaces (the old hypr-local-workspaces idea): Super+1-5 are workspaces 1-5 of the
+-- monitor with keyboard focus, so 1-5 on main and 6-10 on portrait. Super+Alt reaches the other
+-- monitor's five. The real IDs stay 1-10, so the rules above, the bar and e+1 scrolling still work.
+-- Any monitor that isn't portrait (e.g. awayctl's virtual one) counts as main.
+local function local_ws(n, other)
+    local on_side = hl.get_active_monitor().description == SIDE_DESC
+    if other then
+        on_side = not on_side
+    end
+    return (on_side and 5 or 0) + n
+end
+
+-- Super+6-0 and Super+Shift+6-0 from hyprland.lua are dropped and left free
+for i = 1, 10 do
+    local key = i % 10
+    hl.unbind(mainMod .. " + " .. key)
+    hl.unbind(mainMod .. " + SHIFT + " .. key)
+end
+
+for n = 1, 5 do
+    hl.bind(mainMod .. " + " .. n, function()
+        hl.dispatch(hl.dsp.focus({ workspace = local_ws(n) }))
+    end, { description = "Workspaces: go to workspace 1-5 of the focused monitor" })
+    hl.bind(mainMod .. " + SHIFT + " .. n, function()
+        hl.dispatch(hl.dsp.window.move({ workspace = local_ws(n) }))
+    end, { description = "Workspaces: send the window to workspace 1-5 of the focused monitor" })
+    hl.bind(mainMod .. " + ALT + " .. n, function()
+        hl.dispatch(hl.dsp.focus({ workspace = local_ws(n, true) }))
+    end, { description = "Workspaces: go to workspace 1-5 of the other monitor" })
+    hl.bind(mainMod .. " + ALT + SHIFT + " .. n, function()
+        hl.dispatch(hl.dsp.window.move({ workspace = local_ws(n, true) }))
+    end, { description = "Workspaces: send the window to workspace 1-5 of the other monitor" })
 end
 
 -- Super + volume keys control the default microphone (Scarlett Input 2 Mic).
