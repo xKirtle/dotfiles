@@ -49,29 +49,6 @@
     "utilities": {
         "toasts": {
             "nowPlaying": true
-        },
-        "quickToggles": [
-            { "id": "wifi",      "enabled": true },
-            { "id": "bluetooth", "enabled": true },
-            { "id": "mic",       "enabled": true },
-            { "id": "settings",  "enabled": true },
-            { "id": "gameMode",  "enabled": true },
-            { "id": "dnd",       "enabled": true },
-            { "id": "vpn",       "enabled": true }
-        ],
-        "vpn": {
-            "enabled": true,
-            "selectedProvider": "proton",
-            "provider": [
-                {
-                    "id": "proton",
-                    "name": "proton",
-                    "displayName": "Proton VPN",
-                    "interface": "proton0",
-                    "connectCmd": ["/usr/bin/protonvpn", "connect"],
-                    "disconnectCmd": ["/usr/bin/protonvpn", "disconnect"]
-                }
-            ]
         }
     },
     "background": {

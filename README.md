@@ -22,7 +22,6 @@ Each top-level folder is a [GNU Stow](https://www.gnu.org/software/stow/) packag
 | `ssh` | `~/.ssh/config` only (host aliases, which key per host). Keys stay out of the repo: backed up in Bitwarden |
 | `spotifast` | Copies Caelestia's rendered Spotifast palette into Spotifast's themes (`spotifast-caelestia-theme`, run by Caelestia's postHook) |
 | `calendar` | Proton Calendar: vdirsyncer + khal configs, `calendarctl` (sync, reminders), agenda panel, user units |
-| `vpn` | Proton VPN: `vpnctl` (server data + actions), VPN picker panel (`qs -c vpn`, Super+Shift+P) |
 | `qs-panel` | `qs-panel`: toggles / starts the Quickshell panels, with their shared scale (`SCALE=`); claude-usage-tray's `--panel-scale` drop-in |
 | `keybinds` | Keybind cheat sheet panel (`qs -c keybinds`, Super+K): live `hyprctl binds` with their descriptions |
 | `sysmon` | System monitor panel (`qs -c sysmon`, Ctrl+Shift+Esc): CPU/memory/GPU/disk/network graphs + task manager; `sysmonctl` (sampler, kill) |

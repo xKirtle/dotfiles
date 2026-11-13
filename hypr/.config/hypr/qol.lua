@@ -171,9 +171,6 @@ hl.bind("CTRL + " .. mainMod .. " + space", hl.dsp.exec_cmd(os.getenv("HOME") ..
 -- Agenda panel: Proton Calendar, today + next days (calendar package, qs -c agenda)
 hl.bind(mainMod .. " + A",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/calendarctl panel"), { description = "Panels: agenda (Proton Calendar)" })
 
--- VPN panel: Proton VPN country/city/server picker (vpn package, qs -c vpn). Shift so it's hard to hit by accident
-hl.bind(mainMod .. " + SHIFT + P",   hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/vpnctl panel"), { description = "Panels: VPN (Proton VPN country / city / server picker)" })
-
 -- Keybind cheat sheet: searchable list of the live binds and their descriptions (keybinds package, qs -c keybinds)
 hl.bind(mainMod .. " + K",           hl.dsp.exec_cmd(os.getenv("HOME") .. "/.local/bin/qs-panel keybinds keybinds"), { description = "Panels: keybinds (this cheat sheet)" })
 

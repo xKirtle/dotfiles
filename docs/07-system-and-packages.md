@@ -57,7 +57,7 @@ Appended section `# ---- QoL ----`:
   Launched on demand, no autostart. If peers don't appear: Proton VPN may block LAN traffic,
   or the router isolates clients; fall back to manual send by IP (`ip -br addr show enp8s0`).
   Linux↔Linux with SSH: `rsync -aP` is just as fast and scriptable.
-- **Proton VPN:** official CLI (`protonvpn`) + VPN panel (Super+Shift+P): `09-vpn.md`.
+- **Proton VPN:** official CLI (`protonvpn`): `09-vpn.md`.
 - **SSH:** `~/.ssh/config` is a stow link to the `ssh` package (host aliases `pi`/`nas`/`minipc`,
   GitHub personal/work aliases). The keys (`id_ed25519_{homelab,personal,work}`, no passphrase) are
   plain files in `~/.ssh`, with no agent; copies are in Bitwarden as SSH key items. `~/.ssh` must stay

@@ -27,12 +27,6 @@ Theme everywhere: **Catppuccin Mocha**.
   - `bar.popouts.activeWindow: false`: no popout when hovering the active-window title in the bar.
   - `bar.workspaces.specialWorkspaceIcons`: `games` → `sports_esports` (gamepad), `magic` (Super+S scratchpad) → `auto_awesome` (sparkles). The strip of special
     workspaces only shows while one is open, and lists only non-empty ones.
-  - `utilities.quickToggles`: the drawer's default buttons (wifi, bluetooth, mic, settings, gameMode, dnd)
-    plus **vpn**, which is off by default. Setting the list replaces the defaults, so keep all of them listed.
-  - `utilities.vpn`: enabled, one provider `proton` (selected): the toggle runs `/usr/bin/protonvpn
-    connect|disconnect` (fastest server) and reads state from the `proton0` interface. Caelestia has no Proton
-    adapter; this is the generic custom-provider form (`09-vpn.md`). `selectedProvider` comes from the
-    template, so a re-render resets a choice made in the settings app.
   - `launcher.useFuzzy.apps: true`: fuzzy app matching in the launcher.
   - `lock.hideNotifs: true`: no notification contents on the lock screen.
   - `notifs.actionOnClick: true`: clicking a notification runs its default action (not just dismiss).
@@ -244,7 +238,7 @@ of five root images.)
 
 `~/.local/bin/qs-panel <config> <ipc target> [toggle args…]` (`qs-panel` package) toggles one of the Quickshell
 panels, or starts it (`qs -c <config> -d`) and toggles it open once its IPC answers (~0.3 s). Used by Super+K
-(keybinds), `calendarctl panel` (agenda), `vpnctl panel` (VPN) and `sysmonctl panel` (system monitor, 10).
+(keybinds), `calendarctl panel` (agenda) and `sysmonctl panel` (system monitor, 10).
 
 - **Panels stay resident** (hidden, not quit) on purpose. Measured 2026-10-27: an open takes ~55-65 ms when
   the panel is running vs ~170-235 ms from cold (agenda/sysmon/picker); quitting on close would free ~365 MB
