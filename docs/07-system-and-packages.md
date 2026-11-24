@@ -13,6 +13,12 @@
 - **Undo once paru is fixed:** delete the `CompletionInterval` line, then
   `systemctl --user disable --now paru-aur-completion.timer`.
 - Tab completion needs `bash-completion` (sourced in `.bashrc`).
+- **AUR packages break when a repo library changes its version number** (the `.so.N` in its
+  filename; pacman doesn't rebuild AUR packages for you). 2026-11-24: `sndio` 1.11
+  (`libsndio.so.7` → `.so.9`) broke `libcava`, so Caelestia failed to start ("Cannot load
+  library … libsndio.so.7"). Rebuilding `caelestia-shell` alone didn't help. Find the package
+  that really needs the old library: `readelf -d <lib> | grep NEEDED` on each library from
+  `ldd`, then `pacman -Qqo <lib>`. Fix: `paru -S --rebuild <pkg>`.
 - Build leftovers (`rust`, `cmake`, `meson`, …) are orphans you can remove with
   `sudo pacman -Rns $(pacman -Qdtq)`; paru reinstalls them when needed.
 
